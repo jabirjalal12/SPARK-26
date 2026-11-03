@@ -1,11 +1,11 @@
-﻿"use client";
+"use client";
 
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { Html5Qrcode } from "html5-qrcode";
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { useFestStore } from "@/lib/store";
-import { Camera, Search, CheckCircle2, AlertCircle, RefreshCw, X } from "lucide-react";
+import { Camera, Search, CheckCircle2, AlertCircle, X } from "lucide-react";
 
 interface QRScannerModalProps {
   isOpen: boolean;
@@ -25,6 +25,47 @@ export function QRScannerModal({ isOpen, onClose, onScanSuccess }: QRScannerModa
 
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const readerElementId = "qr-reader-viewport";
+
+  const handleScanCode = useCallback((code: string) => {
+    // Vibrate device if supported
+    if (typeof window !== "undefined" && "vibrate" in navigator) {
+      navigator.vibrate(100);
+    }
+
+    // Try checking in as student first
+    const studentRes = checkInStudent(code);
+    if (studentRes.success) {
+      setLastScannedResult({
+        success: true,
+        message: "STUDENT VERIFIED",
+        details: `${studentRes.student?.full_name} (${studentRes.student?.qr_token})`,
+      });
+      if (onScanSuccess) onScanSuccess(code);
+      return;
+    }
+
+    // Try checking in as school code
+    const school = schools.find(
+      (s) => s.code.toUpperCase() === code.toUpperCase() || s.id === code
+    );
+    if (school) {
+      const schoolRes = checkInSchool(school.id);
+      setLastScannedResult({
+        success: schoolRes.success,
+        message: schoolRes.success ? "SCHOOL CHECKED IN" : "ALREADY CHECKED IN",
+        details: `${school.name} (Code: ${school.code})`,
+      });
+      if (onScanSuccess) onScanSuccess(code);
+      return;
+    }
+
+    // Unrecognized code
+    setLastScannedResult({
+      success: false,
+      message: "UNRECOGNIZED PASS",
+      details: `Code: ${code} - No matching registered record found.`,
+    });
+  }, [checkInStudent, checkInSchool, onScanSuccess, schools]);
 
   // Start QR scanner on open
   useEffect(() => {
@@ -77,48 +118,7 @@ export function QRScannerModal({ isOpen, onClose, onScanSuccess }: QRScannerModa
         }
       };
     }
-  }, [isOpen]);
-
-  const handleScanCode = (code: string) => {
-    // Vibrate device if supported
-    if (typeof window !== "undefined" && "vibrate" in navigator) {
-      navigator.vibrate(100);
-    }
-
-    // Try checking in as student first
-    const studentRes = checkInStudent(code);
-    if (studentRes.success) {
-      setLastScannedResult({
-        success: true,
-        message: "STUDENT VERIFIED",
-        details: `${studentRes.student?.full_name} (${studentRes.student?.qr_token})`,
-      });
-      if (onScanSuccess) onScanSuccess(code);
-      return;
-    }
-
-    // Try checking in as school code
-    const school = schools.find(
-      (s) => s.code.toUpperCase() === code.toUpperCase() || s.id === code
-    );
-    if (school) {
-      const schoolRes = checkInSchool(school.id);
-      setLastScannedResult({
-        success: schoolRes.success,
-        message: schoolRes.success ? "SCHOOL CHECKED IN" : "ALREADY CHECKED IN",
-        details: `${school.name} (Code: ${school.code})`,
-      });
-      if (onScanSuccess) onScanSuccess(code);
-      return;
-    }
-
-    // Unrecognized code
-    setLastScannedResult({
-      success: false,
-      message: "UNRECOGNIZED PASS",
-      details: `Code: ${code} - No matching registered record found.`,
-    });
-  };
+  }, [isOpen, handleScanCode]);
 
   // Filtered manual search results
   const filteredStudents = searchQuery.trim()

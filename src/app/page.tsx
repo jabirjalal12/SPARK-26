@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
@@ -76,11 +76,11 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-18 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3 group">
             <div className="h-10 w-10 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-pink-500 flex items-center justify-center shadow-lg shadow-indigo-600/30 group-hover:scale-105 transition-transform">
-              <span className="text-white font-black text-base tracking-tighter">M//B</span>
+              <span className="text-white font-black text-base tracking-tighter">{"M//B"}</span>
             </div>
             <div>
               <span className="font-black text-xl text-white tracking-tight leading-none block">
-                MAKE<span className="text-indigo-400">//</span>BREAK
+                MAKE<span className="text-indigo-400">{"//"}</span>BREAK
               </span>
               <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block mt-0.5">
                 Tech Fest 2026
