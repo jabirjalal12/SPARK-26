@@ -92,7 +92,7 @@ interface FestStoreContextType {
 
 const FestStoreContext = createContext<FestStoreContextType | null>(null);
 
-const STORAGE_KEY = "makebreak_fest_state_v2";
+const STORAGE_KEY = "spark_fest_state_v3";
 
 export function FestStoreProvider({ children }: { children: React.ReactNode }) {
   const [currentRole, setCurrentRole] = useState<UserRole>("organizer");
