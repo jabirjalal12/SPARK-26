@@ -1,9 +1,10 @@
-﻿-- ============================================================================
--- SPARK TECH FEST MANAGER - SEED DATA
--- 3 Tracks, Criteria, 5 Schools, Teams, 20 Students, Tickets, Venues, Schedule
+-- ============================================================================
+-- SPARK TECH FEST MANAGER - CORE CONFIGURATION & SEED DATA
+-- Tracks, Criteria, Venues, Schedule (05/11/2026 07:00 AM)
+-- NO DEMO SCHOOLS OR STUDENTS - Data populated via real registration
 -- ============================================================================
 
--- 1. TRACKS
+-- 1. COMPETITION TRACKS
 INSERT INTO public.tracks (id, name, slug, color, description, rules) VALUES
 ('11111111-1111-1111-1111-111111111111', 'Robotics', 'robotics', '#1E40AF', 'Autonomous & line-follower rover engineering arena.', 'Standard chassis, battery <= 12V, no flame sources.')
 ON CONFLICT (id) DO NOTHING;
@@ -21,76 +22,31 @@ ON CONFLICT (id) DO NOTHING;
 INSERT INTO public.scoring_criteria (track_id, name, weight, max_score) VALUES
 ('11111111-1111-1111-1111-111111111111', 'Autonomous Navigation', 0.40, 10.0),
 ('11111111-1111-1111-1111-111111111111', 'Hardware Robustness', 0.30, 10.0),
-('11111111-1111-1111-1111-111111111111', 'Innovation & Code', 0.30, 10.0);
+('11111111-1111-1111-1111-111111111111', 'Innovation & Code', 0.30, 10.0)
+ON CONFLICT DO NOTHING;
 
 -- Build from Scrap
 INSERT INTO public.scoring_criteria (track_id, name, weight, max_score) VALUES
 ('22222222-2222-2222-2222-222222222222', 'Creative Use of Scrap', 0.40, 10.0),
 ('22222222-2222-2222-2222-222222222222', 'Mechanism Functionality', 0.35, 10.0),
-('22222222-2222-2222-2222-222222222222', 'Durability & Finish', 0.25, 10.0);
+('22222222-2222-2222-2222-222222222222', 'Durability & Finish', 0.25, 10.0)
+ON CONFLICT DO NOTHING;
 
 -- Useless Projects
 INSERT INTO public.scoring_criteria (track_id, name, weight, max_score) VALUES
 ('33333333-3333-3333-3333-333333333333', 'Comedic Value & Irony', 0.45, 10.0),
 ('33333333-3333-3333-3333-333333333333', 'Absurd Over-Engineering', 0.35, 10.0),
-('33333333-3333-3333-3333-333333333333', 'Working Execution', 0.20, 10.0);
-
--- 3. 5 VISITING SCHOOLS
-INSERT INTO public.schools (id, name, code, city, address, contact_email, contact_phone, status, arrived) VALUES
-('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'Apex Institute of Technology', 'SCH-APX-812', 'Bengaluru', '42 Innovation Way', 'apex@edu.in', '+919845011001', 'approved', true),
-('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'St. Joseph Senior Secondary', 'SCH-STJ-401', 'Mysuru', '15 Convent Road', 'stjoseph@edu.in', '+919845011002', 'approved', false),
-('cccccccc-cccc-cccc-cccc-cccccccccccc', 'Green Valley Academy', 'SCH-GVA-932', 'Mangaluru', '88 Hill View', 'greenvalley@edu.in', '+919845011003', 'approved', false),
-('dddddddd-dddd-dddd-dddd-dddddddddddd', 'Horizon Science College', 'SCH-HSC-154', 'Hubballi', '23 Vidya Nagar', 'horizon@edu.in', '+919845011004', 'approved', false),
-('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', 'Metro Public School', 'SCH-MPS-677', 'Belagavi', '10 Nehru Circle', 'metro@edu.in', '+919845011005', 'pending', false)
-ON CONFLICT (id) DO NOTHING;
-
--- 4. TICKETS FOR APPROVED SCHOOLS (Single random token per school)
-INSERT INTO public.school_tickets (school_id, token_hash) VALUES
-('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'TKT-APX-812-7f9a2b1c'),
-('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'TKT-STJ-401-4c8d3e2f'),
-('cccccccc-cccc-cccc-cccc-cccccccccccc', 'TKT-GVA-932-9b1e5a7d'),
-('dddddddd-dddd-dddd-dddd-dddddddddddd', 'TKT-HSC-154-3f2a8c6e')
+('33333333-3333-3333-3333-333333333333', 'Working Execution', 0.20, 10.0)
 ON CONFLICT DO NOTHING;
 
--- 5. TEAMS
-INSERT INTO public.teams (id, school_id, track_id, name, project_title, project_summary, table_number) VALUES
-('aaaa1111-1111-1111-1111-111111111111', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '11111111-1111-1111-1111-111111111111', 'Apex Botsmiths', 'VortexCrawler X4', 'Quadruped pipeline inspection rover', 'T-01'),
-('aaaa2222-2222-2222-2222-222222222222', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '22222222-2222-2222-2222-222222222222', 'Apex JunkForge', 'Pedal-Powered Air Purifier', 'Recycled cycle frame and vacuum filters', 'T-02'),
-('bbbb1111-1111-1111-1111-111111111111', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', '11111111-1111-1111-1111-111111111111', 'Josephite Circuit', 'Solar Pathfinder', 'Solar-tracked field exploration vehicle', 'T-03'),
-('cccc3333-3333-3333-3333-333333333333', 'cccccccc-cccc-cccc-cccc-cccccccccccc', '33333333-3333-3333-3333-333333333333', 'Valley Goofs', 'The Regret Alarm', 'Slaps you with rubber hand if snooze pressed', 'T-04')
-ON CONFLICT (id) DO NOTHING;
-
--- 6. 20 STUDENTS (Stored with name and class ONLY; zero minor phone/email)
-INSERT INTO public.students (school_id, track_id, team_id, name, class) VALUES
-('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '11111111-1111-1111-1111-111111111111', 'aaaa1111-1111-1111-1111-111111111111', 'Aarav Nair', 'Grade 12-A'),
-('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '11111111-1111-1111-1111-111111111111', 'aaaa1111-1111-1111-1111-111111111111', 'Ananya Sharma', 'Grade 12-A'),
-('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '22222222-2222-2222-2222-222222222222', 'aaaa2222-2222-2222-2222-222222222222', 'Rohan Verma', 'Grade 11-B'),
-('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '22222222-2222-2222-2222-222222222222', 'aaaa2222-2222-2222-2222-222222222222', 'Diya Patel', 'Grade 11-B'),
-('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', '11111111-1111-1111-1111-111111111111', 'bbbb1111-1111-1111-1111-111111111111', 'Kavya Menon', 'Grade 12-C'),
-('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', '11111111-1111-1111-1111-111111111111', 'bbbb1111-1111-1111-1111-111111111111', 'Aditya Rao', 'Grade 12-C'),
-('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', '22222222-2222-2222-2222-222222222222', NULL, 'Pooja Hegde', 'Grade 11-A'),
-('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', '33333333-3333-3333-3333-333333333333', NULL, 'Siddharth Sen', 'Grade 11-A'),
-('cccccccc-cccc-cccc-cccc-cccccccccccc', '33333333-3333-3333-3333-333333333333', 'cccc3333-3333-3333-3333-333333333333', 'Meera Iyer', 'Grade 12-B'),
-('cccccccc-cccc-cccc-cccc-cccccccccccc', '33333333-3333-3333-3333-333333333333', 'cccc3333-3333-3333-3333-333333333333', 'Varun Joshi', 'Grade 12-B'),
-('cccccccc-cccc-cccc-cccc-cccccccccccc', '11111111-1111-1111-1111-111111111111', NULL, 'Tara Deshmukh', 'Grade 11-C'),
-('cccccccc-cccc-cccc-cccc-cccccccccccc', '22222222-2222-2222-2222-222222222222', NULL, 'Nikhil Kulkarni', 'Grade 11-C'),
-('dddddddd-dddd-dddd-dddd-dddddddddddd', '11111111-1111-1111-1111-111111111111', NULL, 'Ishaan Gupta', 'Grade 12-A'),
-('dddddddd-dddd-dddd-dddd-dddddddddddd', '11111111-1111-1111-1111-111111111111', NULL, 'Sneha Reddy', 'Grade 12-A'),
-('dddddddd-dddd-dddd-dddd-dddddddddddd', '22222222-2222-2222-2222-222222222222', NULL, 'Gautam Nambiar', 'Grade 11-B'),
-('dddddddd-dddd-dddd-dddd-dddddddddddd', '33333333-3333-3333-3333-333333333333', NULL, 'Anika Pillai', 'Grade 11-B'),
-('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', '11111111-1111-1111-1111-111111111111', NULL, 'Kunal Bhat', 'Grade 10'),
-('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', '22222222-2222-2222-2222-222222222222', NULL, 'Neha Koorse', 'Grade 10'),
-('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', '33333333-3333-3333-3333-333333333333', NULL, 'Abhinav Patil', 'Grade 10'),
-('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', '33333333-3333-3333-3333-333333333333', NULL, 'Tanvi Kamat', 'Grade 10');
-
--- 7. VENUES
+-- 3. OFFICIAL VENUES
 INSERT INTO public.venues (id, name, location, capacity) VALUES
 ('e1111111-1111-1111-1111-111111111111', 'Main Auditorium', 'Ground Floor, Tech Block', 500),
 ('e2222222-2222-2222-2222-222222222222', 'Robotics Arena Alpha', 'Mechanical Labs 1st Floor', 150),
 ('e3333333-3333-3333-3333-333333333333', 'Open Maker Quad', 'Central Courtyard', 300)
 ON CONFLICT (id) DO NOTHING;
 
--- 8. SCHEDULE ITEMS
+-- 4. OFFICIAL EVENT SCHEDULE (Starts 05/11/2026 at 07:00 AM)
 INSERT INTO public.schedule_items (title, description, venue_id, track_id, starts_at, ends_at, type) VALUES
 ('Gates Open & Fast-Pass Registration Desk', 'School delegations report at Central Quad with their master QR pass.', 'e1111111-1111-1111-1111-111111111111', NULL, '2026-11-05T07:00:00Z', '2026-11-05T08:00:00Z', 'break'),
 ('Visiting Faculty & Delegation Welcome Breakfast', 'Networking lounge and breakfast buffet.', 'e1111111-1111-1111-1111-111111111111', NULL, '2026-11-05T07:45:00Z', '2026-11-05T08:30:00Z', 'break'),
@@ -98,13 +54,15 @@ INSERT INTO public.schedule_items (title, description, venue_id, track_id, start
 ('Arena Safety Pit Scrutiny & Tool Allotment', 'Robotics voltage inspection and scrap tools allotment.', 'e2222222-2222-2222-2222-222222222222', NULL, '2026-11-05T09:30:00Z', '2026-11-05T10:00:00Z', 'competition'),
 ('Robotics Arena Trials (Heat 1)', 'Autonomous obstacle navigation qualifiers.', 'e2222222-2222-2222-2222-222222222222', '11111111-1111-1111-1111-111111111111', '2026-11-05T10:00:00Z', '2026-11-05T13:00:00Z', 'competition'),
 ('Scrap Assembly & Build Sprint', '4-hour non-stop junkyard fabrication and prototype assembly.', 'e3333333-3333-3333-3333-333333333333', '22222222-2222-2222-2222-222222222222', '2026-11-05T10:00:00Z', '2026-11-05T14:00:00Z', 'competition'),
-('Useless Pitching & Demo Show', 'Live exhibition and deadpan stage demonstrations.', 'e1111111-1111-1111-1111-111111111111', '33333333-3333-3333-3333-333333333333', '2026-11-05T10:30:00Z', '2026-11-05T12:30:00Z', 'judging'),
+('Useless Pitching & Stage Presentation', 'Live exhibition and deadpan stage demonstrations.', 'e1111111-1111-1111-1111-111111111111', '33333333-3333-3333-3333-333333333333', '2026-11-05T10:30:00Z', '2026-11-05T12:30:00Z', 'judging'),
 ('Delegation Lunch & Tech Showcase', 'Buffet lunch and open engineering exhibits at Central Quad.', 'e1111111-1111-1111-1111-111111111111', NULL, '2026-11-05T13:00:00Z', '2026-11-05T14:00:00Z', 'break'),
 ('Robotics Arena Championship Finals', 'Head-to-head top 4 bot championship trials.', 'e2222222-2222-2222-2222-222222222222', '11111111-1111-1111-1111-111111111111', '2026-11-05T14:00:00Z', '2026-11-05T15:30:00Z', 'competition'),
-('Valedictory & Grand Award Ceremony', 'Announcement of official winners, ₹75k+ cash, and certificates.', 'e1111111-1111-1111-1111-111111111111', NULL, '2026-11-05T16:30:00Z', '2026-11-05T18:00:00Z', 'ceremony');
+('Valedictory & Grand Award Ceremony', 'Announcement of official winners, ₹75k+ cash, and certificates.', 'e1111111-1111-1111-1111-111111111111', NULL, '2026-11-05T16:30:00Z', '2026-11-05T18:00:00Z', 'ceremony')
+ON CONFLICT DO NOTHING;
 
--- 9. ANNOUNCEMENTS
+-- 5. INITIAL OFFICIAL ANNOUNCEMENTS
 INSERT INTO public.announcements (title, body, audience, urgent) VALUES
 ('Welcome to SPARK 2026!', 'Campus gates are open. Faculty coordinators must present their single school QR ticket at Central Registration.', 'all', false),
 ('Power Strip Distribution at Maker Quad', 'Scrap track teams can collect 16A heavy-duty extension strips from Table 0.', 'all', false),
-('Urgent: Robotics Heat 1 Pit Call', 'All line-following robots must report to inspection bay by 10:20 AM sharp.', 'all', true);
+('Urgent: Robotics Heat 1 Pit Call', 'All line-following robots must report to inspection bay by 10:20 AM sharp.', 'all', true)
+ON CONFLICT DO NOTHING;

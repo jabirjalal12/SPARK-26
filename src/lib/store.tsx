@@ -30,7 +30,7 @@ import {
   initialStudents,
   initialSchedule,
   initialAnnouncements,
-  demoProfiles,
+  defaultProfile,
 } from "./mock-data";
 import { createClient, isSupabaseConfigured } from "./supabase/client";
 import { fetchFestDataFromSupabase, fetchUserProfile, subscribeToFestRealtime } from "./supabase/db";
@@ -97,7 +97,7 @@ interface FestStoreContextType {
 
 const FestStoreContext = createContext<FestStoreContextType | null>(null);
 
-const STORAGE_KEY = "spark_fest_state_v3";
+const STORAGE_KEY = "spark_live_v4";
 
 export function FestStoreProvider({ children }: { children: React.ReactNode }) {
   const [currentRole, setCurrentRole] = useState<UserRole>("organizer");
@@ -114,85 +114,10 @@ export function FestStoreProvider({ children }: { children: React.ReactNode }) {
   const [scores, setScores] = useState<Score[]>([]);
   const [schedule, setSchedule] = useState<ScheduleItem[]>(initialSchedule);
   const [announcements, setAnnouncements] = useState<Announcement[]>(initialAnnouncements);
-  const [checkins, setCheckins] = useState<Checkin[]>([
-    {
-      id: "chk-1",
-      student_id: "s1",
-      school_id: "a0000001-0000-0000-0000-000000000001",
-      volunteer_id: "p-vol-1",
-      timestamp: "2026-11-05T07:35:00Z",
-      is_undone: false,
-      undone_by: null,
-      undone_at: null,
-    },
-    {
-      id: "chk-2",
-      student_id: "s2",
-      school_id: "a0000001-0000-0000-0000-000000000001",
-      volunteer_id: "p-vol-1",
-      timestamp: "2026-11-05T07:35:00Z",
-      is_undone: false,
-      undone_by: null,
-      undone_at: null,
-    },
-    {
-      id: "chk-3",
-      student_id: "s5",
-      school_id: "a0000002-0000-0000-0000-000000000002",
-      volunteer_id: "p-vol-1",
-      timestamp: "2026-11-05T07:42:00Z",
-      is_undone: false,
-      undone_by: null,
-      undone_at: null,
-    },
-  ]);
-  const [issueReports, setIssueReports] = useState<IssueReport[]>([
-    {
-      id: "iss-1",
-      reported_by: "p-vol-1",
-      title: "Scrap Bay extension cord overloaded breaker 4",
-      description: "Circuit breaker 4 tripped twice in fabrication yard. Electrician dispatched.",
-      severity: "high",
-      status: "in_progress",
-      resolved_by: null,
-      resolution_notes: null,
-      created_at: "2026-11-05T08:10:00Z",
-      updated_at: "2026-11-05T08:10:00Z",
-    },
-  ]);
-  const [volunteerDuties, setVolunteerDuties] = useState<VolunteerDuty[]>([
-    {
-      id: "vd-1",
-      volunteer_id: "p-vol-1",
-      duty: "Registration Fast-Pass Desk Marshal",
-      description: "Scan incoming school QR passes, mark arriving students, and distribute badge kits.",
-      starts_at: "2026-11-05T07:00:00",
-      ends_at: "2026-11-05T08:30:00",
-      status: "assigned",
-    },
-    {
-      id: "vd-2",
-      volunteer_id: "p-vol-1",
-      duty: "Arena Alpha Course Marshall & Timer",
-      description: "Measure obstacle clearance times and log disqualification boundary lines.",
-      starts_at: "2026-11-05T10:00:00",
-      ends_at: "2026-11-05T13:00:00",
-      status: "assigned",
-    },
-  ]);
-  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([
-    {
-      id: "aud-1",
-      actor_id: "p-admin-sa",
-      action: "APPROVE_SCHOOL",
-      target_type: "schools",
-      target_id: "a0000001-0000-0000-0000-000000000001",
-      old_data: { status: "pending" },
-      new_data: { status: "approved", name: "St. Joseph's Engineering Academy" },
-      ip_address: "192.168.12.165",
-      created_at: "2026-11-01T10:00:00Z",
-    },
-  ]);
+  const [checkins, setCheckins] = useState<Checkin[]>([]);
+  const [issueReports, setIssueReports] = useState<IssueReport[]>([]);
+  const [volunteerDuties, setVolunteerDuties] = useState<VolunteerDuty[]>([]);
+  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [resultsPublished, setResultsPublished] = useState<boolean>(false);
   const [isLoaded, setIsLoaded] = useState<boolean>(false);
 
@@ -288,16 +213,14 @@ export function FestStoreProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  // Determine current active profile
+  // Determine current active profile (Authenticated via Supabase or fallback)
   const currentProfile: Profile = useMemo(() => {
     if (customProfile) return customProfile;
-    if (currentRole === "organizer") {
-      if (activeOrganizerSubRole === "event_coordinator") return demoProfiles.event_coordinator;
-      if (activeOrganizerSubRole === "registration_head") return demoProfiles.registration_head;
-      return demoProfiles.super_admin;
-    }
-    if (currentRole === "faculty") return demoProfiles.faculty;
-    return demoProfiles.volunteer;
+    return {
+      ...defaultProfile,
+      role: currentRole,
+      sub_roles: currentRole === "organizer" ? [activeOrganizerSubRole] : undefined,
+    };
   }, [customProfile, currentRole, activeOrganizerSubRole]);
 
   // Role permissions

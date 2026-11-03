@@ -657,7 +657,12 @@ export default function LandingPage() {
                   </div>
 
                   <div className="space-y-3">
-                    {trackTeams.slice(0, 3).map((team, idx) => {
+                    {trackTeams.length === 0 ? (
+                      <div className="p-4 border-2 border-dashed border-black bg-[#FFFBEB] text-center">
+                        <p className="text-xs font-bold text-slate-700">Awaiting registrations & team check-ins</p>
+                      </div>
+                    ) : (
+                      trackTeams.slice(0, 3).map((team, idx) => {
                       const school = schools.find((s) => s.id === team.school_id);
                       return (
                         <div
@@ -686,7 +691,7 @@ export default function LandingPage() {
                           </div>
                         </div>
                       );
-                    })}
+                    }))}
                   </div>
                 </div>
               );
