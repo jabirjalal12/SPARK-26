@@ -34,7 +34,7 @@ import {
 } from "lucide-react";
 
 export default function LandingPage() {
-  const { tracks, schedule, venues, teams, schools, resultsPublished } = useFestStore();
+  const { tracks = [], schedule = [], venues = [], teams = [], schools = [], resultsPublished } = useFestStore();
 
   // Program starts 5/11/2026 at 7:00 AM local time
   const targetDate = new Date("2026-11-05T07:00:00").getTime();
@@ -488,7 +488,7 @@ export default function LandingPage() {
               </div>
             ) : (
               filteredSchedule.map((item, index) => {
-                const venue = venues.find((v) => v.id === item.venue_id);
+                const venue = (venues || []).find((v) => v.id === item.venue_id);
                 const venueName = venue ? `${venue.name} (${venue.location})` : (item.venue_id || "Campus Venue");
                 const startTime = new Date(item.starts_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
                 const endTime = new Date(item.ends_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });

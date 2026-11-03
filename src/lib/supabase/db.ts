@@ -131,7 +131,7 @@ export function subscribeToFestRealtime(callback: (payload: { table: string; eve
   const supabase = createClient();
 
   const channel = supabase
-    .channel("fest-db-changes")
+    .channel(`fest-db-changes-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`)
     .on(
       "postgres_changes",
       { event: "*", schema: "public", table: "venues" },
