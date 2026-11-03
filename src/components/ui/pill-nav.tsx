@@ -27,6 +27,7 @@ import {
   RotateCcw,
   CheckCircle2,
   Lock,
+  Settings,
 } from "lucide-react";
 
 export function PillNav() {
@@ -81,6 +82,7 @@ export function PillNav() {
         { href: "/announcements", label: "Notices", icon: Bell },
         { href: "/organizer/export", label: "Export", icon: Sliders },
         { href: "/organizer/audit", label: "Audit Log", icon: History },
+        { href: "/organizer/settings", label: "Settings", icon: Settings },
       ];
     }
 

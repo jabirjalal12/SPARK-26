@@ -27,6 +27,7 @@ import {
   Zap,
   Lock,
   FileText,
+  Settings,
 } from "lucide-react";
 
 export default function DashboardPage() {
@@ -247,6 +248,16 @@ export default function DashboardPage() {
                   <p className="text-[11px] font-bold text-slate-700 mt-0.5">Download full roster logs</p>
                 </div>
               </Link>
+
+              {isSuperAdmin && (
+                <Link href="/organizer/settings" className="block">
+                  <div className="p-4 border-2 border-black bg-[#FFFBEB] hover:bg-[#FF5252]/20 shadow-[2px_2px_0px_#000000] transition-all">
+                    <Settings className="w-5 h-5 text-black mb-2" />
+                    <p className="font-black text-black">Settings & Reset</p>
+                    <p className="text-[11px] font-bold text-slate-700 mt-0.5">Factory reset & system controls</p>
+                  </div>
+                </Link>
+              )}
             </div>
           </div>
 

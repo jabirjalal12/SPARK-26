@@ -109,6 +109,7 @@ interface FestStoreContextType {
   addVenue: (venue: Omit<Venue, "id" | "created_at">) => Promise<Venue>;
   deleteVenue: (id: string) => Promise<void>;
   resetAllData: () => void;
+  factoryResetAll: () => Promise<{ success: boolean; message: string }>;
 }
 
 const FestStoreContext = createContext<FestStoreContextType | null>(null);
@@ -909,6 +910,60 @@ export function FestStoreProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // FACTORY RESET (Wipes all created fest operational and registration records)
+  const factoryResetAll = async (): Promise<{ success: boolean; message: string }> => {
+    try {
+      if (isSupabaseConfigured()) {
+        const supabase = createClient();
+        
+        // Try RPC first
+        const { error: rpcErr } = await supabase.rpc("factory_reset_fest");
+        if (rpcErr) {
+          // Fallback sequential table delete
+          await supabase.from("checkins").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+          await supabase.from("scores").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+          await supabase.from("results").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+          await supabase.from("students").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+          await supabase.from("teams").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+          await supabase.from("school_tickets").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+          await supabase.from("volunteer_duties").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+          await supabase.from("issue_reports").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+          await supabase.from("schedule_items").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+          await supabase.from("announcements").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+          await supabase.from("venues").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+          await supabase.from("schools").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+          await supabase.from("audit_log").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+          await supabase.from("profiles").update({ school_id: null }).neq("id", "00000000-0000-0000-0000-000000000000");
+        }
+      }
+
+      // Reset application state
+      setSchools([]);
+      setSchoolTickets([]);
+      setStudents([]);
+      setTeams([]);
+      setScores([]);
+      setCheckins([]);
+      setVolunteerDuties([]);
+      setIssueReports([]);
+      setSchedule([]);
+      setVenues([]);
+      setAnnouncements([]);
+      setAuditLogs([]);
+      setResultsPublished(false);
+
+      if (typeof window !== "undefined") {
+        localStorage.removeItem(STORAGE_KEY);
+      }
+
+      logAudit("FACTORY_RESET", "system", "all", null, { executed_at: new Date().toISOString() });
+      return { success: true, message: "System successfully reset to clean factory state." };
+    } catch (err: any) {
+      console.error("Factory reset failed:", err);
+      return { success: false, message: err?.message || "Failed to execute factory reset." };
+    }
+  };
+
   const resetAllData = () => {
     setSchools(initialSchools);
     setSchoolTickets(initialSchoolTickets);
@@ -981,6 +1036,7 @@ export function FestStoreProvider({ children }: { children: React.ReactNode }) {
     addVenue,
     deleteVenue,
     resetAllData,
+    factoryResetAll,
   };
 
   return <FestStoreContext.Provider value={value}>{children}</FestStoreContext.Provider>;
