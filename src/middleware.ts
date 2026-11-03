@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 export function middleware(request: NextRequest) {
@@ -12,6 +12,8 @@ export function middleware(request: NextRequest) {
     pathname === "/join" ||
     pathname === "/login" ||
     pathname === "/register" ||
+    pathname === "/leaderboard" ||
+    pathname === "/schedule" ||
     pathname.endsWith(".ico") ||
     pathname.endsWith(".png") ||
     pathname.endsWith(".json") ||
@@ -20,24 +22,9 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Read role cookie if set
-  const userRole = request.cookies.get("fest_role")?.value || "organizer";
-
-  // Route-based guards
-  if (pathname.startsWith("/organizer") && userRole !== "organizer") {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
-  }
-
-  if (pathname.startsWith("/faculty") && userRole !== "faculty" && userRole !== "organizer") {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
-  }
-
-  if (pathname.startsWith("/volunteer") && userRole !== "volunteer" && userRole !== "organizer") {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
-  }
-
-  if (pathname.startsWith("/judge") && userRole !== "judge" && userRole !== "organizer") {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+  // Obsolete judge route -> redirect to organizer scoring
+  if (pathname.startsWith("/judge")) {
+    return NextResponse.redirect(new URL("/organizer/scoring", request.url));
   }
 
   return NextResponse.next();

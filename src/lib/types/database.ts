@@ -1,15 +1,21 @@
-﻿export type UserRole = "organizer" | "faculty" | "volunteer" | "judge" | "participant";
+﻿export type UserRole = "organizer" | "faculty" | "volunteer";
+export type OrganizerSubRole = "super_admin" | "event_coordinator" | "registration_head";
+
+export interface OrganizerRoleRecord {
+  id: string;
+  user_id: string;
+  sub_role: OrganizerSubRole;
+  created_at: string;
+}
 
 export interface Profile {
   id: string;
   role: UserRole;
+  sub_roles?: OrganizerSubRole[];
   school_id: string | null;
   full_name: string;
-  email: string | null;
+  email: string;
   phone: string | null;
-  avatar_url: string | null;
-  approved: boolean;
-  assigned_track_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -19,21 +25,19 @@ export interface Track {
   name: string;
   slug: string;
   color: string;
-  accent_class: string;
   description: string | null;
   rules: string | null;
-  icon: string | null;
+  scores_locked: boolean;
   created_at?: string;
-  updated_at?: string;
 }
 
 export interface ScoringCriterion {
   id: string;
   track_id: string;
   name: string;
-  description: string | null;
   weight: number;
   max_score: number;
+  created_at?: string;
 }
 
 export interface Venue {
@@ -41,8 +45,7 @@ export interface Venue {
   name: string;
   location: string;
   capacity: number | null;
-  map_url: string | null;
-  notes: string | null;
+  created_at?: string;
 }
 
 export interface School {
@@ -50,21 +53,24 @@ export interface School {
   name: string;
   code: string;
   address: string | null;
-  city: string | null;
-  contact_email: string | null;
-  contact_phone: string | null;
-  faculty_id: string | null;
-  approved: boolean;
-  checked_in: boolean;
-  checked_in_at: string | null;
-  checked_in_by: string | null;
-  notes: string | null;
+  city: string;
+  contact_email: string;
+  contact_phone: string;
+  status: "pending" | "approved" | "rejected";
+  approved_by: string | null;
+  approved_at: string | null;
+  arrived: boolean;
+  ticket_token?: string;
   created_at: string;
   updated_at: string;
-  // Joined relations
-  faculty?: Profile;
-  students_count?: number;
-  teams_count?: number;
+}
+
+export interface SchoolTicket {
+  id: string;
+  school_id: string;
+  token_hash: string;
+  revoked_at: string | null;
+  created_at: string;
 }
 
 export interface Team {
@@ -72,37 +78,26 @@ export interface Team {
   name: string;
   school_id: string;
   track_id: string;
-  project_title: string | null;
+  project_title: string;
   project_summary: string | null;
   table_number: string | null;
-  created_at: string;
-  updated_at: string;
-  // Joined relations
-  school?: School;
-  track?: Track;
-  students?: Student[];
   score_total?: number;
+  created_at: string;
 }
 
 export interface Student {
   id: string;
   school_id: string;
-  full_name: string;
-  email: string | null;
-  phone: string | null;
-  track_id: string | null;
+  track_id: string;
   team_id: string | null;
-  qr_token: string;
-  checked_in: boolean;
-  checked_in_at: string | null;
-  checked_in_by: string | null;
-  user_id: string | null;
+  name: string;
+  class: string;
+  is_walkin: boolean;
+  checked_in?: boolean;
+  checked_in_at?: string | null;
+  checked_in_by?: string | null;
   created_at: string;
-  updated_at: string;
-  // Joined relations
-  school?: School;
-  track?: Track;
-  team?: Team;
+  updated_at?: string;
 }
 
 export interface ScheduleItem {
@@ -114,102 +109,92 @@ export interface ScheduleItem {
   starts_at: string;
   ends_at: string;
   type: "ceremony" | "competition" | "break" | "judging" | "other";
-  // Joined relations
-  track?: Track;
-  venue?: Venue;
+  created_at?: string;
 }
 
 export interface Announcement {
   id: string;
   title: string;
   body: string;
-  audience: "all" | "faculty" | "volunteers" | "track";
-  track_id: string | null;
+  audience: "all" | "faculty" | "volunteers";
   urgent: boolean;
-  published: boolean;
   author_id: string | null;
   created_at: string;
-  updated_at: string;
-  // Joined relations
-  track?: Track;
-  author?: Profile;
 }
 
 export interface Checkin {
   id: string;
+  student_id: string;
   school_id: string;
-  student_id: string | null;
   volunteer_id: string;
-  type: "school" | "student";
-  notes: string | null;
-  created_at: string;
-  volunteer?: Profile;
-  school?: School;
-  student?: Student;
+  timestamp: string;
+  is_undone: boolean;
+  undone_by: string | null;
+  undone_at: string | null;
 }
 
 export interface VolunteerDuty {
   id: string;
   volunteer_id: string;
-  track_id: string | null;
-  venue_id: string | null;
   duty: string;
   description: string | null;
-  starts_at: string | null;
-  ends_at: string | null;
-  status: "assigned" | "completed" | "excused";
-  track?: Track;
-  venue?: Venue;
+  starts_at: string;
+  ends_at: string;
+  status: "assigned" | "completed" | "missed";
+  created_at?: string;
 }
 
 export interface Score {
   id: string;
+  entered_by: string;
   team_id: string;
-  judge_id: string;
   criterion_id: string;
   value: number;
   feedback: string | null;
-  locked: boolean;
   created_at: string;
   updated_at: string;
-  criterion?: ScoringCriterion;
-  judge?: Profile;
-  team?: Team;
 }
 
 export interface Result {
   id: string;
   track_id: string;
   team_id: string;
-  total_score: number;
-  rank: number | null;
-  published: boolean;
-  created_at: string;
-  updated_at: string;
-  team?: Team;
-  track?: Track;
+  rank: number;
+  weighted_score: number;
+  is_published: boolean;
+  published_by: string | null;
+  published_at: string | null;
+  created_at?: string;
 }
 
 export interface IssueReport {
   id: string;
-  reporter_id: string;
+  reported_by: string;
   title: string;
   description: string;
   severity: "low" | "medium" | "high" | "critical";
   status: "open" | "in_progress" | "resolved";
-  resolved_by: string | null;
-  resolved_at: string | null;
   resolution_notes: string | null;
+  resolved_by: string | null;
   created_at: string;
-  reporter?: Profile;
+  updated_at: string;
+}
+
+export interface GalleryItem {
+  id: string;
+  caption: string | null;
+  image_url: string;
+  track_id: string | null;
+  uploaded_by: string;
+  created_at: string;
 }
 
 export interface AuditLog {
   id: string;
-  actor_id: string | null;
   action: string;
-  table_name: string;
-  record_id: string | null;
+  actor_id: string | null;
+  target_type: string;
+  target_id: string | null;
   old_data: any;
   new_data: any;
   ip_address: string | null;
@@ -218,15 +203,10 @@ export interface AuditLog {
 
 export interface Certificate {
   id: string;
-  student_id: string;
   school_id: string;
-  track_id: string | null;
-  type: "participation" | "winner" | "runner_up" | "special_mention";
+  student_name: string;
+  track_name: string;
+  type: "participation" | "winner" | "runner_up";
   cert_code: string;
-  title: string;
-  issued_at: string;
-  metadata: Record<string, any>;
-  student?: Student;
-  school?: School;
-  track?: Track;
+  created_at: string;
 }

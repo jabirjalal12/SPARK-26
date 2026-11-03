@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from "react";
 import jsPDF from "jspdf";
@@ -6,6 +6,7 @@ import { Certificate } from "@/lib/types/database";
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Download, Award, ShieldCheck, Printer } from "lucide-react";
+import { useFestStore } from "@/lib/store";
 
 interface CertificateGeneratorProps {
   certificate: Certificate;
@@ -13,11 +14,18 @@ interface CertificateGeneratorProps {
 
 export function CertificateGenerator({ certificate }: CertificateGeneratorProps) {
   const [isGenerating, setIsGenerating] = useState(false);
+  const { schools } = useFestStore();
+  const school = schools.find((s) => s.id === certificate.school_id);
 
-  const studentName = certificate.metadata?.student_name || certificate.student?.full_name || "Participant";
-  const schoolName = certificate.metadata?.school_name || certificate.school?.name || "Institution";
-  const trackName = certificate.metadata?.track_name || certificate.track?.name || "Open Technical Track";
-  const certType = certificate.type === "winner" ? "WINNER OF EXCELLENCE" : "CERTIFICATE OF MERIT & PARTICIPATION";
+  const studentName = certificate.student_name || "Participant";
+  const schoolName = school?.name || "Visiting Institution";
+  const trackName = certificate.track_name || "Technical Track";
+  const certType =
+    certificate.type === "winner"
+      ? "CERTIFICATE OF EXCELLENCE • FIRST PLACE"
+      : certificate.type === "runner_up"
+      ? "CERTIFICATE OF MERIT • RUNNER-UP"
+      : "CERTIFICATE OF ACTIVE PARTICIPATION";
 
   const handleDownloadPdf = () => {
     setIsGenerating(true);
@@ -31,169 +39,140 @@ export function CertificateGenerator({ certificate }: CertificateGeneratorProps)
       const width = doc.internal.pageSize.getWidth();
       const height = doc.internal.pageSize.getHeight();
 
-      // Neubrutalism Paper background
-      doc.setFillColor(255, 251, 235); // #FFFBEB
+      // Outer background
+      doc.setFillColor(248, 250, 252); // slate-50
       doc.rect(0, 0, width, height, "F");
 
-      // Thick bold black border (Neubrutalism trademark)
-      doc.setDrawColor(0, 0, 0);
-      doc.setLineWidth(2.5);
-      doc.rect(12, 12, width - 24, height - 24, "D");
+      // Deep blue decorative border
+      doc.setDrawColor(30, 41, 59); // slate-800
+      doc.setLineWidth(2);
+      doc.rect(10, 10, width - 20, height - 20, "D");
 
-      // Hard shadow box behind title
-      doc.setFillColor(255, 235, 59); // #FFEB3B yellow
-      doc.rect(width / 2 - 80, 22, 160, 22, "F");
-      doc.setDrawColor(0, 0, 0);
-      doc.setLineWidth(1.2);
-      doc.rect(width / 2 - 80, 22, 160, 22, "D");
+      doc.setDrawColor(99, 102, 241); // indigo-500
+      doc.setLineWidth(0.8);
+      doc.rect(13, 13, width - 26, height - 26, "D");
 
       // Header branding
-      doc.setTextColor(0, 0, 0);
+      doc.setTextColor(30, 27, 75); // indigo-950
       doc.setFont("helvetica", "bold");
       doc.setFontSize(26);
-      doc.text("SPARK 2026", width / 2, 33, { align: "center" });
+      doc.text("MAKE//BREAK 2026", width / 2, 34, { align: "center" });
 
       doc.setFontSize(10);
-      doc.setFont("helvetica", "bold");
-      doc.text("ANNUAL INTER-SCHOOL & COLLEGE TECH FESTIVAL", width / 2, 40, { align: "center" });
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(100, 116, 139);
+      doc.text("ANNUAL INTER-SCHOOL COLLEGE TECH FESTIVAL", width / 2, 42, { align: "center" });
 
       // Certificate Type Banner
-      doc.setFillColor(33, 150, 243); // #2196F3 blue
-      doc.rect(width / 2 - 65, 54, 130, 10, "F");
-      doc.rect(width / 2 - 65, 54, 130, 10, "D");
-      doc.setTextColor(0, 0, 0);
-      doc.setFontSize(11);
+      doc.setTextColor(79, 70, 229); // indigo-600
+      doc.setFontSize(14);
       doc.setFont("helvetica", "bold");
-      doc.text(certType, width / 2, 61, { align: "center" });
+      doc.text(certType, width / 2, 58, { align: "center" });
 
-      // Body text
+      // Body Text
+      doc.setTextColor(51, 65, 85);
+      doc.setFontSize(12);
       doc.setFont("helvetica", "normal");
-      doc.setFontSize(13);
-      doc.setTextColor(30, 30, 30);
-      doc.text("This is proudly presented to", width / 2, 78, { align: "center" });
+      doc.text("This official credential is awarded with distinction to", width / 2, 75, { align: "center" });
 
-      // Recipient Name
+      // Student Name
+      doc.setTextColor(15, 23, 42);
+      doc.setFontSize(26);
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(30);
-      doc.setTextColor(0, 0, 0);
-      doc.text(studentName, width / 2, 95, { align: "center" });
+      doc.text(studentName, width / 2, 92, { align: "center" });
 
-      // Thick divider line
-      doc.setDrawColor(0, 0, 0);
-      doc.setLineWidth(1.5);
-      doc.line(width / 2 - 70, 102, width / 2 + 70, 102);
-
-      // School & Track details
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(13);
-      doc.setTextColor(0, 0, 0);
-      doc.text(`representing ${schoolName}`, width / 2, 114, { align: "center" });
-
+      // School & Track Citation
+      doc.setTextColor(51, 65, 85);
+      doc.setFontSize(12);
       doc.setFont("helvetica", "normal");
-      doc.setFontSize(11);
+      doc.text(`representing ${schoolName}`, width / 2, 106, { align: "center" });
       doc.text(
-        `for outstanding technical performance in the ${trackName} track during SPARK 2026.`,
+        `for exceptional performance and technical ingenuity in the ${trackName} arena.`,
         width / 2,
-        124,
+        116,
         { align: "center" }
       );
 
-      // Signatures
-      doc.setFontSize(10);
-      doc.setTextColor(0, 0, 0);
-
-      doc.line(40, 160, 95, 160);
-      doc.setFont("helvetica", "bold");
-      doc.text("Dr. P. R. Radhakrishnan", 67.5, 166, { align: "center" });
-      doc.setFont("helvetica", "normal");
-      doc.text("Chief Patron & Principal", 67.5, 171, { align: "center" });
-
-      // Official Stamp Seal in center
-      doc.setFillColor(255, 235, 59);
-      doc.circle(width / 2, 155, 14, "FD");
-      doc.setDrawColor(0, 0, 0);
-      doc.setLineWidth(1);
-      doc.setFontSize(8);
-      doc.setFont("helvetica", "bold");
-      doc.text("OFFICIAL SEAL", width / 2, 153, { align: "center" });
-      doc.text("VERIFIED 2026", width / 2, 158, { align: "center" });
-
-      doc.line(width - 95, 160, width - 40, 160);
-      doc.text("Prof. Vikram Malhotra", width - 67.5, 166, { align: "center" });
-      doc.setFont("helvetica", "normal");
-      doc.text("Convener, SPARK", width - 67.5, 171, { align: "center" });
-
-      // Verification code footer
+      // Certificate Verification Code
+      doc.setFillColor(241, 245, 249);
+      doc.rect(width / 2 - 45, 132, 90, 10, "F");
+      doc.setTextColor(100, 116, 139);
       doc.setFontSize(9);
       doc.setFont("helvetica", "bold");
-      doc.text(`Certificate ID: ${certificate.cert_code}`, 20, height - 16);
-      doc.text("Verify authenticity at: spark.tech/verify", width - 20, height - 16, { align: "right" });
+      doc.text(`ID: ${certificate.cert_code}`, width / 2, 138.5, { align: "center" });
 
-      doc.save(`${studentName.toLowerCase().replace(/\s+/g, "_")}_certificate.pdf`);
-    } catch (e) {
-      console.error("Failed to generate PDF:", e);
+      // Signatures
+      const sigY = 165;
+
+      doc.setDrawColor(148, 163, 184);
+      doc.setLineWidth(0.5);
+      doc.line(35, sigY, 95, sigY);
+      doc.line(width - 95, sigY, width - 35, sigY);
+
+      doc.setTextColor(30, 41, 59);
+      doc.setFontSize(11);
+      doc.setFont("helvetica", "bold");
+      doc.text("Prof. Vikram Malhotra", 65, sigY + 6, { align: "center" });
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(100, 116, 139);
+      doc.text("General Convenor & Super Admin", 65, sigY + 11, { align: "center" });
+
+      doc.setTextColor(30, 41, 59);
+      doc.setFontSize(11);
+      doc.setFont("helvetica", "bold");
+      doc.text("Sarah Thomas", width - 65, sigY + 6, { align: "center" });
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(100, 116, 139);
+      doc.text("Event Coordinator", width - 65, sigY + 11, { align: "center" });
+
+      doc.save(`MAKEBREAK-Certificate-${certificate.cert_code}.pdf`);
     } finally {
       setIsGenerating(false);
     }
   };
 
   return (
-    <GlassCard className="p-6 sm:p-8 relative bg-white border-[3px] border-black shadow-[6px_6px_0px_#000000]">
-      {/* Visual Preview */}
-      <div className="border-[3px] border-black p-6 bg-[#FFFBEB] text-center relative shadow-[4px_4px_0px_#000000]">
-        <div className="flex items-center justify-between border-b-2 border-black pb-3 mb-4">
-          <div className="flex items-center gap-2">
-            <Award className="h-5 w-5 text-black" />
-            <span className="text-xs font-black uppercase tracking-wider bg-[#FFEB3B] text-black px-2 py-0.5 border-2 border-black shadow-[2px_2px_0px_#000000]">
-              VERIFIED CREDENTIAL
-            </span>
-          </div>
-          <span className="font-mono text-xs font-black text-black bg-white px-2 py-0.5 border border-black">{certificate.cert_code}</span>
+    <GlassCard className="p-5 border-white/15 bg-slate-900/70 flex flex-col justify-between">
+      <div>
+        <div className="flex items-center justify-between gap-2 mb-3">
+          <span className="font-mono text-[10px] text-indigo-300 bg-white/10 px-2 py-0.5 rounded border border-white/15">
+            {certificate.cert_code}
+          </span>
+          <span
+            className={`text-xs font-bold uppercase tracking-wider ${
+              certificate.type === "winner"
+                ? "text-amber-400"
+                : certificate.type === "runner_up"
+                ? "text-slate-300"
+                : "text-indigo-400"
+            }`}
+          >
+            {certificate.type}
+          </span>
         </div>
 
-        <h3 className="text-xl font-black tracking-tight text-black uppercase">SPARK 2026</h3>
-        <p className="text-xs text-black font-black uppercase tracking-wider mt-1 bg-[#2196F3] inline-block px-2 py-0.5 border border-black shadow-[2px_2px_0px_#000000]">
-          {certType}
-        </p>
-
-        <div className="my-6">
-          <p className="text-xs font-bold text-slate-700">Awarded to</p>
-          <p className="text-2xl font-black text-black mt-1">
-            {studentName}
-          </p>
-          <p className="text-xs font-bold text-black mt-1">{schoolName}</p>
-        </div>
-
-        <div className="inline-flex items-center gap-2 px-3 py-1 bg-white border-2 border-black text-xs text-black font-bold shadow-[2px_2px_0px_#000000]">
-          <ShieldCheck className="h-4 w-4 text-[#4CAF50]" />
-          <span>Track: {trackName}</span>
-        </div>
-
-        <div className="mt-6 pt-3 border-t-2 border-black flex items-center justify-between text-xs font-bold text-slate-800">
-          <span>St. Andrews College of Engineering</span>
-          <span>Issued: Nov 20, 2026</span>
-        </div>
+        <h3 className="text-lg font-bold text-white mb-1">{studentName}</h3>
+        <p className="text-xs text-slate-300 mb-1">{schoolName}</p>
+        <p className="text-xs text-indigo-400 font-semibold mb-4">{trackName}</p>
       </div>
 
-      {/* Action buttons */}
-      <div className="mt-6 flex flex-wrap gap-3">
+      <div className="pt-3 border-t border-white/10 flex items-center justify-between">
+        <span className="text-[11px] text-emerald-400 font-semibold flex items-center gap-1">
+          <ShieldCheck className="w-3.5 h-3.5" />
+          Verified
+        </span>
+
         <Button
+          size="sm"
+          variant="gradient"
           onClick={handleDownloadPdf}
           isLoading={isGenerating}
-          variant="primary"
-          className="flex-1"
+          className="text-xs h-8"
         >
-          <Download className="h-4 w-4 mr-1.5" />
-          <span>Download Official PDF</span>
-        </Button>
-        <Button
-          onClick={() => window.print()}
-          variant="secondary"
-          className="px-4"
-          title="Print Certificate"
-          aria-label="Print Certificate"
-        >
-          <Printer className="h-4 w-4" />
+          <Download className="w-3.5 h-3.5 mr-1" />
+          <span>Download PDF</span>
         </Button>
       </div>
     </GlassCard>

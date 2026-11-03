@@ -1,4 +1,4 @@
-import type { Metadata, Viewport } from "next";
+﻿import type { Metadata, Viewport } from "next";
 import { Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { FestStoreProvider } from "@/lib/store";
@@ -6,23 +6,23 @@ import { FestStoreProvider } from "@/lib/store";
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-space-grotesk",
   subsets: ["latin"],
-  weight: ["400", "500", "700"],
+  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
-  title: "SPARK 2026 — Inter-School College Tech Fest",
+  title: "MAKE//BREAK 2026 — Inter-School College Tech Fest",
   description:
-    "Production-ready mobile-first manager for SPARK inter-school college tech fest. Tracks: Robotics, Build from Scrap, Useless Projects.",
+    "Production-ready mobile-first manager for MAKE//BREAK inter-school college tech fest. Tracks: Robotics, Build from Scrap, Useless Projects.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "SPARK",
+    title: "MAKE//BREAK",
   },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#FFEB3B",
+  themeColor: "#030712",
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
@@ -34,12 +34,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="h-full">
+    <html lang="en" className="h-full dark">
       <head>
         <link rel="icon" href="/favicon.ico" sizes="any" />
       </head>
       <body
-        className={`${spaceGrotesk.variable} font-sans min-h-full flex flex-col bg-[#FFFBEB] text-black selection:bg-[#FFEB3B] selection:text-black`}
+        className={`${spaceGrotesk.variable} font-sans min-h-full flex flex-col bg-[#030712] text-slate-100 selection:bg-indigo-500 selection:text-white`}
       >
         <FestStoreProvider>{children}</FestStoreProvider>
       </body>

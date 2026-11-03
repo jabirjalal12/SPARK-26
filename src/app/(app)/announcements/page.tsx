@@ -11,18 +11,28 @@ import {
   AlertTriangle,
   Plus,
   Trash2,
+  Clock,
+  Radio,
 } from "lucide-react";
 
 export default function AnnouncementsPage() {
-  const { announcements, addAnnouncement, deleteAnnouncement, tracks, currentProfile } =
-    useFestStore();
+  const {
+    announcements,
+    addAnnouncement,
+    deleteAnnouncement,
+    isSuperAdmin,
+    isEventCoordinator,
+    currentProfile,
+  } = useFestStore();
 
   const [modalOpen, setModalOpen] = useState(false);
+  const [filterAudience, setFilterAudience] = useState<string>("all");
+  const canBroadcast = isSuperAdmin || isEventCoordinator;
+
   const [formData, setFormData] = useState({
     title: "",
     body: "",
-    audience: "all" as "all" | "faculty" | "volunteers" | "track",
-    trackId: "",
+    audience: "all" as "all" | "faculty" | "volunteers",
     urgent: false,
   });
 
@@ -34,172 +44,171 @@ export default function AnnouncementsPage() {
       title: formData.title,
       body: formData.body,
       audience: formData.audience,
-      track_id: formData.audience === "track" ? formData.trackId || tracks[0]?.id : null,
       urgent: formData.urgent,
     });
 
-    setFormData({ title: "", body: "", audience: "all", trackId: "", urgent: false });
+    setFormData({ title: "", body: "", audience: "all", urgent: false });
     setModalOpen(false);
   };
 
+  const filteredAnnouncements = announcements.filter((a) => {
+    if (filterAudience === "all") return true;
+    return a.audience === filterAudience || a.audience === "all";
+  });
+
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b-3 border-black">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-white/10">
         <div>
-          <Badge variant="outline" className="mb-1.5 bg-[#FF9800] text-black border-2 border-black font-black">
-            REALTIME BULLETIN
+          <Badge variant="outline" className="mb-1.5">
+            CAMPUS BROADCASTS
           </Badge>
-          <h1 className="text-2xl sm:text-3xl font-black text-black tracking-tight uppercase">
-            Official Notices & Broadcasts
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-white">
+            Official Notices & Bulletins
           </h1>
-          <p className="text-xs font-bold text-neutral-700 mt-1">
-            Urgent ground alerts, schedule amendments, and jury briefings sent across campus screens.
+          <p className="text-xs text-slate-400 mt-1">
+            Real-time emergency alerts, venue announcements, and faculty advisories.
           </p>
         </div>
 
-        {currentProfile.role === "organizer" && (
-          <Button variant="primary" onClick={() => setModalOpen(true)}>
-            <Plus className="h-4 w-4 mr-1.5" />
-            <span>Post New Announcement</span>
+        {canBroadcast && (
+          <Button variant="gradient" size="sm" onClick={() => setModalOpen(true)} className="text-xs">
+            <Radio className="h-4 w-4 mr-1.5" />
+            <span>Post Broadcast</span>
           </Button>
         )}
       </div>
 
-      <div className="space-y-4">
-        {announcements.map((ann) => {
-          const track = tracks.find((t) => t.id === ann.track_id);
-          return (
-            <GlassCard
-              key={ann.id}
-              variant={ann.urgent ? "yellow" : "white"}
-              className="p-5 sm:p-6 border-4 border-black shadow-[6px_6px_0px_#000]"
-            >
-              <div className="flex items-start justify-between gap-3 mb-2">
-                <div className="flex flex-wrap items-center gap-2">
-                  {ann.urgent && (
-                    <Badge variant="danger" className="border-2 border-black font-black">
-                      <span className="h-2 w-2 rounded-full bg-white border border-black animate-ping mr-1" />
-                      URGENT NOTICE
-                    </Badge>
-                  )}
-                  <Badge variant="outline" className="border-2 border-black bg-white text-black font-black">
-                    AUDIENCE: {ann.audience.toUpperCase()}
-                  </Badge>
-                  {track && (
-                    <span className="text-[11px] font-black uppercase tracking-wider px-2 py-0.5 border-2 border-black bg-[#2196F3] text-black">
-                      {track.name}
-                    </span>
-                  )}
-                </div>
+      {/* Filter Tabs */}
+      <div className="flex gap-1.5 p-1 bg-black/40 rounded-xl border border-white/10 w-fit">
+        {(["all", "faculty", "volunteers"] as const).map((aud) => (
+          <button
+            key={aud}
+            onClick={() => setFilterAudience(aud)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all cursor-pointer ${
+              filterAudience === aud
+                ? "bg-indigo-600 text-white shadow-md"
+                : "text-slate-400 hover:text-white"
+            }`}
+          >
+            {aud === "all" ? "All Notices" : aud}
+          </button>
+        ))}
+      </div>
 
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-black font-mono font-bold bg-white px-2 py-0.5 border border-black">
-                    {new Date(ann.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                  </span>
-                  {currentProfile.role === "organizer" && (
-                    <button
-                      onClick={() => deleteAnnouncement(ann.id)}
-                      className="p-1.5 text-black hover:bg-[#FF5252] border-2 border-black bg-white shadow-[2px_2px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 transition-all"
-                      title="Delete notice"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  )}
-                </div>
+      {/* Announcements List */}
+      <div className="space-y-4">
+        {filteredAnnouncements.map((ann) => (
+          <GlassCard
+            key={ann.id}
+            className={`p-5 sm:p-6 border-white/15 ${
+              ann.urgent
+                ? "border-rose-500/40 bg-gradient-to-r from-rose-950/40 to-slate-900/80 shadow-lg shadow-rose-950/30"
+                : "bg-slate-900/70"
+            }`}
+          >
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+              <div className="flex items-center gap-2">
+                {ann.urgent && (
+                  <Badge variant="danger" className="animate-pulse">
+                    URGENT ALERT
+                  </Badge>
+                )}
+                <Badge variant="outline" className="capitalize text-[10px]">
+                  Audience: {ann.audience}
+                </Badge>
               </div>
 
-              <h3 className="text-lg font-black text-black uppercase tracking-tight">{ann.title}</h3>
-              <p className="text-xs sm:text-sm text-neutral-800 font-medium mt-2 leading-relaxed whitespace-pre-line">
-                {ann.body}
-              </p>
-            </GlassCard>
-          );
-        })}
+              <span className="font-mono text-[11px] text-slate-400 flex items-center gap-1">
+                <Clock className="w-3.5 h-3.5 text-slate-500" />
+                {new Date(ann.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+              </span>
+            </div>
+
+            <h3 className="text-lg font-bold text-white mb-1.5">{ann.title}</h3>
+            <p className="text-xs text-slate-300 leading-relaxed">{ann.body}</p>
+
+            {canBroadcast && (
+              <div className="mt-4 pt-3 border-t border-white/10 flex justify-end">
+                <button
+                  onClick={() => deleteAnnouncement(ann.id)}
+                  className="p-1 rounded text-rose-400 hover:text-white hover:bg-rose-950/60 transition-colors text-xs flex items-center gap-1 cursor-pointer"
+                  title="Delete notice"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Remove Broadcast</span>
+                </button>
+              </div>
+            )}
+          </GlassCard>
+        ))}
       </div>
 
       {/* Post Modal */}
       <Modal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
-        title="Broadcast Announcement"
-        description="Target specific audience segments or push an urgent full-screen top banner."
+        title="Broadcast Campus Notice"
+        description="Broadcast an announcement to all campus screens and participant panels."
       >
         <form onSubmit={handlePost} className="space-y-4">
           <div>
-            <label className="text-xs font-black uppercase tracking-wide text-black block mb-1">Headline *</label>
+            <label className="text-xs font-semibold text-slate-300 block mb-1">Notice Title *</label>
             <input
               type="text"
               required
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              placeholder="e.g. Round 2 Call for Robotics Arena Heats"
-              className="w-full px-3.5 py-2.5 bg-white border-3 border-black text-black placeholder-neutral-500 text-sm font-medium shadow-[2px_2px_0px_#000] focus:outline-none focus:ring-2 focus:ring-[#2196F3]"
+              placeholder="e.g. Schedule Amendment for Robotics Trials"
+              className="w-full px-3 py-2.5 glass-input text-xs"
             />
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs font-black uppercase tracking-wide text-black block mb-1">Target Audience</label>
-              <select
-                value={formData.audience}
-                onChange={(e) => setFormData({ ...formData, audience: e.target.value as any })}
-                className="w-full px-3.5 py-2.5 bg-white border-3 border-black text-black text-sm font-bold shadow-[2px_2px_0px_#000] focus:outline-none focus:ring-2 focus:ring-[#2196F3]"
-              >
-                <option value="all">All Attendees</option>
-                <option value="faculty">Faculty Coordinators Only</option>
-                <option value="volunteers">Volunteers Only</option>
-                <option value="track">Specific Track Arena</option>
-              </select>
-            </div>
-
-            {formData.audience === "track" && (
-              <div>
-                <label className="text-xs font-black uppercase tracking-wide text-black block mb-1">Select Track</label>
-                <select
-                  value={formData.trackId}
-                  onChange={(e) => setFormData({ ...formData, trackId: e.target.value })}
-                  className="w-full px-3.5 py-2.5 bg-white border-3 border-black text-black text-sm font-bold shadow-[2px_2px_0px_#000] focus:outline-none focus:ring-2 focus:ring-[#2196F3]"
-                >
-                  {tracks.map((t) => (
-                    <option key={t.id} value={t.id}>
-                      {t.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
           </div>
 
           <div>
-            <label className="text-xs font-black uppercase tracking-wide text-black block mb-1">Notice Body *</label>
+            <label className="text-xs font-semibold text-slate-300 block mb-1">Target Audience</label>
+            <select
+              value={formData.audience}
+              onChange={(e) => setFormData({ ...formData, audience: e.target.value as any })}
+              className="w-full px-3 py-2.5 glass-input text-xs bg-slate-900 text-white"
+            >
+              <option value="all">Everyone on Campus</option>
+              <option value="faculty">Visiting Faculty Only</option>
+              <option value="volunteers">Crew & Volunteers Only</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="text-xs font-semibold text-slate-300 block mb-1">Message Content *</label>
             <textarea
+              rows={4}
               required
-              rows={3}
               value={formData.body}
               onChange={(e) => setFormData({ ...formData, body: e.target.value })}
-              placeholder="Provide exact instructions, venue details, or time deadlines..."
-              className="w-full px-3.5 py-2.5 bg-white border-3 border-black text-black text-xs font-medium placeholder-neutral-500 shadow-[2px_2px_0px_#000] focus:outline-none focus:ring-2 focus:ring-[#2196F3]"
+              placeholder="Detailed announcement information..."
+              className="w-full px-3 py-2.5 glass-input text-xs"
             />
           </div>
 
-          <label className="flex items-center gap-2 cursor-pointer pt-1 bg-[#FF5252]/10 p-2 border-2 border-black">
+          <div className="p-3 rounded-xl bg-white/[0.04] border border-white/10 flex items-center gap-2">
             <input
               type="checkbox"
+              id="urgent"
               checked={formData.urgent}
               onChange={(e) => setFormData({ ...formData, urgent: e.target.checked })}
-              className="h-4 w-4 accent-black cursor-pointer"
+              className="w-4 h-4 rounded text-rose-600 focus:ring-rose-500 cursor-pointer"
             />
-            <span className="text-xs font-black uppercase text-black">
-              Mark as URGENT (displays in top floating banner)
-            </span>
-          </label>
+            <label htmlFor="urgent" className="text-xs font-bold text-rose-300 cursor-pointer">
+              Mark as URGENT (Displays top banner across all screens)
+            </label>
+          </div>
 
-          <div className="flex gap-2 justify-end pt-2">
-            <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>
+          <div className="flex justify-end gap-2 pt-3 border-t border-white/10">
+            <Button type="button" variant="ghost" size="sm" onClick={() => setModalOpen(false)}>
               Cancel
             </Button>
-            <Button type="submit" variant="primary">
-              Broadcast Notice
+            <Button type="submit" variant="gradient" size="sm">
+              Publish Broadcast
             </Button>
           </div>
         </form>

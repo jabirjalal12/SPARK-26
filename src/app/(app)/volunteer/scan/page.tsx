@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useFestStore } from "@/lib/store";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Button } from "@/components/ui/button";
@@ -12,235 +13,220 @@ import {
   Users,
   Search,
   CheckCircle2,
+  Clock,
+  ArrowRight,
+  Sparkles,
+  Zap,
 } from "lucide-react";
 
 export default function VolunteerScanPage() {
-  const { schools, students, checkInSchool, checkInStudent } = useFestStore();
+  const router = useRouter();
+  const { schools, students, schoolTickets } = useFestStore();
   const [scannerOpen, setScannerOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [feedback, setFeedback] = useState<{ success: boolean; message: string } | null>(null);
 
   const totalSchools = schools.length;
-  const arrivedSchools = schools.filter((s) => s.checked_in).length;
+  const arrivedSchools = schools.filter((s) => s.arrived).length;
   const totalStudents = students.length;
   const arrivedStudents = students.filter((s) => s.checked_in).length;
+  const walkinStudents = students.filter((s) => s.is_walkin).length;
 
-  const handleQuickCheckinSchool = (schoolId: string) => {
-    const res = checkInSchool(schoolId);
-    setFeedback(res);
+  const handleScanSuccess = (scannedCode: string) => {
+    setScannerOpen(false);
+    // Find school by ticket token or school code
+    const ticket = schoolTickets.find((t) => t.token_hash === scannedCode.trim() && !t.revoked_at);
+    let matchedSchool = ticket ? schools.find((s) => s.id === ticket.school_id) : null;
+
+    if (!matchedSchool) {
+      matchedSchool = schools.find(
+        (s) =>
+          s.code.toLowerCase() === scannedCode.trim().toLowerCase() ||
+          s.name.toLowerCase().includes(scannedCode.trim().toLowerCase())
+      ) || null;
+    }
+
+    if (matchedSchool) {
+      router.push(`/volunteer/checkin/${matchedSchool.id}`);
+    } else {
+      alert(`No valid school found for scanned token "${scannedCode}".`);
+    }
   };
 
-  const handleQuickCheckinStudent = (tokenId: string) => {
-    const res = checkInStudent(tokenId);
-    setFeedback(res);
-  };
-
-  const pendingSchools = schools.filter((s) => !s.checked_in);
-  const pendingStudents = students.filter((s) => !s.checked_in);
-
-  const filteredPendingSchools = searchQuery.trim()
-    ? pendingSchools.filter(
+  const filteredSchools = searchQuery.trim()
+    ? schools.filter(
         (s) =>
           s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          s.code.toLowerCase().includes(searchQuery.toLowerCase())
+          s.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          s.city.toLowerCase().includes(searchQuery.toLowerCase())
       )
-    : pendingSchools;
-
-  const filteredPendingStudents = searchQuery.trim()
-    ? pendingStudents.filter(
-        (s) =>
-          s.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          s.qr_token.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    : pendingStudents.slice(0, 8);
+    : schools;
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
-      {/* Header & Live Checkin Metrics */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b-3 border-black">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-white/10">
         <div>
-          <Badge variant="outline" className="mb-1.5 bg-[#4CAF50] text-black border-2 border-black font-black">
-            FAST-PASS DESK
+          <Badge variant="outline" className="mb-1.5">
+            REGISTRATION FAST-PASS DESK
           </Badge>
-          <h1 className="text-2xl sm:text-3xl font-black text-black tracking-tight uppercase">
-            Arrivals & QR Check-In
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-white">
+            School QR Check-In
           </h1>
-          <p className="text-xs font-bold text-neutral-700 mt-1">
-            Scan badges with camera or tap any pending record below to verify in under 5s.
+          <p className="text-xs text-slate-400 mt-1">
+            Scan institutional pass or select below to open the student delegation checklist.
           </p>
         </div>
 
         <Button
           size="lg"
-          variant="primary"
+          variant="gradient"
           onClick={() => setScannerOpen(true)}
-          className="text-base py-3"
+          className="text-sm py-3 px-6"
         >
           <Scan className="h-5 w-5 mr-2" />
           <span>Launch Camera Scanner</span>
         </Button>
       </div>
 
-      {/* Live Arrival Counters */}
-      <div className="grid grid-cols-2 gap-4">
-        <GlassCard variant="green" className="p-4 sm:p-5 border-3 border-black shadow-[4px_4px_0px_#000]">
-          <div className="flex items-center justify-between text-black mb-1">
-            <School className="h-5 w-5" />
-            <span className="text-xs font-mono font-black bg-white px-2 py-0.5 border border-black">
+      {/* Live Telemetry Counters */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <GlassCard className="p-4 sm:p-5 border-white/10 bg-slate-900/60">
+          <div className="flex items-center justify-between text-slate-400 mb-1">
+            <School className="h-5 w-5 text-indigo-400" />
+            <span className="text-xs font-mono font-bold text-indigo-300">
               {Math.round((arrivedSchools / (totalSchools || 1)) * 100)}%
             </span>
           </div>
-          <div className="text-3xl font-black text-black">
-            {arrivedSchools} <span className="text-base font-bold text-neutral-700">/ {totalSchools}</span>
+          <div className="text-3xl font-black text-white">
+            {arrivedSchools} <span className="text-base font-normal text-slate-400">/ {totalSchools}</span>
           </div>
-          <p className="text-xs text-black font-black uppercase mt-1">Schools Arrived on Campus</p>
-          <div className="w-full bg-white border-2 border-black h-3 mt-3 overflow-hidden shadow-[1px_1px_0px_#000]">
+          <p className="text-xs text-slate-400 font-semibold uppercase mt-1">Schools Arrived</p>
+          <div className="w-full bg-white/10 rounded-full h-1.5 mt-3 overflow-hidden">
             <div
-              className="bg-black h-full transition-all duration-300"
+              className="bg-indigo-500 h-full rounded-full transition-all duration-300"
               style={{ width: `${(arrivedSchools / (totalSchools || 1)) * 100}%` }}
             />
           </div>
         </GlassCard>
 
-        <GlassCard variant="blue" className="p-4 sm:p-5 border-3 border-black shadow-[4px_4px_0px_#000]">
-          <div className="flex items-center justify-between text-black mb-1">
-            <Users className="h-5 w-5" />
-            <span className="text-xs font-mono font-black bg-white px-2 py-0.5 border border-black">
+        <GlassCard className="p-4 sm:p-5 border-white/10 bg-slate-900/60">
+          <div className="flex items-center justify-between text-slate-400 mb-1">
+            <Users className="h-5 w-5 text-emerald-400" />
+            <span className="text-xs font-mono font-bold text-emerald-300">
               {Math.round((arrivedStudents / (totalStudents || 1)) * 100)}%
             </span>
           </div>
-          <div className="text-3xl font-black text-black">
-            {arrivedStudents} <span className="text-base font-bold text-neutral-700">/ {totalStudents}</span>
+          <div className="text-3xl font-black text-white">
+            {arrivedStudents} <span className="text-base font-normal text-slate-400">/ {totalStudents}</span>
           </div>
-          <p className="text-xs text-black font-black uppercase mt-1">Students Verified</p>
-          <div className="w-full bg-white border-2 border-black h-3 mt-3 overflow-hidden shadow-[1px_1px_0px_#000]">
+          <p className="text-xs text-slate-400 font-semibold uppercase mt-1">Students Verified</p>
+          <div className="w-full bg-white/10 rounded-full h-1.5 mt-3 overflow-hidden">
             <div
-              className="bg-black h-full transition-all duration-300"
+              className="bg-emerald-500 h-full rounded-full transition-all duration-300"
               style={{ width: `${(arrivedStudents / (totalStudents || 1)) * 100}%` }}
             />
           </div>
         </GlassCard>
-      </div>
 
-      {/* Feedback Alert */}
-      {feedback && (
-        <div
-          className={`p-3.5 border-3 border-black shadow-[4px_4px_0px_#000] flex items-center justify-between ${
-            feedback.success
-              ? "bg-[#4CAF50] text-black"
-              : "bg-[#FF5252] text-white"
-          }`}
-        >
-          <div className="flex items-center gap-2.5 text-xs font-black uppercase">
-            <CheckCircle2 className="h-4 w-4" />
-            <span>{feedback.message}</span>
+        <GlassCard className="p-4 sm:p-5 border-white/10 bg-slate-900/60">
+          <div className="flex items-center justify-between text-slate-400 mb-1">
+            <Zap className="h-5 w-5 text-amber-400" />
+            <span className="text-xs font-mono font-bold text-amber-300">Desk Walk-in</span>
           </div>
-          <button
-            onClick={() => setFeedback(null)}
-            className="text-xs font-black underline hover:opacity-80"
-          >
-            Dismiss
-          </button>
-        </div>
-      )}
+          <div className="text-3xl font-black text-white">{walkinStudents}</div>
+          <p className="text-xs text-slate-400 font-semibold uppercase mt-1">Desk Walk-in Students</p>
+          <p className="text-[11px] text-amber-300/80 mt-2">Added directly at registration gate</p>
+        </GlassCard>
+      </div>
 
-      {/* Instant Search Bar */}
-      <GlassCard variant="white" className="p-4 border-3 border-black shadow-[4px_4px_0px_#000]">
-        <div className="relative">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-black" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Type school name, code (e.g. STJ771), or student name for 1-tap checkin..."
-            className="w-full pl-10 pr-4 py-3 bg-white border-3 border-black text-black placeholder-neutral-500 font-mono text-sm font-bold shadow-[2px_2px_0px_#000] focus:outline-none focus:ring-2 focus:ring-[#2196F3]"
-          />
-        </div>
-      </GlassCard>
-
-      {/* Pending Schools List */}
-      <div>
-        <h2 className="text-base font-black text-black uppercase mb-3 flex items-center justify-between">
-          <span>Pending School Check-Ins ({pendingSchools.length})</span>
-          <span className="text-xs font-bold text-neutral-600">Tap to mark arrived</span>
-        </h2>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {filteredPendingSchools.map((school) => (
-            <GlassCard
-              key={school.id}
-              variant="white"
-              className="p-4 flex items-center justify-between gap-3 border-3 border-black shadow-[3px_3px_0px_#000]"
+      {/* 1-Click Test Simulation Bar for Evaluators */}
+      <div className="p-4 rounded-2xl bg-white/[0.04] border border-white/10">
+        <p className="text-[11px] font-bold uppercase tracking-wider text-indigo-300 mb-2.5 flex items-center gap-1.5">
+          <Zap className="w-4 h-4 text-amber-400" />
+          <span>Quick Test Simulation (1-Click Scan Any School Ticket)</span>
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {schools.slice(0, 4).map((s) => (
+            <Button
+              key={s.id}
+              size="sm"
+              variant="secondary"
+              onClick={() => router.push(`/volunteer/checkin/${s.id}`)}
+              className="text-xs h-8"
             >
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="font-black text-sm text-black uppercase">{school.name}</span>
-                </div>
-                <p className="text-xs text-neutral-700 font-bold flex items-center gap-2 mt-0.5">
-                  <span className="font-mono bg-[#FFEB3B] px-1.5 py-0.5 border border-black text-black">{school.code}</span>
-                  <span>• {school.city}</span>
-                </p>
-              </div>
-
-              <Button
-                size="sm"
-                variant="primary"
-                onClick={() => handleQuickCheckinSchool(school.id)}
-                className="text-xs flex-shrink-0"
-              >
-                <span>Check In</span>
-              </Button>
-            </GlassCard>
+              <span>Scan {s.code} ({s.name.split(" ")[0]})</span>
+              <ArrowRight className="w-3.5 h-3.5 ml-1" />
+            </Button>
           ))}
-
-          {filteredPendingSchools.length === 0 && (
-            <div className="col-span-full py-8 text-center text-xs font-black uppercase text-black bg-[#4CAF50]/30 border-3 border-black shadow-[4px_4px_0px_#000]">
-              All schools have completed arrival check-in!
-            </div>
-          )}
         </div>
       </div>
 
-      {/* Pending Students Quick Check-in */}
-      <div>
-        <h2 className="text-base font-black text-black uppercase mb-3 flex items-center justify-between">
-          <span>Pending Student Passes ({pendingStudents.length})</span>
-          <span className="text-xs font-bold text-neutral-600">1-click manual verification</span>
-        </h2>
+      {/* Manual Search & School Directory */}
+      <GlassCard className="p-5 border-white/15">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+          <h2 className="text-base font-bold text-white flex items-center gap-2">
+            <School className="w-4 h-4 text-indigo-400" />
+            <span>Select Institution Manually</span>
+          </h2>
+
+          <div className="relative w-full sm:w-64">
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search school name or code..."
+              className="w-full pl-9 pr-3 py-2 glass-input text-xs"
+            />
+          </div>
+        </div>
 
         <div className="space-y-2">
-          {filteredPendingStudents.map((stud) => {
-            const sc = schools.find((s) => s.id === stud.school_id);
+          {filteredSchools.map((s) => {
+            const schoolDelegation = students.filter((stu) => stu.school_id === s.id);
+            const arrivedCount = schoolDelegation.filter((stu) => stu.checked_in).length;
+
             return (
-              <GlassCard
-                key={stud.id}
-                variant="white"
-                className="p-3.5 flex items-center justify-between gap-3 border-3 border-black shadow-[2px_2px_0px_#000]"
+              <div
+                key={s.id}
+                onClick={() => router.push(`/volunteer/checkin/${s.id}`)}
+                className="p-3.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] border border-white/10 transition-all cursor-pointer flex items-center justify-between"
               >
-                <div>
-                  <p className="font-black text-sm text-black uppercase">{stud.full_name}</p>
-                  <p className="text-xs text-neutral-700 font-bold flex items-center gap-2 mt-0.5">
-                    <span className="font-mono bg-[#FFEB3B] px-1.5 py-0.5 border border-black text-black">{stud.qr_token}</span>
-                    <span>• {sc?.name}</span>
-                  </p>
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center font-mono font-bold text-xs text-white border border-white/15">
+                    {s.code.slice(0, 3)}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-bold text-sm text-white truncate">{s.name}</p>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      Code: <span className="font-mono text-slate-300">{s.code}</span> • {s.city} • Contact: {s.contact_phone}
+                    </p>
+                  </div>
                 </div>
 
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  onClick={() => handleQuickCheckinStudent(stud.qr_token)}
-                  className="text-xs"
-                >
-                  Verify Pass
-                </Button>
-              </GlassCard>
+                <div className="flex items-center gap-3 flex-shrink-0">
+                  <div className="text-right">
+                    <span className={`text-xs font-semibold block ${s.arrived ? "text-emerald-400" : "text-amber-400"}`}>
+                      {s.arrived ? "Arrived" : "Expected"}
+                    </span>
+                    <span className="text-[11px] text-slate-400">
+                      {arrivedCount} / {schoolDelegation.length} Students
+                    </span>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-slate-400" />
+                </div>
+              </div>
             );
           })}
         </div>
-      </div>
+      </GlassCard>
 
-      {/* Camera scanner modal */}
-      <QRScannerModal isOpen={scannerOpen} onClose={() => setScannerOpen(false)} />
+      {/* QR Scanner Modal */}
+      <QRScannerModal
+        isOpen={scannerOpen}
+        onClose={() => setScannerOpen(false)}
+        onScan={handleScanSuccess}
+      />
     </div>
   );
 }

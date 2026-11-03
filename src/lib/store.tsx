@@ -1,10 +1,12 @@
-"use client";
+﻿"use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useMemo } from "react";
 import {
   UserRole,
+  OrganizerSubRole,
   Profile,
   School,
+  SchoolTicket,
   Student,
   Team,
   Track,
@@ -16,11 +18,14 @@ import {
   IssueReport,
   AuditLog,
   Certificate,
+  Checkin,
+  Result,
 } from "./types/database";
 import {
   initialTracks,
   initialCriteria,
   initialSchools,
+  initialSchoolTickets,
   initialTeams,
   initialStudents,
   initialSchedule,
@@ -29,9 +34,21 @@ import {
 } from "./mock-data";
 
 interface FestStoreContextType {
+  // Roles & Identity
   currentProfile: Profile;
+  activeOrganizerSubRole: OrganizerSubRole;
   switchRole: (role: UserRole) => void;
+  switchOrganizerSubRole: (subRole: OrganizerSubRole) => void;
+  isSuperAdmin: boolean;
+  isEventCoordinator: boolean;
+  isRegistrationHead: boolean;
+  isOrganizer: boolean;
+  isFaculty: boolean;
+  isVolunteer: boolean;
+
+  // Data collections
   schools: School[];
+  schoolTickets: SchoolTicket[];
   students: Student[];
   teams: Team[];
   tracks: Track[];
@@ -42,20 +59,29 @@ interface FestStoreContextType {
   volunteerDuties: VolunteerDuty[];
   issueReports: IssueReport[];
   auditLogs: AuditLog[];
+  checkins: Checkin[];
+  results: Result[];
   certificates: Certificate[];
   resultsPublished: boolean;
-  togglePublishResults: () => void;
-  checkInSchool: (schoolId: string, notes?: string) => { success: boolean; message: string };
-  checkInStudent: (tokenOrId: string) => { success: boolean; student?: Student; message: string };
+
+  // Actions
+  checkInBatch: (schoolId: string, studentIds: string[]) => { success: boolean; message: string; count: number };
+  undoCheckin: (studentId: string) => { success: boolean; message: string };
+  addWalkinStudent: (data: { school_id: string; track_id: string; name: string; class: string }) => Student;
   approveSchool: (schoolId: string, approved: boolean) => void;
+  reissueSchoolTicket: (schoolId: string) => SchoolTicket;
   addSchool: (school: Partial<School>) => School;
-  addStudent: (student: { school_id: string; full_name: string; email?: string; phone?: string; track_id?: string; team_id?: string }) => Student;
+  updateSchool: (id: string, updates: Partial<School>) => void;
+  addStudent: (student: { school_id: string; track_id: string; name: string; class: string; team_id?: string | null }) => Student;
   updateStudent: (id: string, updates: Partial<Student>) => void;
   deleteStudent: (id: string) => void;
   addTeam: (team: { school_id: string; track_id: string; name: string; project_title: string; project_summary: string; table_number?: string }) => Team;
   updateTeam: (id: string, updates: Partial<Team>) => void;
+  deleteTeam: (id: string) => void;
   saveScore: (scoreData: { team_id: string; criterion_id: string; value: number; feedback?: string }) => void;
-  addAnnouncement: (ann: { title: string; body: string; audience: "all" | "faculty" | "volunteers" | "track"; track_id?: string | null; urgent: boolean }) => void;
+  lockTrackScores: (trackId: string, locked: boolean) => void;
+  togglePublishResults: () => void;
+  addAnnouncement: (ann: { title: string; body: string; audience: "all" | "faculty" | "volunteers"; urgent: boolean }) => void;
   deleteAnnouncement: (id: string) => void;
   reportIssue: (issue: { title: string; description: string; severity: "low" | "medium" | "high" | "critical" }) => void;
   resolveIssue: (id: string, notes: string) => void;
@@ -66,106 +92,141 @@ interface FestStoreContextType {
 
 const FestStoreContext = createContext<FestStoreContextType | null>(null);
 
-const STORAGE_KEY = "spark_fest_state_v1";
+const STORAGE_KEY = "makebreak_fest_state_v2";
 
 export function FestStoreProvider({ children }: { children: React.ReactNode }) {
   const [currentRole, setCurrentRole] = useState<UserRole>("organizer");
+  const [activeOrganizerSubRole, setActiveOrganizerSubRole] = useState<OrganizerSubRole>("super_admin");
+
   const [schools, setSchools] = useState<School[]>(initialSchools);
+  const [schoolTickets, setSchoolTickets] = useState<SchoolTicket[]>(initialSchoolTickets);
   const [students, setStudents] = useState<Student[]>(initialStudents);
   const [teams, setTeams] = useState<Team[]>(initialTeams);
-  const [tracks] = useState<Track[]>(initialTracks);
+  const [tracks, setTracks] = useState<Track[]>(initialTracks);
   const [criteria] = useState<ScoringCriterion[]>(initialCriteria);
   const [scores, setScores] = useState<Score[]>([]);
   const [schedule, setSchedule] = useState<ScheduleItem[]>(initialSchedule);
   const [announcements, setAnnouncements] = useState<Announcement[]>(initialAnnouncements);
+  const [checkins, setCheckins] = useState<Checkin[]>([
+    {
+      id: "chk-1",
+      student_id: "s1",
+      school_id: "a0000001-0000-0000-0000-000000000001",
+      volunteer_id: "p-vol-1",
+      timestamp: "2026-11-20T08:35:00Z",
+      is_undone: false,
+      undone_by: null,
+      undone_at: null,
+    },
+    {
+      id: "chk-2",
+      student_id: "s2",
+      school_id: "a0000001-0000-0000-0000-000000000001",
+      volunteer_id: "p-vol-1",
+      timestamp: "2026-11-20T08:35:00Z",
+      is_undone: false,
+      undone_by: null,
+      undone_at: null,
+    },
+    {
+      id: "chk-3",
+      student_id: "s5",
+      school_id: "a0000002-0000-0000-0000-000000000002",
+      volunteer_id: "p-vol-1",
+      timestamp: "2026-11-20T08:42:00Z",
+      is_undone: false,
+      undone_by: null,
+      undone_at: null,
+    },
+  ]);
   const [issueReports, setIssueReports] = useState<IssueReport[]>([
     {
       id: "iss-1",
-      reporter_id: "p-vol-1",
-      title: "Scrap Bay extension cord overload tripped breaker",
+      reported_by: "p-vol-1",
+      title: "Scrap Bay extension cord overloaded breaker 4",
       description: "Circuit breaker 4 tripped twice in fabrication yard. Electrician dispatched.",
       severity: "high",
       status: "in_progress",
       resolved_by: null,
-      resolved_at: null,
       resolution_notes: null,
       created_at: "2026-11-20T11:10:00Z",
+      updated_at: "2026-11-20T11:10:00Z",
     },
   ]);
-  const [volunteerDuties, setVolunteerDuties] = useState<VolunteerDuty[]>([
+  const [volunteerDuties] = useState<VolunteerDuty[]>([
     {
       id: "vd-1",
       volunteer_id: "p-vol-1",
-      track_id: "11111111-1111-1111-1111-111111111111",
-      venue_id: "v-arena",
-      duty: "Arena Alpha Course Marshall & Timer",
-      description: "Measure obstacle clearance times and log disqualification lines.",
-      starts_at: "2026-11-20T10:30:00Z",
-      ends_at: "2026-11-20T13:30:00Z",
+      duty: "Registration Fast-Pass Desk Marshal",
+      description: "Scan incoming school QR passes, mark arriving students, and distribute badge kits.",
+      starts_at: "2026-11-20T08:00:00Z",
+      ends_at: "2026-11-20T10:15:00Z",
       status: "assigned",
     },
     {
       id: "vd-2",
       volunteer_id: "p-vol-1",
-      track_id: null,
-      venue_id: "v-quad",
-      duty: "Helpdesk & QR Fast Check-in",
-      description: "Scan incoming student passes and assist visiting faculty.",
-      starts_at: "2026-11-20T08:00:00Z",
-      ends_at: "2026-11-20T10:15:00Z",
-      status: "completed",
+      duty: "Arena Alpha Course Marshall & Timer",
+      description: "Measure obstacle clearance times and log disqualification boundary lines.",
+      starts_at: "2026-11-20T10:30:00Z",
+      ends_at: "2026-11-20T13:30:00Z",
+      status: "assigned",
     },
   ]);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([
     {
       id: "aud-1",
-      actor_id: "p-admin",
+      actor_id: "p-admin-sa",
       action: "APPROVE_SCHOOL",
-      table_name: "schools",
-      record_id: "a0000001-0000-0000-0000-000000000001",
-      old_data: { approved: false },
-      new_data: { approved: true, name: "St. Joseph's Engineering Academy" },
-      ip_address: "192.168.1.10",
-      created_at: "2026-11-01T10:15:00Z",
+      target_type: "schools",
+      target_id: "a0000001-0000-0000-0000-000000000001",
+      old_data: { status: "pending" },
+      new_data: { status: "approved", name: "St. Joseph's Engineering Academy" },
+      ip_address: "192.168.12.165",
+      created_at: "2026-11-01T10:00:00Z",
     },
     {
       id: "aud-2",
-      actor_id: "p-admin",
-      action: "INSERT_ANNOUNCEMENT",
-      table_name: "announcements",
-      record_id: "ann-2",
+      actor_id: "p-admin-ec",
+      action: "POST_ANNOUNCEMENT",
+      target_type: "announcements",
+      target_id: "ann-2",
       old_data: null,
-      new_data: { title: "URGENT: Safety Eyewear in Scrap Fabrication Bay" },
-      ip_address: "192.168.1.10",
+      new_data: { title: "URGENT: Safety Eyewear Mandatory in Scrap Bay" },
+      ip_address: "192.168.12.165",
       created_at: "2026-11-20T10:15:00Z",
     },
   ]);
   const [resultsPublished, setResultsPublished] = useState<boolean>(false);
   const [isLoaded, setIsLoaded] = useState<boolean>(false);
 
-  // Load from localStorage on mount
+  // Restore state from localStorage
   useEffect(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
         if (parsed.schools) setSchools(parsed.schools);
+        if (parsed.schoolTickets) setSchoolTickets(parsed.schoolTickets);
         if (parsed.students) setStudents(parsed.students);
         if (parsed.teams) setTeams(parsed.teams);
+        if (parsed.tracks) setTracks(parsed.tracks);
         if (parsed.scores) setScores(parsed.scores);
         if (parsed.schedule) setSchedule(parsed.schedule);
         if (parsed.announcements) setAnnouncements(parsed.announcements);
+        if (parsed.checkins) setCheckins(parsed.checkins);
         if (parsed.issueReports) setIssueReports(parsed.issueReports);
         if (parsed.resultsPublished !== undefined) setResultsPublished(parsed.resultsPublished);
         if (parsed.currentRole) setCurrentRole(parsed.currentRole);
+        if (parsed.activeOrganizerSubRole) setActiveOrganizerSubRole(parsed.activeOrganizerSubRole);
       }
     } catch {
-      // Ignore parse errors
+      // Ignore parse error
     }
     setIsLoaded(true);
   }, []);
 
-  // Save to localStorage when updated
+  // Persist state to localStorage
   useEffect(() => {
     if (!isLoaded) return;
     try {
@@ -173,142 +234,309 @@ export function FestStoreProvider({ children }: { children: React.ReactNode }) {
         STORAGE_KEY,
         JSON.stringify({
           schools,
+          schoolTickets,
           students,
           teams,
+          tracks,
           scores,
           schedule,
           announcements,
+          checkins,
           issueReports,
           resultsPublished,
           currentRole,
+          activeOrganizerSubRole,
         })
       );
     } catch {
-      // Ignore quota errors
+      // Ignore storage quota errors
     }
-  }, [schools, students, teams, scores, schedule, announcements, issueReports, resultsPublished, currentRole, isLoaded]);
+  }, [
+    schools,
+    schoolTickets,
+    students,
+    teams,
+    tracks,
+    scores,
+    schedule,
+    announcements,
+    checkins,
+    issueReports,
+    resultsPublished,
+    currentRole,
+    activeOrganizerSubRole,
+    isLoaded,
+  ]);
 
-  const currentProfile = demoProfiles[currentRole] || demoProfiles.organizer;
+  // Determine current active profile
+  const currentProfile: Profile = useMemo(() => {
+    if (currentRole === "organizer") {
+      if (activeOrganizerSubRole === "event_coordinator") return demoProfiles.event_coordinator;
+      if (activeOrganizerSubRole === "registration_head") return demoProfiles.registration_head;
+      return demoProfiles.super_admin;
+    }
+    if (currentRole === "faculty") return demoProfiles.faculty;
+    return demoProfiles.volunteer;
+  }, [currentRole, activeOrganizerSubRole]);
+
+  // Role permissions
+  const isOrganizer = currentRole === "organizer";
+  const isFaculty = currentRole === "faculty";
+  const isVolunteer = currentRole === "volunteer";
+
+  const isSuperAdmin = isOrganizer && (activeOrganizerSubRole === "super_admin" || currentProfile.sub_roles?.includes("super_admin") || false);
+  const isEventCoordinator = isOrganizer && (activeOrganizerSubRole === "event_coordinator" || currentProfile.sub_roles?.includes("event_coordinator") || isSuperAdmin);
+  const isRegistrationHead = isOrganizer && (activeOrganizerSubRole === "registration_head" || currentProfile.sub_roles?.includes("registration_head") || isSuperAdmin);
 
   const switchRole = (role: UserRole) => {
     setCurrentRole(role);
   };
 
-  const logAudit = (action: string, table_name: string, record_id: string | null, old_data: any, new_data: any) => {
+  const switchOrganizerSubRole = (subRole: OrganizerSubRole) => {
+    setActiveOrganizerSubRole(subRole);
+    setCurrentRole("organizer");
+  };
+
+  const logAudit = (action: string, target_type: string, target_id: string | null, old_data: any, new_data: any) => {
     const newLog: AuditLog = {
-      id: "aud-" + Date.now(),
+      id: "aud-" + Date.now() + "-" + Math.random().toString(36).substring(2, 6),
       actor_id: currentProfile.id,
       action,
-      table_name,
-      record_id,
+      target_type,
+      target_id,
       old_data,
       new_data,
-      ip_address: "client-action",
+      ip_address: "192.168.12.165",
       created_at: new Date().toISOString(),
     };
     setAuditLogs((prev) => [newLog, ...prev]);
   };
 
-  const checkInSchool = (schoolId: string, notes?: string) => {
+  // CHECK-IN BATCH: volunteer scans single school ticket QR -> selects present students -> marks arrival
+  const checkInBatch = (schoolId: string, studentIds: string[]) => {
     const school = schools.find((s) => s.id === schoolId);
-    if (!school) return { success: false, message: "School not found" };
-    if (school.checked_in) return { success: false, message: "School is already checked in" };
+    if (!school) return { success: false, message: "School not found in registry.", count: 0 };
 
     const now = new Date().toISOString();
+    const volunteerId = currentProfile.id;
+
+    // Mark selected students as checked in
+    const newlyCheckedStudentIds = new Set(studentIds);
+    setStudents((prev) =>
+      prev.map((stu) => {
+        if (newlyCheckedStudentIds.has(stu.id)) {
+          return {
+            ...stu,
+            checked_in: true,
+            checked_in_at: now,
+            checked_in_by: volunteerId,
+          };
+        }
+        return stu;
+      })
+    );
+
+    // Mark school as arrived
+    setSchools((prev) =>
+      prev.map((s) => (s.id === schoolId ? { ...s, arrived: true, updated_at: now } : s))
+    );
+
+    // Create checkin log records
+    const newCheckins: Checkin[] = studentIds.map((sid) => ({
+      id: "chk-" + Date.now() + "-" + sid,
+      student_id: sid,
+      school_id: schoolId,
+      volunteer_id: volunteerId,
+      timestamp: now,
+      is_undone: false,
+      undone_by: null,
+      undone_at: null,
+    }));
+    setCheckins((prev) => [...newCheckins, ...prev]);
+
+    logAudit("CHECKIN_BATCH", "schools", schoolId, { arrived: school.arrived }, { arrived: true, checked_in_count: studentIds.length });
+    return {
+      success: true,
+      message: `Successfully verified delegation for ${school.name} (${studentIds.length} students checked in).`,
+      count: studentIds.length,
+    };
+  };
+
+  // UNDO CHECKIN: Only Registration Head & Super Admin
+  const undoCheckin = (studentId: string) => {
+    if (!isRegistrationHead && !isSuperAdmin) {
+      return { success: false, message: "Permission denied. Only Registration Head and Super Admin can undo check-ins." };
+    }
+
+    const student = students.find((s) => s.id === studentId);
+    if (!student) return { success: false, message: "Student record not found." };
+    if (!student.checked_in) return { success: false, message: "Student is not currently marked as checked in." };
+
+    const now = new Date().toISOString();
+
+    // Revert student state
+    setStudents((prev) =>
+      prev.map((s) =>
+        s.id === studentId
+          ? { ...s, checked_in: false, checked_in_at: null, checked_in_by: null }
+          : s
+      )
+    );
+
+    // Update checkin log record
+    setCheckins((prev) =>
+      prev.map((c) =>
+        c.student_id === studentId && !c.is_undone
+          ? { ...c, is_undone: true, undone_by: currentProfile.id, undone_at: now }
+          : c
+      )
+    );
+
+    // Check if any other student from same school is still checked in; if none, revert school.arrived
+    const otherStudents = students.filter((s) => s.school_id === student.school_id && s.id !== studentId && s.checked_in);
+    if (otherStudents.length === 0) {
+      setSchools((prev) =>
+        prev.map((sc) => (sc.id === student.school_id ? { ...sc, arrived: false, updated_at: now } : sc))
+      );
+    }
+
+    logAudit("UNDO_CHECKIN", "students", studentId, { checked_in: true }, { checked_in: false });
+    return { success: true, message: `Reverted check-in for ${student.name}.` };
+  };
+
+  // ADD WALK-IN STUDENT AT DESK
+  const addWalkinStudent = (data: { school_id: string; track_id: string; name: string; class: string }) => {
+    const newStudent: Student = {
+      id: "walk-" + Date.now(),
+      school_id: data.school_id,
+      track_id: data.track_id,
+      team_id: null,
+      name: data.name,
+      class: data.class,
+      is_walkin: true,
+      checked_in: true,
+      checked_in_at: new Date().toISOString(),
+      checked_in_by: currentProfile.id,
+      created_at: new Date().toISOString(),
+    };
+
+    setStudents((prev) => [...prev, newStudent]);
+
+    // Ensure school is marked arrived
+    setSchools((prev) =>
+      prev.map((s) => (s.id === data.school_id ? { ...s, arrived: true } : s))
+    );
+
+    logAudit("ADD_WALKIN_STUDENT", "students", newStudent.id, null, newStudent);
+    return newStudent;
+  };
+
+  // APPROVE / REJECT SCHOOL: SA and RH
+  const approveSchool = (schoolId: string, approved: boolean) => {
+    const status = approved ? "approved" : "rejected";
+    const now = new Date().toISOString();
+
     setSchools((prev) =>
       prev.map((s) =>
         s.id === schoolId
-          ? { ...s, checked_in: true, checked_in_at: now, checked_in_by: currentProfile.id, notes: notes || s.notes }
+          ? {
+              ...s,
+              status,
+              approved_by: approved ? currentProfile.id : null,
+              approved_at: approved ? now : null,
+              updated_at: now,
+            }
           : s
       )
     );
-    logAudit("CHECKIN_SCHOOL", "schools", schoolId, { checked_in: false }, { checked_in: true, checked_in_at: now });
-    return { success: true, message: `Checked in ${school.name} successfully!` };
+
+    // Auto-generate ticket token if approving and none exists
+    if (approved) {
+      const existingTicket = schoolTickets.find((t) => t.school_id === schoolId && !t.revoked_at);
+      if (!existingTicket) {
+        const school = schools.find((s) => s.id === schoolId);
+        const code = school ? school.code.replace(/[^A-Za-z0-9]/g, "") : "SCH";
+        const newTicket: SchoolTicket = {
+          id: "tkt-" + Date.now(),
+          school_id: schoolId,
+          token_hash: `TKT-${code}-${Math.random().toString(36).substring(2, 10)}`,
+          revoked_at: null,
+          created_at: now,
+        };
+        setSchoolTickets((prev) => [...prev, newTicket]);
+      }
+    }
+
+    logAudit(approved ? "APPROVE_SCHOOL" : "REJECT_SCHOOL", "schools", schoolId, null, { status });
   };
 
-  const checkInStudent = (tokenOrId: string) => {
-    const normalized = tokenOrId.trim().toUpperCase();
-    const student = students.find(
-      (s) => s.id === tokenOrId || s.qr_token.toUpperCase() === normalized || s.full_name.toUpperCase().includes(normalized)
-    );
-
-    if (!student) return { success: false, message: "No student pass matched the scanned code." };
-    if (student.checked_in) return { success: false, student, message: `${student.full_name} is already checked in.` };
-
+  // REISSUE SCHOOL TICKET: Revokes old ticket, generates new token
+  const reissueSchoolTicket = (schoolId: string) => {
     const now = new Date().toISOString();
-    setStudents((prev) =>
-      prev.map((s) =>
-        s.id === student.id
-          ? { ...s, checked_in: true, checked_in_at: now, checked_in_by: currentProfile.id }
-          : s
-      )
+    // Revoke old ticket
+    setSchoolTickets((prev) =>
+      prev.map((t) => (t.school_id === schoolId && !t.revoked_at ? { ...t, revoked_at: now } : t))
     );
 
-    // Also auto-mark school as checked in if first student
-    setSchools((prev) =>
-      prev.map((sc) =>
-        sc.id === student.school_id && !sc.checked_in
-          ? { ...sc, checked_in: true, checked_in_at: now, checked_in_by: currentProfile.id }
-          : sc
-      )
-    );
+    const school = schools.find((s) => s.id === schoolId);
+    const code = school ? school.code.replace(/[^A-Za-z0-9]/g, "") : "SCH";
+    const newTicket: SchoolTicket = {
+      id: "tkt-" + Date.now(),
+      school_id: schoolId,
+      token_hash: `TKT-${code}-${Math.random().toString(36).substring(2, 10)}`,
+      revoked_at: null,
+      created_at: now,
+    };
 
-    logAudit("CHECKIN_STUDENT", "students", student.id, { checked_in: false }, { checked_in: true, checked_in_at: now });
-    return { success: true, student, message: `Verified & checked in ${student.full_name}!` };
-  };
-
-  const approveSchool = (schoolId: string, approved: boolean) => {
-    setSchools((prev) =>
-      prev.map((s) => (s.id === schoolId ? { ...s, approved } : s))
-    );
-    logAudit(approved ? "APPROVE_SCHOOL" : "REJECT_SCHOOL", "schools", schoolId, null, { approved });
+    setSchoolTickets((prev) => [...prev, newTicket]);
+    logAudit("REISSUE_TICKET", "school_tickets", newTicket.id, null, newTicket);
+    return newTicket;
   };
 
   const addSchool = (schoolData: Partial<School>) => {
+    const code = schoolData.code || "SCH-" + Math.floor(100 + Math.random() * 900);
     const newSchool: School = {
       id: "sch-" + Date.now(),
-      name: schoolData.name || "New School",
-      code: schoolData.code || "SCH" + Math.floor(100 + Math.random() * 900),
+      name: schoolData.name || "Visiting School",
+      code,
       address: schoolData.address || null,
-      city: schoolData.city || null,
-      contact_email: schoolData.contact_email || null,
-      contact_phone: schoolData.contact_phone || null,
-      faculty_id: schoolData.faculty_id || null,
-      approved: schoolData.approved ?? false,
-      checked_in: false,
-      checked_in_at: null,
-      checked_in_by: null,
-      notes: null,
+      city: schoolData.city || "Kerala",
+      contact_email: schoolData.contact_email || "faculty@school.edu",
+      contact_phone: schoolData.contact_phone || "+91 90000 00000",
+      status: "pending",
+      approved_by: null,
+      approved_at: null,
+      arrived: false,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
-      students_count: 0,
-      teams_count: 0,
     };
     setSchools((prev) => [newSchool, ...prev]);
     logAudit("REGISTER_SCHOOL", "schools", newSchool.id, null, newSchool);
     return newSchool;
   };
 
-  const addStudent = (data: { school_id: string; full_name: string; email?: string; phone?: string; track_id?: string; team_id?: string }) => {
-    const school = schools.find((s) => s.id === data.school_id);
-    const codePrefix = school ? school.code.substring(0, 3) : "STU";
+  const updateSchool = (id: string, updates: Partial<School>) => {
+    setSchools((prev) =>
+      prev.map((s) => (s.id === id ? { ...s, ...updates, updated_at: new Date().toISOString() } : s))
+    );
+  };
+
+  // Student delegation management (Minor privacy: name, class, track_id, team_id ONLY)
+  const addStudent = (data: { school_id: string; track_id: string; name: string; class: string; team_id?: string | null }) => {
     const newStudent: Student = {
-      id: "stud-" + Date.now(),
+      id: "stu-" + Date.now(),
       school_id: data.school_id,
-      full_name: data.full_name,
-      email: data.email || null,
-      phone: data.phone || null,
-      track_id: data.track_id || null,
+      track_id: data.track_id,
       team_id: data.team_id || null,
-      qr_token: `QR-${codePrefix}-${Math.floor(10 + Math.random() * 90)}`,
+      name: data.name,
+      class: data.class,
+      is_walkin: false,
       checked_in: false,
       checked_in_at: null,
       checked_in_by: null,
-      user_id: null,
       created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
     };
-    setStudents((prev) => [newStudent, ...prev]);
+    setStudents((prev) => [...prev, newStudent]);
     logAudit("ADD_STUDENT", "students", newStudent.id, null, newStudent);
     return newStudent;
   };
@@ -324,6 +552,7 @@ export function FestStoreProvider({ children }: { children: React.ReactNode }) {
     logAudit("DELETE_STUDENT", "students", id, null, null);
   };
 
+  // Team management
   const addTeam = (teamData: { school_id: string; track_id: string; name: string; project_title: string; project_summary: string; table_number?: string }) => {
     const newTeam: Team = {
       id: "team-" + Date.now(),
@@ -333,9 +562,8 @@ export function FestStoreProvider({ children }: { children: React.ReactNode }) {
       project_title: teamData.project_title,
       project_summary: teamData.project_summary,
       table_number: teamData.table_number || "TBD",
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
       score_total: 0,
+      created_at: new Date().toISOString(),
     };
     setTeams((prev) => [newTeam, ...prev]);
     logAudit("CREATE_TEAM", "teams", newTeam.id, null, newTeam);
@@ -344,13 +572,26 @@ export function FestStoreProvider({ children }: { children: React.ReactNode }) {
 
   const updateTeam = (id: string, updates: Partial<Team>) => {
     setTeams((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, ...updates, updated_at: new Date().toISOString() } : t))
+      prev.map((t) => (t.id === id ? { ...t, ...updates } : t))
     );
   };
 
+  const deleteTeam = (id: string) => {
+    setTeams((prev) => prev.filter((t) => t.id !== id));
+    logAudit("DELETE_TEAM", "teams", id, null, null);
+  };
+
+  // Score management: SA & EC only
   const saveScore = (scoreData: { team_id: string; criterion_id: string; value: number; feedback?: string }) => {
+    const team = teams.find((t) => t.id === scoreData.team_id);
+    const track = tracks.find((tr) => tr.id === team?.track_id);
+    if (track?.scores_locked) {
+      alert("Scores are locked for this track by Super Admin.");
+      return;
+    }
+
     const existingIndex = scores.findIndex(
-      (s) => s.team_id === scoreData.team_id && s.judge_id === currentProfile.id && s.criterion_id === scoreData.criterion_id
+      (s) => s.team_id === scoreData.team_id && s.criterion_id === scoreData.criterion_id
     );
 
     const now = new Date().toISOString();
@@ -359,18 +600,17 @@ export function FestStoreProvider({ children }: { children: React.ReactNode }) {
     if (existingIndex >= 0) {
       updatedScores = scores.map((s, idx) =>
         idx === existingIndex
-          ? { ...s, value: scoreData.value, feedback: scoreData.feedback || s.feedback, updated_at: now }
+          ? { ...s, value: scoreData.value, feedback: scoreData.feedback || s.feedback, updated_at: now, entered_by: currentProfile.id }
           : s
       );
     } else {
       const newScore: Score = {
         id: "scr-" + Date.now(),
         team_id: scoreData.team_id,
-        judge_id: currentProfile.id,
+        entered_by: currentProfile.id,
         criterion_id: scoreData.criterion_id,
         value: scoreData.value,
         feedback: scoreData.feedback || null,
-        locked: false,
         created_at: now,
         updated_at: now,
       };
@@ -378,7 +618,7 @@ export function FestStoreProvider({ children }: { children: React.ReactNode }) {
     }
     setScores(updatedScores);
 
-    // Recompute total score for team
+    // Recompute weighted score for team
     const teamScores = updatedScores.filter((s) => s.team_id === scoreData.team_id);
     let totalWeighted = 0;
     let totalWeight = 0;
@@ -395,27 +635,42 @@ export function FestStoreProvider({ children }: { children: React.ReactNode }) {
       prev.map((t) => (t.id === scoreData.team_id ? { ...t, score_total: finalScore } : t))
     );
 
-    logAudit("SUBMIT_SCORE", "scores", scoreData.team_id, null, { scoreData, finalScore });
+    logAudit("ENTER_SCORE", "scores", scoreData.team_id, null, { scoreData, finalScore });
   };
 
+  // Lock Scores per track: Super Admin only
+  const lockTrackScores = (trackId: string, locked: boolean) => {
+    if (!isSuperAdmin) {
+      alert("Only Super Admin can lock or unlock scores.");
+      return;
+    }
+    setTracks((prev) =>
+      prev.map((t) => (t.id === trackId ? { ...t, scores_locked: locked } : t))
+    );
+    logAudit(locked ? "LOCK_SCORES" : "UNLOCK_SCORES", "tracks", trackId, null, { scores_locked: locked });
+  };
+
+  // Publish Results: Super Admin only
   const togglePublishResults = () => {
+    if (!isSuperAdmin) {
+      alert("Only Super Admin can publish or unpublish official fest results.");
+      return;
+    }
     const nextState = !resultsPublished;
     setResultsPublished(nextState);
     logAudit(nextState ? "PUBLISH_RESULTS" : "UNPUBLISH_RESULTS", "results", null, { published: resultsPublished }, { published: nextState });
   };
 
-  const addAnnouncement = (ann: { title: string; body: string; audience: "all" | "faculty" | "volunteers" | "track"; track_id?: string | null; urgent: boolean }) => {
+  // Announcements: SA & EC
+  const addAnnouncement = (ann: { title: string; body: string; audience: "all" | "faculty" | "volunteers"; urgent: boolean }) => {
     const newAnn: Announcement = {
       id: "ann-" + Date.now(),
       title: ann.title,
       body: ann.body,
       audience: ann.audience,
-      track_id: ann.track_id || null,
       urgent: ann.urgent,
-      published: true,
       author_id: currentProfile.id,
       created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
     };
     setAnnouncements((prev) => [newAnn, ...prev]);
     logAudit("POST_ANNOUNCEMENT", "announcements", newAnn.id, null, newAnn);
@@ -426,18 +681,19 @@ export function FestStoreProvider({ children }: { children: React.ReactNode }) {
     logAudit("DELETE_ANNOUNCEMENT", "announcements", id, null, null);
   };
 
+  // Issue Reporting
   const reportIssue = (issue: { title: string; description: string; severity: "low" | "medium" | "high" | "critical" }) => {
     const newIssue: IssueReport = {
       id: "iss-" + Date.now(),
-      reporter_id: currentProfile.id,
+      reported_by: currentProfile.id,
       title: issue.title,
       description: issue.description,
       severity: issue.severity,
       status: "open",
       resolved_by: null,
-      resolved_at: null,
       resolution_notes: null,
       created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     };
     setIssueReports((prev) => [newIssue, ...prev]);
     logAudit("REPORT_ISSUE", "issue_reports", newIssue.id, null, newIssue);
@@ -447,12 +703,20 @@ export function FestStoreProvider({ children }: { children: React.ReactNode }) {
     setIssueReports((prev) =>
       prev.map((iss) =>
         iss.id === id
-          ? { ...iss, status: "resolved", resolved_by: currentProfile.id, resolved_at: new Date().toISOString(), resolution_notes: notes }
+          ? {
+              ...iss,
+              status: "resolved",
+              resolved_by: currentProfile.id,
+              resolution_notes: notes,
+              updated_at: new Date().toISOString(),
+            }
           : iss
       )
     );
+    logAudit("RESOLVE_ISSUE", "issue_reports", id, null, { resolution_notes: notes });
   };
 
+  // Schedule Management
   const addScheduleItem = (item: Omit<ScheduleItem, "id">) => {
     const newItem: ScheduleItem = {
       ...item,
@@ -472,43 +736,81 @@ export function FestStoreProvider({ children }: { children: React.ReactNode }) {
       localStorage.removeItem(STORAGE_KEY);
     } catch {}
     setSchools(initialSchools);
+    setSchoolTickets(initialSchoolTickets);
     setStudents(initialStudents);
     setTeams(initialTeams);
+    setTracks(initialTracks);
     setScores([]);
     setSchedule(initialSchedule);
     setAnnouncements(initialAnnouncements);
     setResultsPublished(false);
   };
 
-  const certificates: Certificate[] = students.map((s) => {
-    const school = schools.find((sc) => sc.id === s.school_id);
-    const track = tracks.find((t) => t.id === s.track_id);
-    return {
-      id: "cert-" + s.id,
-      student_id: s.id,
-      school_id: s.school_id,
-      track_id: s.track_id,
-      type: "participation",
-      cert_code: "CERT-" + s.qr_token.replace("QR-", "") + "-2026",
-      title: "Certificate of Active Technical Participation",
-      issued_at: "2026-11-20T17:00:00Z",
-      metadata: {
-        student_name: s.full_name,
-        school_name: school?.name || "Visiting Institution",
-        track_name: track?.name || "General Tech Fest Track",
-      },
-      student: s,
-      school,
-      track,
-    };
-  });
+  // Calculated track results
+  const results: Result[] = useMemo(() => {
+    const output: Result[] = [];
+    tracks.forEach((track) => {
+      const trackTeams = teams
+        .filter((t) => t.track_id === track.id)
+        .sort((a, b) => (b.score_total || 0) - (a.score_total || 0));
+
+      trackTeams.forEach((t, idx) => {
+        output.push({
+          id: `res-${t.id}`,
+          track_id: track.id,
+          team_id: t.id,
+          rank: idx + 1,
+          weighted_score: t.score_total || 0,
+          is_published: resultsPublished,
+          published_by: resultsPublished ? "p-admin-sa" : null,
+          published_at: resultsPublished ? "2026-11-20T17:00:00Z" : null,
+        });
+      });
+    });
+    return output;
+  }, [tracks, teams, resultsPublished]);
+
+  // Certificates for checked-in students
+  const certificates: Certificate[] = useMemo(() => {
+    return students
+      .filter((s) => s.checked_in)
+      .map((s) => {
+        const school = schools.find((sc) => sc.id === s.school_id);
+        const track = tracks.find((t) => t.id === s.track_id);
+        const team = teams.find((tm) => tm.id === s.team_id);
+        const rank = results.find((r) => r.team_id === team?.id)?.rank;
+
+        let type: "participation" | "winner" | "runner_up" = "participation";
+        if (rank === 1) type = "winner";
+        else if (rank === 2) type = "runner_up";
+
+        return {
+          id: "cert-" + s.id,
+          school_id: s.school_id,
+          student_name: s.name,
+          track_name: track?.name || "MAKE//BREAK Tech Fest",
+          type,
+          cert_code: `MB-${(school?.code || "SCH").replace(/[^A-Za-z0-9]/g, "")}-${s.id.slice(-4).toUpperCase()}-2026`,
+          created_at: "2026-11-20T17:00:00Z",
+        };
+      });
+  }, [students, schools, tracks, teams, results]);
 
   return (
     <FestStoreContext.Provider
       value={{
         currentProfile,
+        activeOrganizerSubRole,
         switchRole,
+        switchOrganizerSubRole,
+        isSuperAdmin,
+        isEventCoordinator,
+        isRegistrationHead,
+        isOrganizer,
+        isFaculty,
+        isVolunteer,
         schools,
+        schoolTickets,
         students,
         teams,
         tracks,
@@ -519,19 +821,26 @@ export function FestStoreProvider({ children }: { children: React.ReactNode }) {
         volunteerDuties,
         issueReports,
         auditLogs,
+        checkins,
+        results,
         certificates,
         resultsPublished,
-        togglePublishResults,
-        checkInSchool,
-        checkInStudent,
+        checkInBatch,
+        undoCheckin,
+        addWalkinStudent,
         approveSchool,
+        reissueSchoolTicket,
         addSchool,
+        updateSchool,
         addStudent,
         updateStudent,
         deleteStudent,
         addTeam,
         updateTeam,
+        deleteTeam,
         saveScore,
+        lockTrackScores,
+        togglePublishResults,
         addAnnouncement,
         deleteAnnouncement,
         reportIssue,

@@ -11,6 +11,9 @@ import {
   Plus,
   Users,
   Edit2,
+  Bot,
+  Wrench,
+  Table,
 } from "lucide-react";
 
 export default function FacultyTeamsPage() {
@@ -83,15 +86,14 @@ export default function FacultyTeamsPage() {
         name: formData.name,
         project_title: formData.projectTitle,
         project_summary: formData.projectSummary,
-        table_number: formData.tableNumber || "TBD",
+        table_number: formData.tableNumber || undefined,
       });
     } else {
       updateTeam(editingTeamId, {
         name: formData.name,
-        track_id: formData.trackId,
         project_title: formData.projectTitle,
         project_summary: formData.projectSummary,
-        table_number: formData.tableNumber,
+        table_number: formData.tableNumber || undefined,
       });
     }
 
@@ -100,112 +102,126 @@ export default function FacultyTeamsPage() {
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b-3 border-black">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-white/10">
         <div>
-          <Badge variant="outline" className="mb-1.5 bg-[#FFEB3B] text-black border-2 border-black font-black">
-            SQUAD ROSTER
+          <Badge variant="outline" className="mb-1.5">
+            COMPETITION SQUADS
           </Badge>
-          <h1 className="text-2xl sm:text-3xl font-black text-black tracking-tight uppercase">
-            Teams — {facultySchool?.name}
-          </h1>
-          <p className="text-xs font-bold text-neutral-700 mt-1">
-            Configure your school squad for each track (1 team per track allowed).
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-white">Track Teams</h1>
+          <p className="text-xs text-slate-400 mt-1">
+            Configure one team per track for {facultySchool?.name}.
           </p>
         </div>
 
-        <Button variant="primary" onClick={openCreateModal}>
+        <Button size="sm" variant="gradient" onClick={openCreateModal} className="text-xs">
           <Plus className="h-4 w-4 mr-1.5" />
-          <span>Register Team</span>
+          <span>Create Track Team</span>
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        {schoolTeams.map((team) => {
-          const track = tracks.find((t) => t.id === team.track_id);
-          const squadMembers = students.filter((s) => s.team_id === team.id || (s.school_id === facultySchool.id && s.track_id === team.track_id));
+      {/* Grid of Teams */}
+      {schoolTeams.length === 0 ? (
+        <GlassCard className="p-12 text-center border-white/15">
+          <Sparkles className="w-12 h-12 text-slate-500 mx-auto mb-3" />
+          <h3 className="font-bold text-white text-base">No Teams Created Yet</h3>
+          <p className="text-xs text-slate-400 mt-1 mb-5">
+            Form your team for Robotics, Build from Scrap, or Useless Projects.
+          </p>
+          <Button size="sm" variant="gradient" onClick={openCreateModal}>
+            <Plus className="w-4 h-4 mr-1" />
+            <span>Create First Team</span>
+          </Button>
+        </GlassCard>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {schoolTeams.map((team) => {
+            const track = tracks.find((t) => t.id === team.track_id);
+            const teamMembers = students.filter((s) => s.team_id === team.id);
 
-          return (
-            <GlassCard key={team.id} variant="white" className="p-6 flex flex-col justify-between border-4 border-black shadow-[6px_6px_0px_#000]">
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-black uppercase tracking-wider px-2.5 py-0.5 border-2 border-black bg-[#2196F3] text-black shadow-[2px_2px_0px_#000]">
-                    {track?.name}
-                  </span>
-                  <span className="font-mono text-xs font-bold bg-[#FFEB3B] text-black px-2 py-0.5 border border-black">
-                    Table: {team.table_number || "TBD"}
-                  </span>
-                </div>
+            let glow: "blue" | "green" | "red" = "blue";
+            if (track?.slug === "build-from-scrap") glow = "green";
+            if (track?.slug === "useless-projects") glow = "red";
 
-                <h3 className="text-xl font-black text-black uppercase tracking-tight">{team.name}</h3>
-                <p className="text-sm font-bold text-black mt-1 bg-[#FFFBEB] p-1 border border-black">{team.project_title}</p>
-                <p className="text-xs text-neutral-800 font-medium mt-2 leading-relaxed">{team.project_summary}</p>
-
-                {/* Team members count */}
-                <div className="mt-4 pt-3 border-t-2 border-black">
-                  <div className="flex items-center gap-2 text-xs font-black text-black uppercase mb-2">
-                    <Users className="h-4 w-4" />
-                    <span>Members ({squadMembers.length})</span>
+            return (
+              <GlassCard key={team.id} glow={glow} className="p-6 border-white/15 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between gap-3 mb-4">
+                    <span className="text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-white/10 border border-white/15 text-white">
+                      {track?.name || "Track"}
+                    </span>
+                    <button
+                      onClick={() => openEditModal(team)}
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                      title="Edit team"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </button>
                   </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {squadMembers.map((m) => (
-                      <span key={m.id} className="text-[11px] bg-white border border-black px-2 py-0.5 text-black font-bold shadow-[1px_1px_0px_#000]">
-                        {m.full_name}
-                      </span>
-                    ))}
-                    {squadMembers.length === 0 && (
-                      <span className="text-xs text-neutral-500 italic">No students assigned to track</span>
+
+                  <h3 className="text-xl font-bold text-white mb-1">{team.name}</h3>
+                  <p className="text-sm font-semibold text-indigo-300 mb-3">{team.project_title}</p>
+                  <p className="text-xs text-slate-300 leading-relaxed mb-5">
+                    {team.project_summary || "No project summary provided."}
+                  </p>
+
+                  <div className="rounded-xl bg-black/40 border border-white/10 p-3 mb-4">
+                    <div className="flex items-center justify-between text-xs text-slate-400 mb-2">
+                      <span className="font-semibold uppercase tracking-wider text-[10px]">Squad Members ({teamMembers.length})</span>
+                      <span className="text-[11px] font-mono">Table: {team.table_number || "TBD"}</span>
+                    </div>
+                    {teamMembers.length === 0 ? (
+                      <p className="text-[11px] text-slate-500 italic">No students assigned to this team yet.</p>
+                    ) : (
+                      <div className="flex flex-wrap gap-1.5">
+                        {teamMembers.map((m) => (
+                          <span key={m.id} className="text-[11px] px-2 py-0.5 rounded-full bg-white/10 text-slate-200">
+                            {m.name} ({m.class})
+                          </span>
+                        ))}
+                      </div>
                     )}
                   </div>
                 </div>
-              </div>
 
-              <div className="mt-6 pt-3 border-t-2 border-black flex justify-end">
-                <Button size="sm" variant="secondary" className="text-xs font-bold" onClick={() => openEditModal(team)}>
-                  <Edit2 className="h-3.5 w-3.5 mr-1" />
-                  <span>Edit Team Info</span>
-                </Button>
-              </div>
-            </GlassCard>
-          );
-        })}
+                <div className="pt-3 border-t border-white/10 flex items-center justify-between text-xs">
+                  <span className="text-slate-400">Total Score:</span>
+                  <span className="font-mono font-bold text-indigo-300 text-sm">
+                    {team.score_total ? team.score_total.toFixed(2) : "0.00"} pts
+                  </span>
+                </div>
+              </GlassCard>
+            );
+          })}
+        </div>
+      )}
 
-        {schoolTeams.length === 0 && (
-          <GlassCard variant="white" className="col-span-full p-8 text-center text-black font-bold text-xs border-4 border-black shadow-[6px_6px_0px_#000]">
-            No teams created yet. Register a team for Robotics, Build from Scrap, or Useless Projects.
-          </GlassCard>
-        )}
-      </div>
-
-      {/* Modal for creating/editing team */}
+      {/* Modal */}
       <Modal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
-        title={editingTeamId ? "Edit Team Details" : "Register School Team"}
-        description="Assign track, project title, and table number."
+        title={editingTeamId ? "Edit Track Team" : "Register Track Team"}
+        description="Visiting delegations field 1 team per track."
       >
         <form onSubmit={handleSaveTeam} className="space-y-4">
-          <div>
-            <label className="text-xs font-black uppercase tracking-wide text-black block mb-1">Team Squad Name *</label>
-            <input
-              type="text"
-              required
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              placeholder="e.g. Apex Botsmiths"
-              className="w-full px-3.5 py-2.5 bg-white border-3 border-black text-black text-sm font-medium shadow-[2px_2px_0px_#000] focus:outline-none focus:ring-2 focus:ring-[#2196F3]"
-            />
-          </div>
+          {error && (
+            <div className="p-3 rounded-xl bg-rose-950/60 border border-rose-500/30 text-rose-200 text-xs">
+              {error}
+            </div>
+          )}
 
           <div>
-            <label className="text-xs font-black uppercase tracking-wide text-black block mb-1">Track *</label>
+            <label className="text-xs font-semibold text-slate-300 block mb-1">
+              Select Track *
+            </label>
             <select
               disabled={!!editingTeamId}
               value={formData.trackId}
               onChange={(e) => setFormData({ ...formData, trackId: e.target.value })}
-              className="w-full px-3.5 py-2.5 bg-white border-3 border-black text-black text-sm font-bold shadow-[2px_2px_0px_#000] focus:outline-none focus:ring-2 focus:ring-[#2196F3] disabled:opacity-60"
+              className="w-full px-3 py-2.5 glass-input text-xs bg-slate-900 text-white disabled:opacity-50"
             >
               {tracks.map((t) => (
-                <option key={t.id} value={t.id}>
+                <option key={t.id} value={t.id} className="bg-slate-900 text-white">
                   {t.name}
                 </option>
               ))}
@@ -213,41 +229,57 @@ export default function FacultyTeamsPage() {
           </div>
 
           <div>
-            <label className="text-xs font-black uppercase tracking-wide text-black block mb-1">Project Invention Title *</label>
+            <label className="text-xs font-semibold text-slate-300 block mb-1">Team Name *</label>
+            <input
+              type="text"
+              required
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              placeholder="e.g. Joseph MechStrikers"
+              className="w-full px-3 py-2.5 glass-input text-xs"
+            />
+          </div>
+
+          <div>
+            <label className="text-xs font-semibold text-slate-300 block mb-1">Project Title *</label>
             <input
               type="text"
               required
               value={formData.projectTitle}
               onChange={(e) => setFormData({ ...formData, projectTitle: e.target.value })}
-              placeholder="e.g. VortexCrawler X4"
-              className="w-full px-3.5 py-2.5 bg-white border-3 border-black text-black text-sm font-medium shadow-[2px_2px_0px_#000] focus:outline-none focus:ring-2 focus:ring-[#2196F3]"
+              placeholder="e.g. Pneumatic Payload Gripper"
+              className="w-full px-3 py-2.5 glass-input text-xs"
             />
           </div>
 
           <div>
-            <label className="text-xs font-black uppercase tracking-wide text-black block mb-1">Project Concept / Pitch *</label>
+            <label className="text-xs font-semibold text-slate-300 block mb-1">Project Summary / Pitch</label>
             <textarea
-              required
               rows={3}
               value={formData.projectSummary}
               onChange={(e) => setFormData({ ...formData, projectSummary: e.target.value })}
-              placeholder="Brief summary for judges..."
-              className="w-full px-3.5 py-2.5 bg-white border-3 border-black text-black text-sm font-medium shadow-[2px_2px_0px_#000] focus:outline-none focus:ring-2 focus:ring-[#2196F3]"
+              placeholder="Brief description of mechanism, design, or purpose..."
+              className="w-full px-3 py-2.5 glass-input text-xs"
             />
           </div>
 
-          {error && (
-            <p className="text-xs font-bold text-white bg-[#FF5252] border-2 border-black p-2.5 shadow-[2px_2px_0px_#000]">
-              {error}
-            </p>
-          )}
+          <div>
+            <label className="text-xs font-semibold text-slate-300 block mb-1">Allotted Table Number</label>
+            <input
+              type="text"
+              value={formData.tableNumber}
+              onChange={(e) => setFormData({ ...formData, tableNumber: e.target.value })}
+              placeholder="e.g. ROBO-02 (leave blank if not yet allotted)"
+              className="w-full px-3 py-2.5 glass-input text-xs"
+            />
+          </div>
 
-          <div className="flex gap-2 justify-end pt-2">
-            <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>
+          <div className="flex justify-end gap-2 pt-3 border-t border-white/10">
+            <Button type="button" variant="ghost" size="sm" onClick={() => setModalOpen(false)}>
               Cancel
             </Button>
-            <Button type="submit" variant="primary">
-              Save Squad
+            <Button type="submit" variant="gradient" size="sm">
+              Save Team
             </Button>
           </div>
         </form>

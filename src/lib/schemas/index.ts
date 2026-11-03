@@ -13,19 +13,19 @@ export const schoolRegistrationSchema = z.object({
 
 export type SchoolRegistrationInput = z.infer<typeof schoolRegistrationSchema>;
 
+// Strict Minor Privacy: name & class ONLY; zero student phone/email
 export const studentSchema = z.object({
-  fullName: z.string().min(2, "Student full name is required").max(80),
-  email: z.string().email("Valid student email required").optional().or(z.literal("")),
-  phone: z.string().optional().or(z.literal("")),
-  trackId: z.string().uuid("Please select a track"),
-  teamId: z.string().uuid("Please select a team").optional().or(z.literal("")),
+  name: z.string().min(2, "Student name is required").max(80),
+  class: z.string().min(1, "Class/Grade is required").max(30),
+  trackId: z.string().min(1, "Please select a track"),
+  teamId: z.string().optional().or(z.literal("")),
 });
 
 export type StudentInput = z.infer<typeof studentSchema>;
 
 export const teamSchema = z.object({
   name: z.string().min(2, "Team name is required").max(60),
-  trackId: z.string().uuid("Please select a track"),
+  trackId: z.string().min(1, "Please select a track"),
   projectTitle: z.string().min(3, "Project title is required").max(100),
   projectSummary: z.string().min(10, "Provide a brief description of the project").max(500),
   tableNumber: z.string().optional(),
@@ -34,8 +34,8 @@ export const teamSchema = z.object({
 export type TeamInput = z.infer<typeof teamSchema>;
 
 export const scoreSchema = z.object({
-  teamId: z.string().uuid("Invalid team"),
-  criterionId: z.string().uuid("Invalid criterion"),
+  teamId: z.string().min(1, "Invalid team"),
+  criterionId: z.string().min(1, "Invalid criterion"),
   value: z.number().min(0, "Score cannot be negative").max(10, "Score max is 10"),
   feedback: z.string().max(400).optional(),
 });
@@ -45,8 +45,7 @@ export type ScoreInput = z.infer<typeof scoreSchema>;
 export const announcementSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters").max(120),
   body: z.string().min(5, "Announcement body is required").max(1000),
-  audience: z.enum(["all", "faculty", "volunteers", "track"]),
-  trackId: z.string().uuid().optional().nullable(),
+  audience: z.enum(["all", "faculty", "volunteers"]),
   urgent: z.boolean().default(false),
 });
 
@@ -63,8 +62,8 @@ export type IssueReportInput = z.infer<typeof issueReportSchema>;
 export const scheduleItemSchema = z.object({
   title: z.string().min(3, "Title is required").max(100),
   description: z.string().max(500).optional(),
-  trackId: z.string().uuid().optional().nullable(),
-  venueId: z.string().uuid().optional().nullable(),
+  trackId: z.string().optional().nullable(),
+  venueId: z.string().optional().nullable(),
   startsAt: z.string().min(1, "Start time is required"),
   endsAt: z.string().min(1, "End time is required"),
   type: z.enum(["ceremony", "competition", "break", "judging", "other"]),
@@ -72,9 +71,9 @@ export const scheduleItemSchema = z.object({
 
 export type ScheduleItemInput = z.infer<typeof scheduleItemSchema>;
 
-export const studentJoinSchema = z.object({
-  code: z.string().length(6, "School code must be 6 characters").toUpperCase(),
-  studentId: z.string().uuid("Select your student profile from the list"),
+export const checkinBatchSchema = z.object({
+  schoolId: z.string().min(1, "School ID is required"),
+  studentIds: z.array(z.string()).min(1, "Select at least one present student to check in"),
 });
 
-export type StudentJoinInput = z.infer<typeof studentJoinSchema>;
+export type CheckinBatchInput = z.infer<typeof checkinBatchSchema>;

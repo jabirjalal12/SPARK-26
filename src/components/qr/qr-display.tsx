@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useEffect, useState } from "react";
 import QRCode from "qrcode";
@@ -27,7 +27,7 @@ export function QRDisplay({
       width: size * 2,
       margin: 2,
       color: {
-        dark: "#000000",
+        dark: "#0f172a",
         light: "#ffffff",
       },
     })
@@ -46,8 +46,8 @@ export function QRDisplay({
   };
 
   return (
-    <div className="flex flex-col items-center text-center p-4 border-[3px] border-black bg-white shadow-[4px_4px_0px_#000000] text-black">
-      <div className="p-2 bg-white border-[3px] border-black shadow-[3px_3px_0px_#000000]">
+    <div className="flex flex-col items-center text-center p-3 text-slate-900">
+      <div className="p-3 bg-white rounded-xl shadow-lg border border-slate-200">
         {dataUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -55,35 +55,36 @@ export function QRDisplay({
             alt={`QR pass for ${title}`}
             width={size}
             height={size}
-            className="block"
+            className="block rounded-lg"
           />
         ) : (
           <div
             style={{ width: size, height: size }}
-            className="flex items-center justify-center bg-slate-100 text-black border border-black"
+            className="flex items-center justify-center bg-slate-100 rounded-lg text-slate-400"
           >
-            <QrIcon className="h-10 w-10 text-black" />
+            <QrIcon className="h-10 w-10 animate-pulse text-slate-300" />
           </div>
         )}
       </div>
 
-      <div className="mt-3">
-        <h4 className="font-black text-sm text-black">{title}</h4>
-        {subtitle && <p className="text-xs font-medium text-slate-700 mt-0.5">{subtitle}</p>}
-        <div className="mt-2 inline-block font-mono text-xs font-black bg-[#FFEB3B] text-black px-2 py-0.5 border-2 border-black shadow-[2px_2px_0px_#000000]">
-          {value}
-        </div>
+      <div className="mt-2 text-center">
+        <h4 className="font-bold text-xs text-slate-900 tracking-tight">{title}</h4>
+        {subtitle && (
+          <p className="text-[11px] font-medium text-slate-600 mt-0.5 max-w-[200px] truncate">
+            {subtitle}
+          </p>
+        )}
       </div>
 
-      {downloadable && (
+      {downloadable && dataUrl && (
         <Button
           size="sm"
-          variant="secondary"
+          variant="outline"
           onClick={handleDownload}
-          className="mt-3 text-xs w-full"
+          className="mt-3 text-xs h-7 px-3 text-slate-800 border-slate-300 hover:bg-slate-100"
         >
-          <Download className="h-3.5 w-3.5 mr-1" />
-          <span>Save Pass</span>
+          <Download className="h-3 w-3 mr-1" />
+          <span>Save PNG</span>
         </Button>
       )}
     </div>

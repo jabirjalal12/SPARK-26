@@ -4,165 +4,300 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useFestStore } from "@/lib/store";
-import { UserRole } from "@/lib/types/database";
+import { UserRole, OrganizerSubRole } from "@/lib/types/database";
 import { cn } from "@/lib/utils";
 import {
   Sparkles,
   Calendar,
   Trophy,
   Bell,
-  Award,
   Users,
   QrCode,
   Scan,
   ShieldCheck,
   ClipboardList,
   AlertTriangle,
-  Gavel,
   Sliders,
   ChevronDown,
   LogOut,
   Home,
+  FileText,
+  History,
+  RotateCcw,
+  CheckCircle2,
+  Lock,
 } from "lucide-react";
 
 export function PillNav() {
   const pathname = usePathname();
-  const { currentProfile, switchRole } = useFestStore();
-  const [roleMenuOpen, setRoleMenuOpen] = useState(false);
+  const {
+    currentProfile,
+    activeOrganizerSubRole,
+    switchRole,
+    switchOrganizerSubRole,
+    isSuperAdmin,
+    isEventCoordinator,
+    isRegistrationHead,
+  } = useFestStore();
 
+  const [roleMenuOpen, setRoleMenuOpen] = useState(false);
   const role = currentProfile.role;
 
+  // Active navigation tabs per role & organizer sub-role
   const getNavLinks = () => {
-    switch (role) {
-      case "faculty":
-        return [
-          { href: "/dashboard", label: "Overview", icon: Home },
-          { href: "/faculty/students", label: "Students", icon: Users },
-          { href: "/faculty/teams", label: "Teams", icon: Sparkles },
-          { href: "/faculty/qr-passes", label: "QR Passes", icon: QrCode },
-          { href: "/schedule", label: "Schedule", icon: Calendar },
-          { href: "/announcements", label: "Notices", icon: Bell },
-        ];
-      case "volunteer":
-        return [
-          { href: "/dashboard", label: "Status", icon: Home },
-          { href: "/volunteer/scan", label: "QR Scanner", icon: Scan },
-          { href: "/volunteer/duties", label: "My Duties", icon: ClipboardList },
-          { href: "/volunteer/issues", label: "Issues", icon: AlertTriangle },
-          { href: "/schedule", label: "Schedule", icon: Calendar },
-        ];
-      case "judge":
-        return [
-          { href: "/dashboard", label: "Overview", icon: Home },
-          { href: "/judge", label: "Score Teams", icon: Gavel },
-          { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
-          { href: "/schedule", label: "Schedule", icon: Calendar },
-        ];
-      case "organizer":
-        return [
-          { href: "/dashboard", label: "Live Stats", icon: Home },
-          { href: "/organizer/schools", label: "Approvals", icon: ShieldCheck },
-          { href: "/organizer/schedule", label: "Schedule", icon: Calendar },
-          { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
-          { href: "/announcements", label: "Broadcast", icon: Bell },
-          { href: "/organizer/export", label: "Export", icon: Sliders },
-        ];
-      case "participant":
-      default:
-        return [
-          { href: "/dashboard", label: "My Pass", icon: QrCode },
-          { href: "/schedule", label: "Schedule", icon: Calendar },
-          { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
-          { href: "/announcements", label: "Announcements", icon: Bell },
-          { href: "/certificates", label: "Certificate", icon: Award },
-        ];
+    if (role === "faculty") {
+      return [
+        { href: "/dashboard", label: "Overview", icon: Home },
+        { href: "/faculty/students", label: "Students", icon: Users },
+        { href: "/faculty/teams", label: "Teams", icon: Sparkles },
+        { href: "/faculty/ticket", label: "School Pass", icon: QrCode },
+        { href: "/faculty/info-sheet", label: "Info Sheet", icon: FileText },
+        { href: "/schedule", label: "Schedule", icon: Calendar },
+        { href: "/announcements", label: "Notices", icon: Bell },
+      ];
     }
+
+    if (role === "volunteer") {
+      return [
+        { href: "/dashboard", label: "Desk Status", icon: Home },
+        { href: "/volunteer/scan", label: "Fast Scanner", icon: Scan },
+        { href: "/volunteer/duties", label: "Duty Roster", icon: ClipboardList },
+        { href: "/volunteer/issues", label: "Report Issue", icon: AlertTriangle },
+        { href: "/schedule", label: "Schedule", icon: Calendar },
+        { href: "/announcements", label: "Notices", icon: Bell },
+      ];
+    }
+
+    // Organizer sub-role links
+    if (isSuperAdmin) {
+      return [
+        { href: "/dashboard", label: "Telemetry", icon: Home },
+        { href: "/organizer/schools", label: "Approvals", icon: ShieldCheck },
+        { href: "/organizer/checkins", label: "Desk Arrivals", icon: RotateCcw },
+        { href: "/organizer/schedule", label: "Schedule", icon: Calendar },
+        { href: "/organizer/scoring", label: "Scoring", icon: Sparkles },
+        { href: "/organizer/results", label: "Publish", icon: Trophy },
+        { href: "/announcements", label: "Notices", icon: Bell },
+        { href: "/organizer/export", label: "Export", icon: Sliders },
+        { href: "/organizer/audit", label: "Audit Log", icon: History },
+      ];
+    }
+
+    if (isRegistrationHead) {
+      return [
+        { href: "/dashboard", label: "Telemetry", icon: Home },
+        { href: "/organizer/schools", label: "Approvals", icon: ShieldCheck },
+        { href: "/organizer/checkins", label: "Arrivals & Undo", icon: RotateCcw },
+        { href: "/faculty/students", label: "Rosters", icon: Users },
+        { href: "/organizer/export", label: "Export Roster", icon: Sliders },
+        { href: "/announcements", label: "Notices", icon: Bell },
+      ];
+    }
+
+    // Event Coordinator
+    return [
+      { href: "/dashboard", label: "Telemetry", icon: Home },
+      { href: "/organizer/schedule", label: "Schedule", icon: Calendar },
+      { href: "/organizer/scoring", label: "Scoring", icon: Sparkles },
+      { href: "/volunteer/issues", label: "Issues", icon: AlertTriangle },
+      { href: "/announcements", label: "Broadcast", icon: Bell },
+      { href: "/organizer/export", label: "Export", icon: Sliders },
+      { href: "/organizer/audit", label: "Audit Log", icon: History },
+    ];
   };
 
   const links = getNavLinks();
 
-  const roleLabels: Record<UserRole, string> = {
-    organizer: "Organizer (Admin)",
-    faculty: "Faculty Lead",
-    volunteer: "Volunteer",
-    judge: "Judge",
-    participant: "Student",
-  };
-
-  const roleColors: Record<UserRole, string> = {
-    organizer: "bg-[#FFEB3B] text-black border-black",
-    faculty: "bg-[#2196F3] text-black border-black",
-    volunteer: "bg-[#4CAF50] text-black border-black",
-    judge: "bg-[#FF9800] text-black border-black",
-    participant: "bg-[#FF5252] text-black border-black",
+  const getRoleBadgeLabel = () => {
+    if (role === "faculty") return "Visiting Faculty";
+    if (role === "volunteer") return "Registration Desk Volunteer";
+    if (activeOrganizerSubRole === "super_admin") return "Super Admin (Organizer)";
+    if (activeOrganizerSubRole === "event_coordinator") return "Event Coordinator (Organizer)";
+    return "Registration Head (Organizer)";
   };
 
   return (
     <>
-      {/* Top Banner / Navigation Header */}
-      <header className="sticky top-0 z-40 w-full border-b-[3px] border-black bg-white">
+      {/* Top Header Bar */}
+      <header className="sticky top-0 z-40 w-full glass-nav border-b border-white/10 backdrop-blur-2xl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
-          <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="h-10 w-10 bg-[#FFEB3B] border-[3px] border-black shadow-[3px_3px_0px_#000000] flex items-center justify-center transition-transform group-hover:-translate-x-0.5 group-hover:-translate-y-0.5">
-              <Sparkles className="h-5 w-5 text-black" />
+          {/* Logo & Brand */}
+          <Link href="/" className="flex items-center gap-3 group">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-rose-600 flex items-center justify-center font-black text-white shadow-lg shadow-indigo-500/30 group-hover:scale-105 transition-transform">
+              M//B
             </div>
             <div className="flex flex-col">
-              <span className="font-black text-xl text-black tracking-tight leading-none">
-                SPARK
+              <span className="font-extrabold tracking-tight text-lg text-white group-hover:text-indigo-300 transition-colors">
+                MAKE<span className="text-rose-500">//</span>BREAK
               </span>
-              <span className="text-[10px] uppercase tracking-widest text-black font-bold mt-0.5 bg-[#FFEB3B] px-1 border border-black inline-block">
-                TECH FEST 2026
+              <span className="text-[10px] uppercase font-semibold tracking-wider text-slate-400">
+                Inter-School Tech Fest 2026
               </span>
             </div>
           </Link>
 
-          {/* Role Switcher Pill */}
+          {/* Organizer Sub-role Switcher (If in organizer mode) */}
+          {role === "organizer" && (
+            <div className="hidden lg:flex items-center gap-1 bg-white/[0.06] border border-white/15 p-1 rounded-xl">
+              <button
+                onClick={() => switchOrganizerSubRole("super_admin")}
+                className={cn(
+                  "px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer",
+                  activeOrganizerSubRole === "super_admin"
+                    ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/30"
+                    : "text-slate-400 hover:text-white"
+                )}
+              >
+                Super Admin
+              </button>
+              <button
+                onClick={() => switchOrganizerSubRole("event_coordinator")}
+                className={cn(
+                  "px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer",
+                  activeOrganizerSubRole === "event_coordinator"
+                    ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/30"
+                    : "text-slate-400 hover:text-white"
+                )}
+              >
+                Event Coordinator
+              </button>
+              <button
+                onClick={() => switchOrganizerSubRole("registration_head")}
+                className={cn(
+                  "px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer",
+                  activeOrganizerSubRole === "registration_head"
+                    ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/30"
+                    : "text-slate-400 hover:text-white"
+                )}
+              >
+                Registration Head
+              </button>
+            </div>
+          )}
+
+          {/* Role Switcher Pill & Dropdown */}
           <div className="relative">
             <button
               onClick={() => setRoleMenuOpen(!roleMenuOpen)}
-              className={cn(
-                "flex items-center gap-2 px-3 py-1.5 rounded-none text-xs font-black border-[3px] shadow-[3px_3px_0px_#000000] hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-black",
-                roleColors[role]
-              )}
-              title="Click to switch preview roles"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.08] hover:bg-white/[0.14] border border-white/15 text-xs font-semibold text-slate-200 transition-all cursor-pointer shadow-sm"
             >
-              <span className="h-2 w-2 rounded-full bg-black animate-pulse" />
-              <span>Role: {roleLabels[role]}</span>
-              <ChevronDown className="h-3.5 w-3.5 text-black" />
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span>{getRoleBadgeLabel()}</span>
+              <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
             </button>
 
+            {/* Role Switcher Modal / Dropdown */}
             {roleMenuOpen && (
               <div
-                className="absolute right-0 mt-2 w-56 rounded-none border-[3px] border-black bg-white p-2 shadow-[6px_6px_0px_#000000] z-50 animate-in fade-in"
-                onClick={() => setRoleMenuOpen(false)}
+                className="absolute right-0 mt-2 w-72 rounded-2xl glass-panel-elevated p-3 z-50 animate-in fade-in zoom-in-95 duration-150"
+                onClick={(e) => e.stopPropagation()}
               >
-                <div className="px-2 py-1.5 text-[11px] font-black uppercase tracking-wider text-black border-b-2 border-black bg-[#FFEB3B]">
-                  Switch Role Preview
+                <div className="px-3 py-2 border-b border-white/10 mb-2">
+                  <p className="text-xs font-bold text-white uppercase tracking-wider">Switch Test Role</p>
+                  <p className="text-[11px] text-slate-400">Evaluate each portal without logging out</p>
                 </div>
-                <div className="space-y-1 mt-1">
-                  {(["organizer", "faculty", "volunteer", "judge", "participant"] as UserRole[]).map((r) => (
-                    <button
-                      key={r}
-                      onClick={() => switchRole(r)}
-                      className={cn(
-                        "w-full flex items-center justify-between px-2.5 py-1.5 text-xs font-bold text-left border-2 transition-all cursor-pointer",
-                        role === r
-                          ? "bg-black text-white border-black shadow-[2px_2px_0px_#2196F3]"
-                          : "text-black border-transparent hover:bg-[#FFEB3B] hover:border-black"
-                      )}
-                    >
-                      <span>{roleLabels[r]}</span>
-                      {role === r && <span className="text-[10px] bg-white text-black px-1.5 py-0.2 font-black">ACTIVE</span>}
-                    </button>
-                  ))}
-                </div>
-                <div className="mt-2 pt-2 border-t-2 border-black">
-                  <Link
-                    href="/"
-                    className="w-full flex items-center gap-2 px-2.5 py-1.5 text-xs font-bold text-black border-2 border-transparent hover:border-black hover:bg-[#FF5252] transition-colors"
+
+                <div className="space-y-1">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 px-3 pt-1">
+                    Organizer Sub-Roles
+                  </p>
+                  <button
+                    onClick={() => {
+                      switchOrganizerSubRole("super_admin");
+                      setRoleMenuOpen(false);
+                    }}
+                    className={cn(
+                      "w-full text-left px-3 py-2 rounded-xl text-xs font-medium flex items-center justify-between transition-colors",
+                      role === "organizer" && activeOrganizerSubRole === "super_admin"
+                        ? "bg-indigo-600/30 text-indigo-200 border border-indigo-500/30 font-bold"
+                        : "text-slate-300 hover:bg-white/10"
+                    )}
                   >
-                    <LogOut className="h-3.5 w-3.5" />
-                    <span>Public Landing Page</span>
+                    <span>Super Admin (Full Control)</span>
+                    {role === "organizer" && activeOrganizerSubRole === "super_admin" && (
+                      <CheckCircle2 className="w-4 h-4 text-indigo-400" />
+                    )}
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      switchOrganizerSubRole("event_coordinator");
+                      setRoleMenuOpen(false);
+                    }}
+                    className={cn(
+                      "w-full text-left px-3 py-2 rounded-xl text-xs font-medium flex items-center justify-between transition-colors",
+                      role === "organizer" && activeOrganizerSubRole === "event_coordinator"
+                        ? "bg-indigo-600/30 text-indigo-200 border border-indigo-500/30 font-bold"
+                        : "text-slate-300 hover:bg-white/10"
+                    )}
+                  >
+                    <span>Event Coordinator</span>
+                    {role === "organizer" && activeOrganizerSubRole === "event_coordinator" && (
+                      <CheckCircle2 className="w-4 h-4 text-indigo-400" />
+                    )}
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      switchOrganizerSubRole("registration_head");
+                      setRoleMenuOpen(false);
+                    }}
+                    className={cn(
+                      "w-full text-left px-3 py-2 rounded-xl text-xs font-medium flex items-center justify-between transition-colors",
+                      role === "organizer" && activeOrganizerSubRole === "registration_head"
+                        ? "bg-indigo-600/30 text-indigo-200 border border-indigo-500/30 font-bold"
+                        : "text-slate-300 hover:bg-white/10"
+                    )}
+                  >
+                    <span>Registration Head</span>
+                    {role === "organizer" && activeOrganizerSubRole === "registration_head" && (
+                      <CheckCircle2 className="w-4 h-4 text-indigo-400" />
+                    )}
+                  </button>
+
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 px-3 pt-2">
+                    External Leads
+                  </p>
+                  <button
+                    onClick={() => {
+                      switchRole("faculty");
+                      setRoleMenuOpen(false);
+                    }}
+                    className={cn(
+                      "w-full text-left px-3 py-2 rounded-xl text-xs font-medium flex items-center justify-between transition-colors",
+                      role === "faculty"
+                        ? "bg-blue-600/30 text-blue-200 border border-blue-500/30 font-bold"
+                        : "text-slate-300 hover:bg-white/10"
+                    )}
+                  >
+                    <span>Visiting Faculty Lead</span>
+                    {role === "faculty" && <CheckCircle2 className="w-4 h-4 text-blue-400" />}
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      switchRole("volunteer");
+                      setRoleMenuOpen(false);
+                    }}
+                    className={cn(
+                      "w-full text-left px-3 py-2 rounded-xl text-xs font-medium flex items-center justify-between transition-colors",
+                      role === "volunteer"
+                        ? "bg-emerald-600/30 text-emerald-200 border border-emerald-500/30 font-bold"
+                        : "text-slate-300 hover:bg-white/10"
+                    )}
+                  >
+                    <span>Registration Desk Volunteer</span>
+                    {role === "volunteer" && <CheckCircle2 className="w-4 h-4 text-emerald-400" />}
+                  </button>
+                </div>
+
+                <div className="mt-3 pt-2 border-t border-white/10 flex justify-between items-center text-[11px]">
+                  <Link href="/" className="text-indigo-400 hover:underline">
+                    Public Landing
+                  </Link>
+                  <Link href="/login" className="text-slate-400 hover:text-white flex items-center gap-1">
+                    <LogOut className="w-3 h-3" />
+                    <span>Login Page</span>
                   </Link>
                 </div>
               </div>
@@ -171,12 +306,9 @@ export function PillNav() {
         </div>
       </header>
 
-      {/* Floating Pill Nav for Mobile & Desktop */}
-      <nav
-        aria-label="App navigation"
-        className="fixed bottom-5 inset-x-0 z-40 flex justify-center px-4 pointer-events-none"
-      >
-        <div className="pointer-events-auto flex items-center gap-1.5 sm:gap-2 p-2 rounded-none border-[3px] border-black bg-[#FFFBEB] shadow-[6px_6px_0px_#000000] overflow-x-auto max-w-full no-scrollbar">
+      {/* Floating Bottom Pill Navigation Bar */}
+      <nav className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 max-w-full px-3">
+        <div className="flex items-center gap-1 sm:gap-2 px-3 py-2 rounded-full glass-panel-elevated border border-white/20 shadow-2xl backdrop-blur-2xl">
           {links.map((link) => {
             const Icon = link.icon;
             const isActive = pathname === link.href;
@@ -185,14 +317,14 @@ export function PillNav() {
                 key={link.href}
                 href={link.href}
                 className={cn(
-                  "flex items-center gap-2 px-3 py-1.5 rounded-none text-xs font-bold whitespace-nowrap border-2 transition-all duration-100 select-none",
+                  "flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs font-semibold transition-all duration-200 whitespace-nowrap",
                   isActive
-                    ? "bg-black text-white border-black shadow-[3px_3px_0px_#2196F3] -translate-x-0.5 -translate-y-0.5"
-                    : "text-black border-black bg-white hover:bg-[#FFEB3B] shadow-[2px_2px_0px_#000000]"
+                    ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-indigo-500/30 scale-105"
+                    : "text-slate-300 hover:text-white hover:bg-white/10"
                 )}
               >
-                <Icon className={cn("h-4 w-4", isActive ? "text-white" : "text-black")} />
-                <span>{link.label}</span>
+                <Icon className="w-4 h-4 flex-shrink-0" />
+                <span className="hidden sm:inline">{link.label}</span>
               </Link>
             );
           })}

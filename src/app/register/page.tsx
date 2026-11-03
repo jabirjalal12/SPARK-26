@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from "react";
 import Link from "next/link";
@@ -19,6 +19,7 @@ import {
   KeyRound,
   MapPin,
   Clock,
+  ShieldCheck,
 } from "lucide-react";
 
 export default function RegisterSchoolPage() {
@@ -58,10 +59,9 @@ export default function RegisterSchoolPage() {
 
     setIsSubmitting(true);
     try {
-      // Auto-generate 6-char code from name prefix + random digits
       const cleanPrefix = formData.schoolName.replace(/[^a-zA-Z]/g, "").toUpperCase().slice(0, 3) || "SCH";
       const randomNum = Math.floor(100 + Math.random() * 900);
-      const generatedCode = `${cleanPrefix}${randomNum}`;
+      const generatedCode = `${cleanPrefix}-${randomNum}`;
 
       const created = addSchool({
         name: formData.schoolName,
@@ -70,7 +70,7 @@ export default function RegisterSchoolPage() {
         address: formData.address,
         contact_email: formData.contactEmail,
         contact_phone: formData.contactPhone,
-        approved: false, // Organizers approve faculty accounts
+        status: "pending",
       });
 
       setRegisteredSchool(created);
@@ -82,88 +82,89 @@ export default function RegisterSchoolPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FFFBEB] text-black flex flex-col justify-center items-center px-4 py-12 relative">
+    <div className="min-h-screen text-slate-100 flex flex-col justify-center items-center px-4 py-12 relative font-sans">
       <div className="w-full max-w-xl">
         <div className="flex items-center justify-between mb-6">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 text-xs font-bold text-black hover:bg-[#FFEB3B] px-3 py-1.5 border-2 border-black shadow-[2px_2px_0px_#000] bg-white transition-all active:translate-x-0.5 active:translate-y-0.5"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-300 hover:text-white transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
             <span>Back to Fest Landing</span>
           </Link>
-          <span className="text-xs font-bold uppercase tracking-wider bg-[#FFEB3B] text-black px-2.5 py-1 border-2 border-black font-mono shadow-[2px_2px_0px_#000]">
-            FACULTY REGISTRATION
+          <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+            VISITING FACULTY REGISTRATION
           </span>
         </div>
 
         {registeredSchool ? (
-          <GlassCard variant="yellow" className="p-8 text-center border-4 border-black shadow-[8px_8px_0px_#000]">
-            <div className="h-16 w-16 bg-[#4CAF50] text-black border-4 border-black mx-auto flex items-center justify-center mb-4 shadow-[4px_4px_0px_#000]">
-              <CheckCircle2 className="h-10 w-10 text-white" />
+          <GlassCard className="p-8 text-center border-white/20 bg-slate-900/90 backdrop-blur-2xl">
+            <div className="h-16 w-16 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 mx-auto flex items-center justify-center mb-4">
+              <CheckCircle2 className="h-10 w-10 text-emerald-400" />
             </div>
 
-            <h1 className="text-3xl font-black text-black tracking-tight uppercase">Registration Submitted!</h1>
-            <p className="text-sm font-medium text-black max-w-md mx-auto mt-2 leading-relaxed">
-              Your institution <span className="font-black bg-white px-1.5 py-0.5 border border-black">{registeredSchool.name}</span> has been enrolled for SPARK 2026.
+            <h1 className="text-3xl font-extrabold text-white tracking-tight">Registration Submitted</h1>
+            <p className="text-sm text-slate-300 max-w-md mx-auto mt-2 leading-relaxed">
+              Your institution <strong className="text-white">{registeredSchool.name}</strong> has been enrolled for MAKE//BREAK 2026.
             </p>
 
-            <div className="my-6 p-5 bg-white border-4 border-black shadow-[6px_6px_0px_#000] max-w-xs mx-auto">
-              <p className="text-xs uppercase tracking-wider font-black text-black">
+            <div className="my-6 p-5 rounded-xl bg-white/[0.04] border border-white/10 max-w-xs mx-auto">
+              <p className="text-xs uppercase tracking-wider font-bold text-slate-400">
                 Assigned School Code
               </p>
-              <p className="text-4xl font-black text-black font-mono tracking-widest mt-1 bg-[#FFEB3B] py-1 border-2 border-black">
+              <p className="text-3xl font-black text-indigo-300 font-mono tracking-widest mt-1">
                 {registeredSchool.code}
               </p>
-              <p className="text-xs font-bold text-neutral-700 mt-2">
-                Share this with your students so they can access their passes.
+              <p className="text-[11px] text-slate-400 mt-2">
+                Use this identifier to retrieve your delegation pass at the desk.
               </p>
             </div>
 
-            <div className="p-4 bg-[#FF9800]/20 border-3 border-black text-black text-xs text-left flex items-start gap-3 mb-6 shadow-[3px_3px_0px_#000]">
-              <Clock className="h-5 w-5 flex-shrink-0 mt-0.5 text-black" />
+            <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs text-left flex items-start gap-3 mb-6">
+              <Clock className="h-5 w-5 flex-shrink-0 mt-0.5 text-amber-400" />
               <div>
-                <p className="font-black uppercase tracking-wide">Pending Organizer Approval</p>
-                <p className="text-xs font-medium text-black mt-0.5">
-                  Organizers review institutional applications within 24 hours. You can already add students and configure teams.
+                <p className="font-bold text-white uppercase tracking-wide">Pending Registration Head Approval</p>
+                <p className="text-xs text-amber-200/90 mt-0.5">
+                  The fest Registration Head reviews institutional submissions. In the meantime, you can log in, enter your student delegation roster, and prepare your track teams.
                 </p>
               </div>
             </div>
 
             <div className="flex gap-3">
               <Button
-                variant="primary"
+                variant="gradient"
                 className="w-full text-base py-3"
                 onClick={() => {
                   switchRole("faculty");
                   router.push("/faculty/students");
                 }}
               >
-                <span>Proceed to Faculty Dashboard</span>
+                <span>Proceed to Faculty Delegation Manager</span>
                 <ArrowRight className="h-4 w-4 ml-1.5" />
               </Button>
             </div>
           </GlassCard>
         ) : (
-          <GlassCard variant="white" className="p-6 sm:p-8 border-4 border-black shadow-[8px_8px_0px_#000]">
+          <GlassCard className="p-6 sm:p-8 border-white/15 bg-slate-900/80 backdrop-blur-2xl">
             <div className="text-center mb-6">
-              <div className="h-14 w-14 bg-[#2196F3] border-3 border-black mx-auto flex items-center justify-center shadow-[4px_4px_0px_#000] mb-3">
-                <School className="h-7 w-7 text-black" />
+              <div className="h-12 w-12 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center mx-auto mb-3 shadow-lg shadow-indigo-500/30">
+                <School className="h-6 w-6 text-white" />
               </div>
-              <h1 className="text-2xl sm:text-3xl font-black text-black tracking-tight uppercase">Register Your Institution</h1>
-              <p className="text-xs font-semibold text-neutral-700 mt-1">
-                Each visiting school sends ONE faculty coordinator and student squads.
+              <h1 className="text-2xl font-bold text-white tracking-tight">Register Your Institution</h1>
+              <p className="text-xs text-slate-400 mt-1">
+                Each visiting school sends ONE faculty coordinator who manages their student squad.
               </p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Institution Info */}
-              <div className="space-y-3 pb-4 border-b-3 border-black">
-                <div className="inline-block bg-[#2196F3] text-black border-2 border-black px-2 py-0.5 text-xs font-black uppercase">
+              <div className="space-y-3 pb-4 border-b border-white/10">
+                <p className="text-xs font-bold uppercase tracking-wider text-indigo-300">
                   Institution Details
-                </div>
+                </p>
+
                 <div>
-                  <label className="text-xs font-black uppercase tracking-wide text-black block mb-1">
+                  <label className="text-xs font-semibold text-slate-300 block mb-1">
                     School / College Name *
                   </label>
                   <input
@@ -172,132 +173,130 @@ export default function RegisterSchoolPage() {
                     value={formData.schoolName}
                     onChange={(e) => setFormData({ ...formData, schoolName: e.target.value })}
                     placeholder="e.g. Apex Institute of Technology"
-                    className="w-full px-3.5 py-2.5 bg-white border-3 border-black text-black placeholder-neutral-500 text-sm font-medium shadow-[2px_2px_0px_#000] focus:outline-none focus:ring-2 focus:ring-[#2196F3]"
+                    className="w-full px-3.5 py-2.5 glass-input text-xs"
                   />
-                  {errors.schoolName && <p className="text-xs font-bold text-[#FF5252] mt-1">{errors.schoolName}</p>}
+                  {errors.schoolName && <p className="text-xs text-rose-400 mt-1">{errors.schoolName}</p>}
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="text-xs font-black uppercase tracking-wide text-black block mb-1">City *</label>
+                    <label className="text-xs font-semibold text-slate-300 block mb-1">City *</label>
                     <input
                       type="text"
                       required
                       value={formData.city}
                       onChange={(e) => setFormData({ ...formData, city: e.target.value })}
                       placeholder="e.g. Bengaluru"
-                      className="w-full px-3.5 py-2.5 bg-white border-3 border-black text-black placeholder-neutral-500 text-sm font-medium shadow-[2px_2px_0px_#000] focus:outline-none focus:ring-2 focus:ring-[#2196F3]"
+                      className="w-full px-3.5 py-2.5 glass-input text-xs"
                     />
-                    {errors.city && <p className="text-xs font-bold text-[#FF5252] mt-1">{errors.city}</p>}
+                    {errors.city && <p className="text-xs text-rose-400 mt-1">{errors.city}</p>}
                   </div>
                   <div>
-                    <label className="text-xs font-black uppercase tracking-wide text-black block mb-1">Campus Address</label>
+                    <label className="text-xs font-semibold text-slate-300 block mb-1">Campus Address</label>
                     <input
                       type="text"
                       value={formData.address}
                       onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                       placeholder="Street / Sector"
-                      className="w-full px-3.5 py-2.5 bg-white border-3 border-black text-black placeholder-neutral-500 text-sm font-medium shadow-[2px_2px_0px_#000] focus:outline-none focus:ring-2 focus:ring-[#2196F3]"
+                      className="w-full px-3.5 py-2.5 glass-input text-xs"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="text-xs font-black uppercase tracking-wide text-black block mb-1">Official Email *</label>
+                    <label className="text-xs font-semibold text-slate-300 block mb-1">Official Email *</label>
                     <input
                       type="email"
                       required
                       value={formData.contactEmail}
                       onChange={(e) => setFormData({ ...formData, contactEmail: e.target.value })}
                       placeholder="fest@college.edu"
-                      className="w-full px-3.5 py-2.5 bg-white border-3 border-black text-black placeholder-neutral-500 text-sm font-medium shadow-[2px_2px_0px_#000] focus:outline-none focus:ring-2 focus:ring-[#2196F3]"
+                      className="w-full px-3.5 py-2.5 glass-input text-xs"
                     />
-                    {errors.contactEmail && <p className="text-xs font-bold text-[#FF5252] mt-1">{errors.contactEmail}</p>}
+                    {errors.contactEmail && <p className="text-xs text-rose-400 mt-1">{errors.contactEmail}</p>}
                   </div>
                   <div>
-                    <label className="text-xs font-black uppercase tracking-wide text-black block mb-1">Phone Number *</label>
+                    <label className="text-xs font-semibold text-slate-300 block mb-1">Phone Number *</label>
                     <input
                       type="tel"
                       required
                       value={formData.contactPhone}
                       onChange={(e) => setFormData({ ...formData, contactPhone: e.target.value })}
                       placeholder="+91 98450 11223"
-                      className="w-full px-3.5 py-2.5 bg-white border-3 border-black text-black placeholder-neutral-500 text-sm font-medium shadow-[2px_2px_0px_#000] focus:outline-none focus:ring-2 focus:ring-[#2196F3]"
+                      className="w-full px-3.5 py-2.5 glass-input text-xs"
                     />
-                    {errors.contactPhone && <p className="text-xs font-bold text-[#FF5252] mt-1">{errors.contactPhone}</p>}
+                    {errors.contactPhone && <p className="text-xs text-rose-400 mt-1">{errors.contactPhone}</p>}
                   </div>
                 </div>
               </div>
 
-              {/* Faculty Coordinator Info */}
+              {/* Faculty Lead Info */}
               <div className="space-y-3 pt-2">
-                <div className="inline-block bg-[#FF5252] text-black border-2 border-black px-2 py-0.5 text-xs font-black uppercase">
+                <p className="text-xs font-bold uppercase tracking-wider text-rose-300">
                   Accompanying Faculty Lead
-                </div>
+                </p>
+
                 <div>
-                  <label className="text-xs font-black uppercase tracking-wide text-black block mb-1">Full Name *</label>
+                  <label className="text-xs font-semibold text-slate-300 block mb-1">Full Name *</label>
                   <input
                     type="text"
                     required
                     value={formData.facultyName}
                     onChange={(e) => setFormData({ ...formData, facultyName: e.target.value })}
                     placeholder="Dr. / Prof. Full Name"
-                    className="w-full px-3.5 py-2.5 bg-white border-3 border-black text-black placeholder-neutral-500 text-sm font-medium shadow-[2px_2px_0px_#000] focus:outline-none focus:ring-2 focus:ring-[#FF5252]"
+                    className="w-full px-3.5 py-2.5 glass-input text-xs"
                   />
-                  {errors.facultyName && <p className="text-xs font-bold text-[#FF5252] mt-1">{errors.facultyName}</p>}
+                  {errors.facultyName && <p className="text-xs text-rose-400 mt-1">{errors.facultyName}</p>}
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="text-xs font-black uppercase tracking-wide text-black block mb-1">Faculty Email *</label>
+                    <label className="text-xs font-semibold text-slate-300 block mb-1">Faculty Email *</label>
                     <input
                       type="email"
                       required
                       value={formData.facultyEmail}
                       onChange={(e) => setFormData({ ...formData, facultyEmail: e.target.value })}
-                      placeholder="faculty@college.edu"
-                      className="w-full px-3.5 py-2.5 bg-white border-3 border-black text-black placeholder-neutral-500 text-sm font-medium shadow-[2px_2px_0px_#000] focus:outline-none focus:ring-2 focus:ring-[#FF5252]"
+                      placeholder="faculty.lead@college.edu"
+                      className="w-full px-3.5 py-2.5 glass-input text-xs"
                     />
-                    {errors.facultyEmail && <p className="text-xs font-bold text-[#FF5252] mt-1">{errors.facultyEmail}</p>}
+                    {errors.facultyEmail && <p className="text-xs text-rose-400 mt-1">{errors.facultyEmail}</p>}
                   </div>
                   <div>
-                    <label className="text-xs font-black uppercase tracking-wide text-black block mb-1">Create Password *</label>
+                    <label className="text-xs font-semibold text-slate-300 block mb-1">Portal Password *</label>
                     <input
                       type="password"
                       required
                       value={formData.password}
                       onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                      placeholder="Min 6 characters"
-                      className="w-full px-3.5 py-2.5 bg-white border-3 border-black text-black placeholder-neutral-500 text-sm font-medium shadow-[2px_2px_0px_#000] focus:outline-none focus:ring-2 focus:ring-[#FF5252]"
+                      placeholder="••••••••"
+                      className="w-full px-3.5 py-2.5 glass-input text-xs"
                     />
-                    {errors.password && <p className="text-xs font-bold text-[#FF5252] mt-1">{errors.password}</p>}
+                    {errors.password && <p className="text-xs text-rose-400 mt-1">{errors.password}</p>}
                   </div>
                 </div>
               </div>
 
               {errors.form && (
-                <p className="text-xs font-bold text-white bg-[#FF5252] border-2 border-black p-2.5 text-center shadow-[3px_3px_0px_#000]">
+                <div className="p-3 rounded-xl bg-rose-950/60 border border-rose-500/30 text-rose-200 text-xs">
                   {errors.form}
-                </p>
+                </div>
               )}
 
-              <Button type="submit" variant="primary" className="w-full mt-4 text-base py-3" isLoading={isSubmitting}>
-                <span>Submit School Registration</span>
-                <ArrowRight className="h-4 w-4 ml-1.5" />
+              <Button
+                type="submit"
+                variant="gradient"
+                className="w-full mt-4"
+                isLoading={isSubmitting}
+              >
+                <span>Submit Institutional Application</span>
+                <ArrowRight className="h-4 w-4 ml-1" />
               </Button>
             </form>
-
-            <div className="mt-5 text-center text-xs font-bold text-neutral-700">
-              Already registered?{" "}
-              <Link href="/login" className="text-black bg-[#FFEB3B] px-2 py-0.5 border border-black hover:shadow-[2px_2px_0px_#000] font-black underline">
-                Sign In to Faculty Portal
-              </Link>
-            </div>
           </GlassCard>
         )}
       </div>
     </div>
   );
 }
-

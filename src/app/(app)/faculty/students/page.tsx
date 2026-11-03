@@ -11,6 +11,12 @@ import {
   Plus,
   Upload,
   Trash2,
+  CheckCircle2,
+  Clock,
+  ShieldAlert,
+  Bot,
+  Wrench,
+  Sparkles,
 } from "lucide-react";
 
 export default function FacultyStudentsPage() {
@@ -26,28 +32,27 @@ export default function FacultyStudentsPage() {
   const [csvText, setCsvText] = useState("");
   const [csvStatus, setCsvStatus] = useState<string | null>(null);
 
+  // Minor Privacy: Strictly name, class, trackId, teamId. NO email, NO phone!
   const [formData, setFormData] = useState({
-    fullName: "",
-    email: "",
-    phone: "",
+    name: "",
+    classGrade: "12-A",
     trackId: tracks[0]?.id || "",
     teamId: "",
   });
 
   const handleManualAdd = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.fullName) return;
+    if (!formData.name) return;
 
     addStudent({
       school_id: facultySchool.id,
-      full_name: formData.fullName,
-      email: formData.email,
-      phone: formData.phone,
+      name: formData.name,
+      class: formData.classGrade,
       track_id: formData.trackId,
-      team_id: formData.teamId || undefined,
+      team_id: formData.teamId || null,
     });
 
-    setFormData({ fullName: "", email: "", phone: "", trackId: tracks[0]?.id || "", teamId: "" });
+    setFormData({ name: "", classGrade: "12-A", trackId: tracks[0]?.id || "", teamId: "" });
     setAddModalOpen(false);
   };
 
@@ -62,9 +67,8 @@ export default function FacultyStudentsPage() {
         const parts = line.split(",").map((p) => p.trim());
         if (parts.length >= 1 && parts[0] && !parts[0].toLowerCase().includes("name")) {
           const name = parts[0];
-          const email = parts[1] || "";
-          const phone = parts[2] || "";
-          const trackSlug = (parts[3] || "").toLowerCase();
+          const classGrade = parts[1] || "12-A";
+          const trackSlug = (parts[2] || "").toLowerCase();
 
           const matchedTrack =
             tracks.find((t) => t.slug.includes(trackSlug) || t.name.toLowerCase().includes(trackSlug)) ||
@@ -72,181 +76,237 @@ export default function FacultyStudentsPage() {
 
           addStudent({
             school_id: facultySchool.id,
-            full_name: name,
-            email,
-            phone,
-            track_id: matchedTrack?.id,
+            name,
+            class: classGrade,
+            track_id: matchedTrack?.id || tracks[0].id,
           });
           count++;
         }
       });
 
-      setCsvStatus(`Successfully parsed and registered ${count} students!`);
+      setCsvStatus(`Successfully enrolled ${count} students!`);
       setTimeout(() => {
         setCsvModalOpen(false);
         setCsvStatus(null);
         setCsvText("");
       }, 1200);
     } catch {
-      setCsvStatus("Error parsing CSV format. Please ensure comma-separated lines.");
+      setCsvStatus("Error parsing CSV. Format: Full Name, Class/Grade, Track");
     }
   };
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b-3 border-black">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-white/10">
         <div>
-          <Badge variant="outline" className="mb-1.5 bg-[#FFEB3B] text-black border-2 border-black font-black">
-            STUDENT DELEGATION
+          <Badge variant="outline" className="mb-1.5">
+            DELEGATION ROSTER
           </Badge>
-          <h1 className="text-2xl sm:text-3xl font-black text-black tracking-tight uppercase">
-            Student Roster — {facultySchool?.name}
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-white">
+            {facultySchool?.name || "Institution"} Squad
           </h1>
-          <p className="text-xs font-bold text-neutral-700 mt-1">
-            Add your student participants, assign competition tracks, and verify digital credentials.
+          <p className="text-xs text-slate-400 mt-1">
+            Registered students arriving with your faculty delegation. (Total: {schoolStudents.length})
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Button variant="secondary" onClick={() => setCsvModalOpen(true)}>
+        <div className="flex items-center gap-2.5">
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => setCsvModalOpen(true)}
+            className="text-xs"
+          >
             <Upload className="h-4 w-4 mr-1.5" />
             <span>CSV Bulk Upload</span>
           </Button>
-          <Button variant="primary" onClick={() => setAddModalOpen(true)}>
+          <Button
+            size="sm"
+            variant="gradient"
+            onClick={() => setAddModalOpen(true)}
+            className="text-xs"
+          >
             <Plus className="h-4 w-4 mr-1.5" />
             <span>Add Student</span>
           </Button>
         </div>
       </div>
 
-      {/* Roster Table */}
-      <GlassCard variant="white" className="overflow-hidden border-4 border-black shadow-[8px_8px_0px_#000] p-0">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-[#FFEB3B] border-b-3 border-black uppercase tracking-wider text-black font-black">
-              <tr>
-                <th className="py-3.5 px-4">Student Name</th>
-                <th className="py-3.5 px-4">Track</th>
-                <th className="py-3.5 px-4">Team</th>
-                <th className="py-3.5 px-4">Pass Token</th>
-                <th className="py-3.5 px-4">Arrival Status</th>
-                <th className="py-3.5 px-4 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y-2 divide-black bg-white">
-              {schoolStudents.map((stud) => {
-                const tr = tracks.find((t) => t.id === stud.track_id);
-                const tm = teams.find((t) => t.id === stud.team_id);
-                return (
-                  <tr key={stud.id} className="hover:bg-[#FFFBEB] transition-colors">
-                    <td className="py-3.5 px-4 font-black text-black">
-                      <div className="text-sm uppercase">{stud.full_name}</div>
-                      {stud.email && <div className="text-[11px] text-neutral-600 font-bold">{stud.email}</div>}
-                    </td>
-                    <td className="py-3.5 px-4">
-                      <span className="font-black uppercase text-black bg-[#2196F3] px-2 py-0.5 border border-black">
-                        {tr?.name || "Unassigned"}
-                      </span>
-                    </td>
-                    <td className="py-3.5 px-4 text-black font-bold">{tm?.name || "Solo Squad"}</td>
-                    <td className="py-3.5 px-4">
-                      <span className="font-mono text-black font-black bg-[#FFEB3B] px-2 py-0.5 border border-black shadow-[1px_1px_0px_#000]">
-                        {stud.qr_token}
-                      </span>
-                    </td>
-                    <td className="py-3.5 px-4">
-                      <Badge variant={stud.checked_in ? "success" : "warning"}>
-                        {stud.checked_in ? "Checked In" : "Pending Arrival"}
-                      </Badge>
-                    </td>
-                    <td className="py-3.5 px-4 text-right">
-                      <button
-                        onClick={() => deleteStudent(stud.id)}
-                        className="p-1.5 text-black hover:bg-[#FF5252] border-2 border-black bg-white shadow-[2px_2px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 transition-all"
-                        title="Delete Student"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
+      {/* Minor Privacy Guarantee Banner */}
+      <div className="p-3.5 rounded-xl bg-indigo-950/40 border border-indigo-500/30 text-indigo-200 text-xs flex items-center gap-3">
+        <ShieldAlert className="w-5 h-5 flex-shrink-0 text-indigo-400" />
+        <p>
+          <strong>Minor Student Privacy Enforced:</strong> As per fest rules, no minor student emails or contact numbers are collected. Verification is managed strictly via your single School Ticket QR code.
+        </p>
+      </div>
 
-              {schoolStudents.length === 0 && (
-                <tr>
-                  <td colSpan={6} className="py-10 text-center text-black font-bold text-xs">
-                    No students enrolled yet. Add students manually or paste a CSV roster above.
-                  </td>
+      {/* Students List Table */}
+      <GlassCard className="p-5 border-white/15 overflow-hidden">
+        {schoolStudents.length === 0 ? (
+          <div className="text-center py-12">
+            <Users className="w-12 h-12 text-slate-500 mx-auto mb-3" />
+            <h3 className="font-bold text-white text-base">No Students Enrolled Yet</h3>
+            <p className="text-xs text-slate-400 mt-1 mb-5">
+              Add your visiting student participants individually or paste a CSV list.
+            </p>
+            <Button size="sm" variant="gradient" onClick={() => setAddModalOpen(true)}>
+              <Plus className="w-4 h-4 mr-1" />
+              <span>Enroll First Student</span>
+            </Button>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead>
+                <tr className="border-b border-white/10 text-slate-400 font-semibold uppercase tracking-wider text-[11px]">
+                  <th className="pb-3 px-3">Student Name</th>
+                  <th className="pb-3 px-3">Class / Grade</th>
+                  <th className="pb-3 px-3">Assigned Track</th>
+                  <th className="pb-3 px-3">Team</th>
+                  <th className="pb-3 px-3">Arrival Status</th>
+                  <th className="pb-3 px-3 text-right">Actions</th>
                 </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                {schoolStudents.map((student) => {
+                  const track = tracks.find((t) => t.id === student.track_id);
+                  const team = teams.find((t) => t.id === student.team_id);
+
+                  return (
+                    <tr key={student.id} className="hover:bg-white/[0.03] transition-colors">
+                      <td className="py-3 px-3 font-semibold text-white">
+                        <div className="flex items-center gap-2">
+                          <span>{student.name}</span>
+                          {student.is_walkin && (
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold">
+                              Walk-in
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-3 px-3 text-slate-300 font-mono">
+                        {student.class}
+                      </td>
+                      <td className="py-3 px-3">
+                        <span className="inline-flex items-center gap-1 font-medium text-slate-200">
+                          {track?.name || "Unassigned"}
+                        </span>
+                      </td>
+                      <td className="py-3 px-3 text-slate-300">
+                        {team ? team.name : <span className="text-slate-500 italic">Individual</span>}
+                      </td>
+                      <td className="py-3 px-3">
+                        {student.checked_in ? (
+                          <span className="inline-flex items-center gap-1 text-emerald-400 font-semibold">
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                            <span>Checked In</span>
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-slate-400">
+                            <Clock className="w-3.5 h-3.5" />
+                            <span>Expected</span>
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-3 px-3 text-right">
+                        <button
+                          onClick={() => deleteStudent(student.id)}
+                          className="p-1 rounded text-rose-400 hover:text-white hover:bg-rose-950/60 transition-colors cursor-pointer"
+                          title="Remove student"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </GlassCard>
 
       {/* Manual Add Student Modal */}
       <Modal
         isOpen={addModalOpen}
         onClose={() => setAddModalOpen(false)}
-        title="Add Student Participant"
-        description="Enroll a student under your institutional delegation."
+        title="Enroll Student Participant"
+        description="Add a student to your visiting school squad. No phone or email required."
       >
         <form onSubmit={handleManualAdd} className="space-y-4">
           <div>
-            <label className="text-xs font-black uppercase tracking-wide text-black block mb-1">Student Full Name *</label>
+            <label className="text-xs font-semibold text-slate-300 block mb-1">
+              Full Legal Name *
+            </label>
             <input
               type="text"
               required
-              value={formData.fullName}
-              onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-              placeholder="e.g. Aarav Nair"
-              className="w-full px-3.5 py-2.5 bg-white border-3 border-black text-black placeholder-neutral-500 text-sm font-medium shadow-[2px_2px_0px_#000] focus:outline-none focus:ring-2 focus:ring-[#2196F3]"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              placeholder="e.g. Rahul Sharma"
+              className="w-full px-3 py-2.5 glass-input text-xs"
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-black uppercase tracking-wide text-black block mb-1">Email</label>
+              <label className="text-xs font-semibold text-slate-300 block mb-1">
+                Class / Grade *
+              </label>
               <input
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                placeholder="aarav@example.edu"
-                className="w-full px-3.5 py-2.5 bg-white border-3 border-black text-black placeholder-neutral-500 text-sm font-medium shadow-[2px_2px_0px_#000] focus:outline-none focus:ring-2 focus:ring-[#2196F3]"
+                type="text"
+                required
+                value={formData.classGrade}
+                onChange={(e) => setFormData({ ...formData, classGrade: e.target.value })}
+                placeholder="e.g. 11-A or Grade 12"
+                className="w-full px-3 py-2.5 glass-input text-xs"
               />
             </div>
+
             <div>
-              <label className="text-xs font-black uppercase tracking-wide text-black block mb-1">Mobile Phone</label>
-              <input
-                type="tel"
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                placeholder="+91 98950 11001"
-                className="w-full px-3.5 py-2.5 bg-white border-3 border-black text-black placeholder-neutral-500 text-sm font-medium shadow-[2px_2px_0px_#000] focus:outline-none focus:ring-2 focus:ring-[#2196F3]"
-              />
+              <label className="text-xs font-semibold text-slate-300 block mb-1">
+                Track *
+              </label>
+              <select
+                value={formData.trackId}
+                onChange={(e) => setFormData({ ...formData, trackId: e.target.value })}
+                className="w-full px-3 py-2.5 glass-input text-xs bg-slate-900 text-white"
+              >
+                {tracks.map((t) => (
+                  <option key={t.id} value={t.id} className="bg-slate-900 text-white">
+                    {t.name}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 
           <div>
-            <label className="text-xs font-black uppercase tracking-wide text-black block mb-1">Competition Track *</label>
+            <label className="text-xs font-semibold text-slate-300 block mb-1">
+              Assign to Team (Optional)
+            </label>
             <select
-              value={formData.trackId}
-              onChange={(e) => setFormData({ ...formData, trackId: e.target.value })}
-              className="w-full px-3.5 py-2.5 bg-white border-3 border-black text-black text-sm font-bold shadow-[2px_2px_0px_#000] focus:outline-none focus:ring-2 focus:ring-[#2196F3]"
+              value={formData.teamId}
+              onChange={(e) => setFormData({ ...formData, teamId: e.target.value })}
+              className="w-full px-3 py-2.5 glass-input text-xs bg-slate-900 text-white"
             >
-              {tracks.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.name}
-                </option>
-              ))}
+              <option value="" className="bg-slate-900 text-white">-- None (Individual / Unassigned) --</option>
+              {teams
+                .filter((t) => t.school_id === facultySchool.id)
+                .map((t) => (
+                  <option key={t.id} value={t.id} className="bg-slate-900 text-white">
+                    {t.name} ({tracks.find((tr) => tr.id === t.track_id)?.name})
+                  </option>
+                ))}
             </select>
           </div>
 
-          <div className="flex gap-2 justify-end pt-2">
-            <Button type="button" variant="outline" onClick={() => setAddModalOpen(false)}>
+          <div className="flex justify-end gap-2 pt-3 border-t border-white/10">
+            <Button type="button" variant="ghost" size="sm" onClick={() => setAddModalOpen(false)}>
               Cancel
             </Button>
-            <Button type="submit" variant="primary">
+            <Button type="submit" variant="gradient" size="sm">
               Enroll Student
             </Button>
           </div>
@@ -257,34 +317,37 @@ export default function FacultyStudentsPage() {
       <Modal
         isOpen={csvModalOpen}
         onClose={() => setCsvModalOpen(false)}
-        title="Bulk Student CSV Import"
-        description="Paste comma-separated rows: Name, Email, Phone, Track"
+        title="CSV Bulk Student Import"
+        description="Format: Full Name, Class/Grade, Track (One student per line)"
       >
         <div className="space-y-4">
-          <div className="p-3 bg-[#FFEB3B] border-2 border-black font-mono text-xs text-black font-bold shadow-[2px_2px_0px_#000]">
-            Format: Aarav Nair, aarav@stj.edu, +919895011001, robotics
+          <div className="p-3 rounded-xl bg-white/[0.04] border border-white/10 text-[11px] text-slate-300 font-mono">
+            Example:<br />
+            Aarav Nair, 12-A, Robotics<br />
+            Kavya Menon, 11-B, Build from Scrap<br />
+            Tanvi Joshi, 12-C, Useless Projects
           </div>
 
           <textarea
             rows={6}
             value={csvText}
             onChange={(e) => setCsvText(e.target.value)}
-            placeholder="Aarav Nair, aarav@stj.edu, +919895011001, robotics&#10;Riya Thomas, riya@stj.edu, +919895011002, scrap&#10;Kavya Menon, kavya@stj.edu, +919895011003, useless"
-            className="w-full px-3.5 py-2.5 bg-white border-3 border-black text-black font-mono text-xs placeholder-neutral-500 shadow-[2px_2px_0px_#000] focus:outline-none focus:ring-2 focus:ring-[#2196F3]"
+            placeholder="Paste your CSV roster here..."
+            className="w-full p-3 glass-input text-xs font-mono"
           />
 
           {csvStatus && (
-            <div className="p-2.5 bg-[#4CAF50] text-black border-2 border-black text-xs font-black shadow-[2px_2px_0px_#000]">
+            <div className="p-2.5 rounded-lg bg-emerald-950/60 border border-emerald-500/30 text-emerald-200 text-xs">
               {csvStatus}
             </div>
           )}
 
-          <div className="flex gap-2 justify-end pt-2">
-            <Button variant="outline" onClick={() => setCsvModalOpen(false)}>
+          <div className="flex justify-end gap-2 pt-2 border-t border-white/10">
+            <Button type="button" variant="ghost" size="sm" onClick={() => setCsvModalOpen(false)}>
               Cancel
             </Button>
-            <Button variant="primary" onClick={handleCsvImport}>
-              Import Squad Roster
+            <Button type="button" variant="gradient" size="sm" onClick={handleCsvImport}>
+              Import Roster
             </Button>
           </div>
         </div>

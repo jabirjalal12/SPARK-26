@@ -3,12 +3,12 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 
-interface GlassCardProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface GlassCardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   gradient?: boolean;
   glow?: "blue" | "green" | "red" | "purple" | "none";
-  color?: "white" | "yellow" | "blue" | "green" | "red" | "paper";
-  variant?: "white" | "yellow" | "blue" | "green" | "red" | "paper";
+  color?: "white" | "yellow" | "blue" | "green" | "red" | "paper" | "purple";
+  variant?: "white" | "yellow" | "blue" | "green" | "red" | "paper" | "purple";
   interactive?: boolean;
 }
 
@@ -18,58 +18,47 @@ export function GlassCard({
   glow = "none",
   color,
   variant,
+  gradient = false,
   interactive = false,
   ...props
 }: GlassCardProps) {
   const chosenColor = variant || color;
-  let bgClass = "bg-white text-black";
 
-  if (chosenColor) {
-    switch (chosenColor) {
-      case "yellow":
-        bgClass = "bg-[#FFEB3B] text-black";
-        break;
-      case "blue":
-        bgClass = "bg-[#2196F3] text-black";
-        break;
-      case "green":
-        bgClass = "bg-[#4CAF50] text-black";
-        break;
-      case "red":
-        bgClass = "bg-[#FF5252] text-black";
-        break;
-      case "paper":
-        bgClass = "bg-[#FFFBEB] text-black";
-        break;
-      case "white":
-      default:
-        bgClass = "bg-white text-black";
-        break;
-    }
-  } else if (glow !== "none") {
-    switch (glow) {
-      case "blue":
-        bgClass = "bg-white text-black";
-        break;
-      case "green":
-        bgClass = "bg-white text-black";
-        break;
-      case "red":
-        bgClass = "bg-[#FF5252]/10 text-black";
-        break;
-      case "purple":
-        bgClass = "bg-white text-black";
-        break;
-    }
+  const glowStyles = {
+    none: "",
+    blue: "glow-blue border-blue-500/30",
+    green: "glow-green border-emerald-500/30",
+    red: "glow-red border-rose-500/30",
+    purple: "glow-purple border-purple-500/30",
+  }[glow];
+
+  let variantStyle = "bg-white/[0.06] border-white/15 text-white";
+
+  if (chosenColor === "blue") {
+    variantStyle = "bg-blue-950/30 border-blue-500/25 text-blue-50";
+  } else if (chosenColor === "green") {
+    variantStyle = "bg-emerald-950/30 border-emerald-500/25 text-emerald-50";
+  } else if (chosenColor === "red") {
+    variantStyle = "bg-rose-950/30 border-rose-500/25 text-rose-50";
+  } else if (chosenColor === "yellow") {
+    variantStyle = "bg-amber-950/30 border-amber-500/25 text-amber-50";
+  } else if (chosenColor === "purple") {
+    variantStyle = "bg-purple-950/30 border-purple-500/25 text-purple-50";
   }
+
+  const gradientStyle = gradient
+    ? "bg-gradient-to-br from-white/[0.09] via-white/[0.04] to-transparent"
+    : "";
 
   return (
     <div
       className={cn(
-        "rounded-none border-[3px] border-black shadow-[4px_4px_0px_#000000]",
-        bgClass,
+        "relative rounded-2xl border backdrop-blur-xl shadow-xl transition-all duration-200",
+        variantStyle,
+        gradientStyle,
+        glowStyles,
         interactive &&
-          "transition-all duration-100 hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[6px_6px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[2px_2px_0px_#000000] cursor-pointer",
+          "cursor-pointer hover:border-white/30 hover:bg-white/[0.09] hover:-translate-y-0.5 hover:shadow-2xl active:translate-y-0",
         className
       )}
       {...props}

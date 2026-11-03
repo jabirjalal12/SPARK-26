@@ -1,11 +1,11 @@
-{
-  "name": "SPARK Tech Fest",
-  "short_name": "SPARK",
-  "description": "Production-ready mobile-first manager for SPARK inter-school college tech fest",
+﻿{
+  "name": "MAKE//BREAK Tech Fest",
+  "short_name": "MAKE//BREAK",
+  "description": "Production-ready mobile-first manager for MAKE//BREAK inter-school college tech fest",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#090d16",
-  "theme_color": "#4f46e5",
+  "background_color": "#030712",
+  "theme_color": "#030712",
   "icons": [
     {
       "src": "/favicon.ico",

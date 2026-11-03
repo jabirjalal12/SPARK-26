@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from "react";
 import Link from "next/link";
@@ -6,7 +6,6 @@ import { useFestStore } from "@/lib/store";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { QRDisplay } from "@/components/qr/qr-display";
 import { QRScannerModal } from "@/components/qr/qr-scanner-modal";
 import {
   Users,
@@ -19,21 +18,24 @@ import {
   Calendar,
   Sparkles,
   ShieldCheck,
-  Award,
   ArrowRight,
   TrendingUp,
   Sliders,
   ChevronRight,
   Clock,
-  MapPin,
-  Bot,
-  Wrench,
-  Gavel,
+  RotateCcw,
+  Zap,
+  Lock,
+  FileText,
 } from "lucide-react";
 
 export default function DashboardPage() {
   const {
     currentProfile,
+    activeOrganizerSubRole,
+    isSuperAdmin,
+    isEventCoordinator,
+    isRegistrationHead,
     schools,
     students,
     teams,
@@ -45,29 +47,16 @@ export default function DashboardPage() {
     volunteerDuties,
   } = useFestStore();
 
-  const [scannerOpen, setScannerOpen] = useState(false);
-
   const role = currentProfile.role;
 
   // Aggregate stats
   const totalSchools = schools.length;
-  const approvedSchools = schools.filter((s) => s.approved).length;
-  const arrivedSchools = schools.filter((s) => s.checked_in).length;
+  const approvedSchools = schools.filter((s) => s.status === "approved").length;
+  const arrivedSchools = schools.filter((s) => s.arrived).length;
   const totalStudents = students.length;
   const arrivedStudents = students.filter((s) => s.checked_in).length;
+  const walkinStudents = students.filter((s) => s.is_walkin).length;
   const openIssues = issueReports.filter((i) => i.status !== "resolved").length;
-
-  // Student specific data
-  const currentStudent = students[0] || null;
-  const studentSchool = currentStudent
-    ? schools.find((s) => s.id === currentStudent.school_id)
-    : null;
-  const studentTrack = currentStudent
-    ? tracks.find((t) => t.id === currentStudent.track_id)
-    : null;
-  const studentTeam = currentStudent
-    ? teams.find((t) => t.id === currentStudent.team_id)
-    : null;
 
   // Faculty specific data
   const facultySchool = schools.find((s) => s.id === currentProfile.school_id) || schools[0];
@@ -78,468 +67,337 @@ export default function DashboardPage() {
     ? teams.filter((t) => t.school_id === facultySchool.id)
     : [];
 
-  // Volunteer specific data
-  const myDuties = volunteerDuties.filter((d) => d.volunteer_id === currentProfile.id);
-
-  // Judge specific data
-  const judgeTrack = tracks.find((t) => t.id === currentProfile.assigned_track_id) || tracks[0];
-  const judgeTeams = judgeTrack
-    ? teams.filter((t) => t.track_id === judgeTrack.id)
-    : [];
+  const getSubRoleTitle = () => {
+    if (role === "faculty") return "Visiting Faculty Coordinator";
+    if (role === "volunteer") return "Registration Desk Volunteer";
+    if (activeOrganizerSubRole === "super_admin") return "Super Admin (Organizer)";
+    if (activeOrganizerSubRole === "event_coordinator") return "Event Coordinator (Organizer)";
+    return "Registration Head (Organizer)";
+  };
 
   return (
-    <div className="space-y-6">
-      {/* Dashboard Top Welcome Bar */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b-3 border-black">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-black uppercase tracking-wider bg-[#FFEB3B] text-black px-2 py-0.5 border border-black shadow-[2px_2px_0px_#000]">
-              Live Fest Command
-            </span>
-            <span className="text-xs font-bold text-black">•</span>
-            <Badge variant="outline">{currentProfile.role.toUpperCase()}</Badge>
+    <div className="space-y-6 max-w-7xl mx-auto">
+      {/* Welcome Banner */}
+      <GlassCard className="p-6 border-white/15 bg-gradient-to-r from-blue-950/40 via-indigo-950/30 to-purple-950/40">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <Badge variant="outline" className="border-indigo-500/40 text-indigo-300">
+                {getSubRoleTitle()}
+              </Badge>
+              <span className="text-xs text-slate-400">Campus Live Telemetry</span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+              Welcome back, {currentProfile.full_name}
+            </h1>
+            <p className="text-xs text-slate-300 mt-1">
+              MAKE//BREAK 2026 Inter-School Tech Fest • Real-time coordination hub
+            </p>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-black tracking-tight uppercase">
-            {role === "organizer" && "Organizer Control Tower"}
-            {role === "faculty" && `Faculty Hub — ${facultySchool?.name || "Institution"}`}
-            {role === "volunteer" && "Volunteer Operations Deck"}
-            {role === "judge" && `Jury Scoring Deck — ${judgeTrack?.name || "Track"}`}
-            {role === "participant" && `Welcome, ${currentStudent?.full_name || "Participant"}!`}
-          </h1>
-        </div>
 
-        {/* Quick context action buttons */}
-        <div className="flex items-center gap-2">
-          {role === "volunteer" && (
-            <Button variant="primary" onClick={() => setScannerOpen(true)}>
-              <Scan className="h-4 w-4 mr-1.5" />
-              <span>Open QR Scanner</span>
-            </Button>
-          )}
-          {role === "organizer" && (
-            <Button
-              variant={resultsPublished ? "danger" : "primary"}
-              size="sm"
-              onClick={togglePublishResults}
-            >
-              <Trophy className="h-4 w-4 mr-1.5" />
-              <span>{resultsPublished ? "Unpublish Results" : "Publish Final Results"}</span>
-            </Button>
-          )}
-          {role === "participant" && (
-            <Link href="/certificates">
-              <Button variant="secondary" size="sm">
-                <Award className="h-4 w-4 mr-1.5" />
-                <span>My Certificate</span>
-              </Button>
-            </Link>
-          )}
+          {/* Quick context CTA */}
+          <div className="flex items-center gap-2">
+            {role === "organizer" && isSuperAdmin && (
+              <Link href="/organizer/results">
+                <Button size="sm" variant={resultsPublished ? "green" : "gradient"} className="text-xs">
+                  <Trophy className="w-4 h-4 mr-1.5" />
+                  <span>{resultsPublished ? "Results Published" : "Publish Results"}</span>
+                </Button>
+              </Link>
+            )}
+            {role === "volunteer" && (
+              <Link href="/volunteer/scan">
+                <Button size="sm" variant="gradient" className="text-xs">
+                  <Scan className="w-4 h-4 mr-1.5" />
+                  <span>Open QR Scanner</span>
+                </Button>
+              </Link>
+            )}
+            {role === "faculty" && (
+              <Link href="/faculty/ticket">
+                <Button size="sm" variant="gradient" className="text-xs">
+                  <QrCode className="w-4 h-4 mr-1.5" />
+                  <span>View School Ticket</span>
+                </Button>
+              </Link>
+            )}
+          </div>
         </div>
+      </GlassCard>
+
+      {/* Main Metrics Bar */}
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
+        <GlassCard className="p-4 border-white/10 bg-slate-900/60">
+          <div className="flex items-center justify-between text-slate-400 mb-1">
+            <School className="w-4 h-4 text-blue-400" />
+            <span className="text-[11px] font-mono text-blue-300">{approvedSchools} Approved</span>
+          </div>
+          <div className="text-2xl sm:text-3xl font-black text-white">
+            {arrivedSchools} <span className="text-sm font-normal text-slate-400">/ {totalSchools}</span>
+          </div>
+          <p className="text-[11px] text-slate-400 font-semibold uppercase mt-1">Schools Arrived</p>
+        </GlassCard>
+
+        <GlassCard className="p-4 border-white/10 bg-slate-900/60">
+          <div className="flex items-center justify-between text-slate-400 mb-1">
+            <Users className="w-4 h-4 text-emerald-400" />
+            <span className="text-[11px] font-mono text-emerald-300">
+              {Math.round((arrivedStudents / (totalStudents || 1)) * 100)}%
+            </span>
+          </div>
+          <div className="text-2xl sm:text-3xl font-black text-white">
+            {arrivedStudents} <span className="text-sm font-normal text-slate-400">/ {totalStudents}</span>
+          </div>
+          <p className="text-[11px] text-slate-400 font-semibold uppercase mt-1">Students Verified</p>
+        </GlassCard>
+
+        <GlassCard className="p-4 border-white/10 bg-slate-900/60">
+          <div className="flex items-center justify-between text-slate-400 mb-1">
+            <Zap className="w-4 h-4 text-amber-400" />
+            <span className="text-[11px] font-mono text-amber-300">At Desk</span>
+          </div>
+          <div className="text-2xl sm:text-3xl font-black text-white">{walkinStudents}</div>
+          <p className="text-[11px] text-slate-400 font-semibold uppercase mt-1">Desk Walk-ins</p>
+        </GlassCard>
+
+        <GlassCard className="p-4 border-white/10 bg-slate-900/60">
+          <div className="flex items-center justify-between text-slate-400 mb-1">
+            <Sparkles className="w-4 h-4 text-purple-400" />
+            <span className="text-[11px] font-mono text-purple-300">3 Tracks</span>
+          </div>
+          <div className="text-2xl sm:text-3xl font-black text-white">{teams.length}</div>
+          <p className="text-[11px] text-slate-400 font-semibold uppercase mt-1">Active Teams</p>
+        </GlassCard>
+
+        <GlassCard className="p-4 border-white/10 bg-slate-900/60 col-span-2 lg:col-span-1">
+          <div className="flex items-center justify-between text-slate-400 mb-1">
+            <AlertTriangle className="w-4 h-4 text-rose-400" />
+            <span className="text-[11px] font-mono text-rose-300">{openIssues === 0 ? "All Clear" : "Pending"}</span>
+          </div>
+          <div className="text-2xl sm:text-3xl font-black text-white">{openIssues}</div>
+          <p className="text-[11px] text-slate-400 font-semibold uppercase mt-1">Ground Issues</p>
+        </GlassCard>
       </div>
 
-      {/* -------------------------------------------------------------------- */}
-      {/* 1. ORGANIZER DASHBOARD VIEW */}
-      {/* -------------------------------------------------------------------- */}
+      {/* Role-Adaptive Content Section */}
       {role === "organizer" && (
         <div className="space-y-6">
-          {/* Telemetry Metrics */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <GlassCard variant="blue" className="p-4 sm:p-5 border-3 border-black shadow-[4px_4px_0px_#000]">
-              <div className="flex items-center justify-between text-black mb-2">
-                <School className="h-5 w-5" />
-                <span className="text-xs font-black font-mono bg-white px-1.5 py-0.5 border border-black">
-                  {Math.round((arrivedSchools / (totalSchools || 1)) * 100)}%
-                </span>
-              </div>
-              <div className="text-2xl sm:text-3xl font-black text-black">
-                {arrivedSchools} <span className="text-sm font-bold text-neutral-800">/ {totalSchools}</span>
-              </div>
-              <p className="text-xs text-black mt-1 font-black uppercase">Schools Checked In</p>
-            </GlassCard>
+          {/* Sub-Role Quick Action Dashboard */}
+          <GlassCard className="p-5 border-white/15">
+            <h2 className="text-sm font-bold uppercase tracking-wider text-indigo-300 mb-4 flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4" />
+              <span>{getSubRoleTitle()} Command Panel</span>
+            </h2>
 
-            <GlassCard variant="green" className="p-4 sm:p-5 border-3 border-black shadow-[4px_4px_0px_#000]">
-              <div className="flex items-center justify-between text-black mb-2">
-                <Users className="h-5 w-5" />
-                <span className="text-xs font-black font-mono bg-white px-1.5 py-0.5 border border-black">
-                  {Math.round((arrivedStudents / (totalStudents || 1)) * 100)}%
-                </span>
-              </div>
-              <div className="text-2xl sm:text-3xl font-black text-black">
-                {arrivedStudents} <span className="text-sm font-bold text-neutral-800">/ {totalStudents}</span>
-              </div>
-              <p className="text-xs text-black mt-1 font-black uppercase">Students Verified</p>
-            </GlassCard>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+              {(isSuperAdmin || isRegistrationHead) && (
+                <Link href="/organizer/schools" className="block">
+                  <div className="p-4 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 transition-colors">
+                    <ShieldCheck className="w-5 h-5 text-indigo-400 mb-2" />
+                    <p className="font-bold text-white">School Approvals</p>
+                    <p className="text-[11px] text-slate-400 mt-0.5">Approve & Issue Tickets</p>
+                  </div>
+                </Link>
+              )}
 
-            <GlassCard variant="yellow" className="p-4 sm:p-5 border-3 border-black shadow-[4px_4px_0px_#000]">
-              <div className="flex items-center justify-between text-black mb-2">
-                <Trophy className="h-5 w-5" />
-                <Badge variant={resultsPublished ? "success" : "warning"}>
-                  {resultsPublished ? "Live" : "Draft"}
-                </Badge>
-              </div>
-              <div className="text-2xl sm:text-3xl font-black text-black">
-                {teams.length}
-              </div>
-              <p className="text-xs text-black mt-1 font-black uppercase">Competing Teams</p>
-            </GlassCard>
+              {(isSuperAdmin || isRegistrationHead) && (
+                <Link href="/organizer/checkins" className="block">
+                  <div className="p-4 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 transition-colors">
+                    <RotateCcw className="w-5 h-5 text-amber-400 mb-2" />
+                    <p className="font-bold text-white">Desk Arrivals & Undo</p>
+                    <p className="text-[11px] text-slate-400 mt-0.5">Undo mistaken check-ins</p>
+                  </div>
+                </Link>
+              )}
 
-            <GlassCard variant="red" className="p-4 sm:p-5 border-3 border-black shadow-[4px_4px_0px_#000]">
-              <div className="flex items-center justify-between text-black mb-2">
-                <AlertTriangle className="h-5 w-5" />
-                {openIssues > 0 && <span className="h-2.5 w-2.5 bg-black border border-white animate-ping" />}
-              </div>
-              <div className="text-2xl sm:text-3xl font-black text-black">
-                {openIssues}
-              </div>
-              <p className="text-xs text-black mt-1 font-black uppercase">Open Ground Issues</p>
-            </GlassCard>
-          </div>
+              {(isSuperAdmin || isEventCoordinator) && (
+                <Link href="/organizer/scoring" className="block">
+                  <div className="p-4 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 transition-colors">
+                    <Sparkles className="w-5 h-5 text-emerald-400 mb-2" />
+                    <p className="font-bold text-white">Score Entry</p>
+                    <p className="text-[11px] text-slate-400 mt-0.5">Score all 3 track arenas</p>
+                  </div>
+                </Link>
+              )}
 
-          {/* Quick Management Actions Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            <GlassCard variant="white" className="p-5 border-3 border-black shadow-[6px_6px_0px_#000]">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="p-2.5 bg-[#2196F3] text-black border-2 border-black shadow-[2px_2px_0px_#000]">
-                  <ShieldCheck className="h-5 w-5" />
+              {(isSuperAdmin || isEventCoordinator) && (
+                <Link href="/organizer/schedule" className="block">
+                  <div className="p-4 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 transition-colors">
+                    <Calendar className="w-5 h-5 text-blue-400 mb-2" />
+                    <p className="font-bold text-white">Schedule Editor</p>
+                    <p className="text-[11px] text-slate-400 mt-0.5">Edit timelines & venues</p>
+                  </div>
+                </Link>
+              )}
+
+              {isSuperAdmin && (
+                <Link href="/organizer/results" className="block">
+                  <div className="p-4 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 transition-colors">
+                    <Trophy className="w-5 h-5 text-yellow-400 mb-2" />
+                    <p className="font-bold text-white">Lock & Publish</p>
+                    <p className="text-[11px] text-slate-400 mt-0.5">SA Result Publishing</p>
+                  </div>
+                </Link>
+              )}
+
+              <Link href="/organizer/export" className="block">
+                <div className="p-4 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 transition-colors">
+                  <Sliders className="w-5 h-5 text-purple-400 mb-2" />
+                  <p className="font-bold text-white">Export CSV</p>
+                  <p className="text-[11px] text-slate-400 mt-0.5">Download full roster logs</p>
                 </div>
-                <div>
-                  <h3 className="font-black text-base text-black uppercase">School Approvals</h3>
-                  <p className="text-xs font-bold text-neutral-700">
-                    {totalSchools - approvedSchools} schools awaiting approval
-                  </p>
-                </div>
-              </div>
-              <p className="text-xs font-medium text-neutral-800 mb-4">
-                Verify institution credentials, authorize faculty accounts, and unlock student rosters.
-              </p>
-              <Link href="/organizer/schools">
-                <Button variant="secondary" size="sm" className="w-full text-xs font-bold">
-                  Review Schools ({totalSchools})
-                </Button>
               </Link>
+            </div>
+          </GlassCard>
+
+          {/* Live Standings & Arrival Stream Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Live Track Leaders */}
+            <GlassCard className="p-5 border-white/15">
+              <div className="flex items-center justify-between pb-3 border-b border-white/10 mb-4">
+                <h3 className="font-bold text-white text-sm flex items-center gap-2">
+                  <Trophy className="w-4 h-4 text-amber-400" />
+                  <span>Track Standings Summary</span>
+                </h3>
+                <Link href="/leaderboard" className="text-xs text-indigo-400 hover:underline">
+                  Full Leaderboard
+                </Link>
+              </div>
+
+              <div className="space-y-3">
+                {tracks.map((track) => {
+                  const topTeam = teams
+                    .filter((t) => t.track_id === track.id)
+                    .sort((a, b) => (b.score_total || 0) - (a.score_total || 0))[0];
+
+                  return (
+                    <div key={track.id} className="p-3 rounded-xl bg-white/[0.03] border border-white/10 flex items-center justify-between text-xs">
+                      <div>
+                        <span className="font-bold text-white block">{track.name}</span>
+                        <span className="text-slate-400 text-[11px]">
+                          Leader: <strong className="text-indigo-300">{topTeam ? topTeam.name : "Pending scores"}</strong>
+                        </span>
+                      </div>
+                      <span className="font-mono font-bold text-indigo-300">
+                        {topTeam?.score_total ? topTeam.score_total.toFixed(2) : "0.00"} pts
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
             </GlassCard>
 
-            <GlassCard variant="white" className="p-5 border-3 border-black shadow-[6px_6px_0px_#000]">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="p-2.5 bg-[#FFEB3B] text-black border-2 border-black shadow-[2px_2px_0px_#000]">
-                  <Calendar className="h-5 w-5" />
-                </div>
-                <div>
-                  <h3 className="font-black text-base text-black uppercase">Schedule Editor</h3>
-                  <p className="text-xs font-bold text-neutral-700">Live time slots & venues</p>
-                </div>
+            {/* Recent School Arrival Logs */}
+            <GlassCard className="p-5 border-white/15">
+              <div className="flex items-center justify-between pb-3 border-b border-white/10 mb-4">
+                <h3 className="font-bold text-white text-sm flex items-center gap-2">
+                  <School className="w-4 h-4 text-emerald-400" />
+                  <span>Institutional Arrival Stream</span>
+                </h3>
+                <Link href="/organizer/checkins" className="text-xs text-indigo-400 hover:underline">
+                  All Arrivals
+                </Link>
               </div>
-              <p className="text-xs font-medium text-neutral-800 mb-4">
-                Update rounds, delay start times, and notify coordinators instantly with real-time sync.
-              </p>
-              <Link href="/organizer/schedule">
-                <Button variant="secondary" size="sm" className="w-full text-xs font-bold">
-                  Manage Schedule
-                </Button>
-              </Link>
-            </GlassCard>
 
-            <GlassCard variant="white" className="p-5 border-3 border-black shadow-[6px_6px_0px_#000]">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="p-2.5 bg-[#4CAF50] text-black border-2 border-black shadow-[2px_2px_0px_#000]">
-                  <Sliders className="h-5 w-5" />
-                </div>
-                <div>
-                  <h3 className="font-black text-base text-black uppercase">Data Export & Audit</h3>
-                  <p className="text-xs font-bold text-neutral-700">CSV & security logs</p>
-                </div>
+              <div className="space-y-2.5">
+                {schools.map((s) => (
+                  <div key={s.id} className="p-3 rounded-xl bg-white/[0.03] border border-white/10 flex items-center justify-between text-xs">
+                    <div>
+                      <p className="font-semibold text-white">{s.name}</p>
+                      <p className="text-[11px] text-slate-400">Code: {s.code} • {s.city}</p>
+                    </div>
+                    <Badge variant={s.arrived ? "success" : "warning"}>
+                      {s.arrived ? "Checked In" : "Expected"}
+                    </Badge>
+                  </div>
+                ))}
               </div>
-              <p className="text-xs font-medium text-neutral-800 mb-4">
-                Download attendee sheets, scores per track, and inspect immutable audit trail logs.
-              </p>
-              <Link href="/organizer/export">
-                <Button variant="secondary" size="sm" className="w-full text-xs font-bold">
-                  Export Data
-                </Button>
-              </Link>
             </GlassCard>
           </div>
         </div>
       )}
 
-      {/* -------------------------------------------------------------------- */}
-      {/* 2. FACULTY DASHBOARD VIEW */}
-      {/* -------------------------------------------------------------------- */}
+      {/* Faculty Portal View */}
       {role === "faculty" && (
         <div className="space-y-6">
-          <GlassCard variant="white" className="p-6 sm:p-8 border-4 border-black shadow-[8px_8px_0px_#000]">
-            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-              <div>
-                <div className="flex items-center gap-2 mb-1.5">
-                  <Badge variant={facultySchool?.approved ? "success" : "warning"}>
-                    {facultySchool?.approved ? "Approved Institution" : "Approval In Review"}
-                  </Badge>
-                  <span className="font-mono text-xs font-bold text-black bg-[#FFEB3B] border-2 border-black px-2.5 py-0.5 shadow-[2px_2px_0px_#000]">
-                    Code: {facultySchool?.code}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <GlassCard className="p-6 border-white/15 md:col-span-2">
+              <h2 className="text-base font-bold text-white mb-2">Delegation Status</h2>
+              <p className="text-xs text-slate-300 mb-6">
+                Institution: <strong>{facultySchool?.name}</strong> (Code: {facultySchool?.code})
+              </p>
+
+              <div className="grid grid-cols-3 gap-3 mb-6 text-center">
+                <div className="p-3 rounded-xl bg-white/[0.04] border border-white/10">
+                  <span className="text-xs text-slate-400 block">Enrolled Students</span>
+                  <span className="text-xl font-bold text-white mt-1 block">{facultyStudents.length}</span>
+                </div>
+                <div className="p-3 rounded-xl bg-white/[0.04] border border-white/10">
+                  <span className="text-xs text-slate-400 block">Track Teams</span>
+                  <span className="text-xl font-bold text-indigo-300 mt-1 block">{facultyTeams.length}</span>
+                </div>
+                <div className="p-3 rounded-xl bg-white/[0.04] border border-white/10">
+                  <span className="text-xs text-slate-400 block">Gate Status</span>
+                  <span className={`text-sm font-bold mt-1 block ${facultySchool?.arrived ? "text-emerald-400" : "text-amber-400"}`}>
+                    {facultySchool?.arrived ? "Arrived" : "Expected"}
                   </span>
                 </div>
-                <h2 className="text-2xl font-black text-black uppercase">{facultySchool?.name}</h2>
-                <p className="text-xs font-semibold text-neutral-700 mt-1">{facultySchool?.address}, {facultySchool?.city}</p>
               </div>
 
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-3">
+                <Link href="/faculty/ticket">
+                  <Button size="sm" variant="gradient" className="text-xs">
+                    <QrCode className="w-4 h-4 mr-1.5" />
+                    <span>View Single School QR Ticket</span>
+                  </Button>
+                </Link>
                 <Link href="/faculty/students">
-                  <Button variant="primary" size="sm">
-                    <Users className="h-4 w-4 mr-1.5" />
-                    <span>Manage Students ({facultyStudents.length})</span>
+                  <Button size="sm" variant="secondary" className="text-xs">
+                    <Users className="w-4 h-4 mr-1.5" />
+                    <span>Manage Students</span>
                   </Button>
                 </Link>
-                <Link href="/faculty/qr-passes">
-                  <Button variant="secondary" size="sm">
-                    <QrCode className="h-4 w-4 mr-1.5" />
-                    <span>All QR Passes</span>
+                <Link href="/faculty/info-sheet">
+                  <Button size="sm" variant="outline" className="text-xs">
+                    <FileText className="w-4 h-4 mr-1.5" />
+                    <span>Print 1-Page Info Sheet</span>
                   </Button>
                 </Link>
               </div>
-            </div>
+            </GlassCard>
 
-            {/* Quick summary strip */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6 pt-6 border-t-3 border-black">
-              <div className="p-3.5 bg-[#FFFBEB] border-3 border-black shadow-[3px_3px_0px_#000]">
-                <p className="text-xs font-bold uppercase text-black">Registered Students</p>
-                <p className="text-2xl font-black text-black mt-0.5">{facultyStudents.length}</p>
-              </div>
-              <div className="p-3.5 bg-[#FFFBEB] border-3 border-black shadow-[3px_3px_0px_#000]">
-                <p className="text-xs font-bold uppercase text-black">Formed Teams</p>
-                <p className="text-2xl font-black text-black mt-0.5">{facultyTeams.length} / 3 Tracks</p>
-              </div>
-              <div className="p-3.5 bg-[#FFFBEB] border-3 border-black shadow-[3px_3px_0px_#000]">
-                <p className="text-xs font-bold uppercase text-black">Campus Check-in Status</p>
-                <p className="text-xl font-black text-black mt-0.5">
-                  {facultySchool?.checked_in ? (
-                    <span className="bg-[#4CAF50] text-black px-2 py-0.5 border border-black">Arrived on Campus</span>
-                  ) : (
-                    <span className="bg-[#FFEB3B] text-black px-2 py-0.5 border border-black">Awaiting Arrival</span>
-                  )}
-                </p>
-              </div>
-            </div>
-          </GlassCard>
-
-          {/* Teams registered for this school */}
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-black text-lg text-black uppercase">Your Registered Track Teams</h3>
-              <Link href="/faculty/teams">
-                <Button variant="secondary" size="sm" className="text-xs font-bold">
-                  Create / Edit Teams
-                </Button>
+            <GlassCard className="p-6 border-white/15">
+              <h3 className="font-bold text-white text-sm mb-3">Check-in Instructions</h3>
+              <p className="text-xs text-slate-300 leading-relaxed mb-4">
+                Students do not need individual passes or devices. Present your official School QR pass at Registration Desk Booth 1 upon campus arrival. The desk volunteer will verify and mark your delegation present.
+              </p>
+              <Link href="/faculty/ticket" className="text-xs text-indigo-400 font-semibold hover:underline">
+                Open QR Ticket →
               </Link>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {facultyTeams.map((team) => {
-                const tr = tracks.find((t) => t.id === team.track_id);
-                return (
-                  <GlassCard key={team.id} variant="white" className="p-4 border-3 border-black shadow-[4px_4px_0px_#000]">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-black uppercase bg-[#2196F3] text-black px-2 py-0.5 border border-black">
-                        {tr?.name}
-                      </span>
-                      <span className="font-mono text-xs font-bold bg-[#FFEB3B] px-2 py-0.5 border border-black text-black">
-                        Table: {team.table_number || "TBD"}
-                      </span>
-                    </div>
-                    <h4 className="font-black text-base text-black uppercase">{team.name}</h4>
-                    <p className="text-xs text-neutral-800 font-bold mt-1">{team.project_title}</p>
-                    <p className="text-xs text-neutral-600 line-clamp-2 mt-1">{team.project_summary}</p>
-                  </GlassCard>
-                );
-              })}
-            </div>
+            </GlassCard>
           </div>
         </div>
       )}
 
-      {/* -------------------------------------------------------------------- */}
-      {/* 3. VOLUNTEER DASHBOARD VIEW */}
-      {/* -------------------------------------------------------------------- */}
+      {/* Volunteer View */}
       {role === "volunteer" && (
         <div className="space-y-6">
-          {/* Big Quick Scanner Banner */}
-          <GlassCard variant="yellow" className="p-6 sm:p-8 text-center border-4 border-black shadow-[8px_8px_0px_#000]">
-            <div className="max-w-md mx-auto space-y-3">
-              <div className="h-16 w-16 bg-[#4CAF50] text-black border-4 border-black mx-auto flex items-center justify-center shadow-[4px_4px_0px_#000]">
-                <Scan className="h-8 w-8 text-black" />
-              </div>
-              <h2 className="text-2xl sm:text-3xl font-black text-black uppercase">Fast Pass Scanner Active</h2>
-              <p className="text-xs font-bold text-neutral-800">
-                Scan student badge or school registration QR for instant sub-5-second check-in.
+          <GlassCard className="p-6 border-white/15 text-center sm:text-left flex flex-col sm:flex-row items-center justify-between gap-6">
+            <div>
+              <h2 className="text-xl font-bold text-white">Registration Desk Scanner Active</h2>
+              <p className="text-xs text-slate-300 mt-1 max-w-lg">
+                Scan incoming visiting school QR passes. Mark attending students on the digital delegation checklist to check in the delegation in seconds.
               </p>
-              <div className="pt-2">
-                <Button
-                  size="lg"
-                  variant="primary"
-                  className="w-full text-base py-3 font-black"
-                  onClick={() => setScannerOpen(true)}
-                >
-                  <Scan className="h-5 w-5 mr-2" />
-                  <span>Launch Camera Scanner</span>
-                </Button>
-              </div>
             </div>
+            <Link href="/volunteer/scan">
+              <Button size="lg" variant="gradient" className="text-sm px-6">
+                <Scan className="w-5 h-5 mr-2" />
+                <span>Launch QR Scanner</span>
+              </Button>
+            </Link>
           </GlassCard>
-
-          {/* Assigned Duties */}
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-black text-lg text-black uppercase">My Duty Roster</h3>
-              <Link href="/volunteer/duties">
-                <Button variant="secondary" size="sm" className="text-xs font-bold">
-                  Full Roster
-                </Button>
-              </Link>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {myDuties.map((d) => (
-                <GlassCard key={d.id} variant="white" className="p-4 sm:p-5 border-3 border-black shadow-[4px_4px_0px_#000]">
-                  <div className="flex items-center justify-between mb-2">
-                    <Badge variant={d.status === "completed" ? "success" : "warning"}>
-                      {d.status.toUpperCase()}
-                    </Badge>
-                    <span className="text-xs font-mono font-bold bg-[#FFEB3B] text-black px-2 py-0.5 border border-black">
-                      {d.starts_at ? new Date(d.starts_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "Shift 1"}
-                    </span>
-                  </div>
-                  <h4 className="font-black text-base text-black uppercase">{d.duty}</h4>
-                  <p className="text-xs font-medium text-neutral-800 mt-1">{d.description}</p>
-                </GlassCard>
-              ))}
-            </div>
-          </div>
         </div>
       )}
-
-      {/* -------------------------------------------------------------------- */}
-      {/* 4. JUDGE DASHBOARD VIEW */}
-      {/* -------------------------------------------------------------------- */}
-      {role === "judge" && (
-        <div className="space-y-6">
-          <GlassCard variant="blue" className="p-6 sm:p-8 border-4 border-black shadow-[8px_8px_0px_#000]">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div>
-                <Badge variant="outline" className="mb-2 bg-white text-black font-black">
-                  ASSIGNED JURY TRACK
-                </Badge>
-                <h2 className="text-2xl sm:text-3xl font-black text-black uppercase">{judgeTrack?.name}</h2>
-                <p className="text-xs font-bold text-neutral-900 mt-1 max-w-md">{judgeTrack?.description}</p>
-              </div>
-              <Link href="/judge">
-                <Button variant="primary">
-                  <Gavel className="h-4 w-4 mr-1.5" />
-                  <span>Score Competing Teams</span>
-                </Button>
-              </Link>
-            </div>
-          </GlassCard>
-
-          {/* Teams to Score */}
-          <div>
-            <h3 className="font-black text-lg text-black uppercase mb-3">Teams in Your Track ({judgeTeams.length})</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {judgeTeams.map((team) => {
-                const school = schools.find((s) => s.id === team.school_id);
-                return (
-                  <GlassCard key={team.id} variant="white" className="p-4 border-3 border-black shadow-[4px_4px_0px_#000]">
-                    <div className="flex justify-between items-center mb-1 text-xs">
-                      <span className="font-mono font-bold bg-[#FFEB3B] px-1.5 py-0.5 border border-black text-black">
-                        Table: {team.table_number || "TBD"}
-                      </span>
-                      {team.score_total ? (
-                        <span className="font-black text-black bg-[#4CAF50] px-1.5 py-0.5 border border-black font-mono">
-                          {team.score_total}/10
-                        </span>
-                      ) : (
-                        <span className="font-bold text-black bg-[#FF9800] px-1.5 py-0.5 border border-black text-[11px]">
-                          Unscored
-                        </span>
-                      )}
-                    </div>
-                    <h4 className="font-black text-base text-black uppercase">{team.name}</h4>
-                    <p className="text-xs font-bold text-neutral-600">{school?.name}</p>
-                    <p className="text-xs text-neutral-800 mt-2 font-medium">{team.project_title}</p>
-                  </GlassCard>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* -------------------------------------------------------------------- */}
-      {/* 5. PARTICIPANT (STUDENT) DASHBOARD VIEW */}
-      {/* -------------------------------------------------------------------- */}
-      {role === "participant" && (
-        <div className="space-y-6 max-w-xl mx-auto">
-          {currentStudent ? (
-            <GlassCard variant="white" className="p-6 text-center border-4 border-black shadow-[8px_8px_0px_#000]">
-              <div className="flex items-center justify-between border-b-3 border-black pb-3 mb-4">
-                <Badge variant={currentStudent.checked_in ? "success" : "warning"}>
-                  {currentStudent.checked_in ? "Checked In & Verified" : "Ready for Gate Scan"}
-                </Badge>
-                <span className="font-mono text-xs text-black font-black bg-[#FFEB3B] px-2 py-0.5 border border-black">
-                  {studentSchool?.name}
-                </span>
-              </div>
-
-              <h2 className="text-2xl font-black text-black uppercase">{currentStudent.full_name}</h2>
-              <p className="text-xs font-bold text-neutral-700 mt-0.5">
-                Track: <span className="font-black bg-[#2196F3] text-black px-1.5 py-0.5 border border-black">{studentTrack?.name || "General"}</span>
-              </p>
-
-              <div className="my-5">
-                <QRDisplay
-                  value={currentStudent.qr_token}
-                  title={currentStudent.full_name}
-                  subtitle={`Pass Token: ${currentStudent.qr_token}`}
-                  size={190}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-2 text-left text-xs bg-[#FFFBEB] border-3 border-black p-3 mb-4 shadow-[3px_3px_0px_#000]">
-                <div>
-                  <span className="text-neutral-700 block text-[11px] font-black uppercase">Your Team</span>
-                  <span className="font-black text-black truncate block text-sm">{studentTeam?.name || "Solo"}</span>
-                </div>
-                <div>
-                  <span className="text-neutral-700 block text-[11px] font-black uppercase">Work Table</span>
-                  <span className="font-mono font-black text-black block text-sm">{studentTeam?.table_number || "TBD"}</span>
-                </div>
-              </div>
-
-              <div className="flex gap-2">
-                <Link href="/schedule" className="flex-1">
-                  <Button variant="secondary" className="w-full text-xs font-bold">
-                    <Calendar className="h-3.5 w-3.5 mr-1" />
-                    <span>Schedule</span>
-                  </Button>
-                </Link>
-                <Link href="/certificates" className="flex-1">
-                  <Button variant="primary" className="w-full text-xs font-bold">
-                    <Award className="h-3.5 w-3.5 mr-1" />
-                    <span>My Certificate</span>
-                  </Button>
-                </Link>
-              </div>
-            </GlassCard>
-          ) : (
-            <GlassCard variant="white" className="p-8 text-center border-4 border-black shadow-[8px_8px_0px_#000]">
-              <p className="text-black font-bold text-sm">No student pass claimed yet.</p>
-              <Link href="/join" className="mt-4 inline-block">
-                <Button variant="primary">Join with School Code</Button>
-              </Link>
-            </GlassCard>
-          )}
-        </div>
-      )}
-
-      {/* QR Scanner Modal component */}
-      <QRScannerModal isOpen={scannerOpen} onClose={() => setScannerOpen(false)} />
     </div>
   );
 }
