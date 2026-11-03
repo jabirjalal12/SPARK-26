@@ -105,11 +105,11 @@ export function PillNav() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
           <Link href="/" className="flex items-center gap-2.5 group">
             <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-pink-500 flex items-center justify-center shadow-md shadow-indigo-500/25 group-hover:scale-105 transition-transform">
-              <span className="text-white font-black text-sm tracking-tighter">{"M//B"}</span>
+              <Sparkles className="h-4 w-4 text-white" />
             </div>
             <div className="flex flex-col">
               <span className="font-extrabold tracking-tight text-white text-base leading-none group-hover:text-indigo-400 transition-colors">
-                MAKE//BREAK
+                SPARK
               </span>
               <span className="text-[10px] uppercase tracking-widest text-slate-400 font-semibold mt-0.5">
                 Tech Fest 2026

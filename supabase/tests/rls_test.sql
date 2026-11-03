@@ -1,5 +1,5 @@
-﻿-- ==============================================================================
--- MAKE//BREAK RLS VERIFICATION TESTS - rls_test.sql
+-- ==============================================================================
+-- SPARK RLS VERIFICATION TESTS - rls_test.sql
 -- Automated SQL assertions to verify permissions per role:
 -- 1. participant
 -- 2. faculty
@@ -105,7 +105,7 @@ BEGIN
     -- --------------------------------------------------------------------------
     PERFORM set_config('request.jwt.claim.sub', v_organizer_id::text, true);
     INSERT INTO public.profiles (id, role, full_name, email, approved)
-    VALUES (v_organizer_id, 'organizer', 'Chief Organizer', 'admin@makebreak.tech', true)
+    VALUES (v_organizer_id, 'organizer', 'Chief Organizer', 'admin@spark.tech', true)
     ON CONFLICT (id) DO UPDATE SET role = 'organizer', approved = true;
 
     SELECT COUNT(*) INTO v_count FROM public.schools;

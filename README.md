@@ -1,4 +1,4 @@
-# MAKE//BREAK — Inter-School College Tech Fest Manager
+# SPARK — Inter-School College Tech Fest Manager
 
 ![Next.js](https://img.shields.io/badge/Next.js-16+-black?style=flat&logo=next.js)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=flat&logo=typescript)
@@ -6,7 +6,7 @@
 ![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL%20%7C%20Auth%20%7C%20RLS-3ecf8e?style=flat&logo=supabase)
 ![PWA](https://img.shields.io/badge/PWA-Installable%20%26%20Offline-purple?style=flat)
 
-Production-ready, mobile-first web app for **MAKE//BREAK**, an inter-school college tech festival. Each visiting institution sends **ONE faculty coordinator** and **student delegations** competing across three signature tracks:
+Production-ready, mobile-first web app for **SPARK**, an inter-school college tech festival. Each visiting institution sends **ONE faculty coordinator** and **student delegations** competing across three signature tracks:
 - 🤖 **Robotics** (Track color: `#2563EB` Blue) — Obstacle navigation, RC and autonomous rover trials.
 - 🔧 **Build from Scrap** (Track color: `#15803D` Deep Green) — Rapid 4-hour prototyping from salvage scrap parts.
 - ✨ **Useless Projects** (Track color: `#DC2626` Crimson) — Absurd, delightfully over-engineered contraptions.
@@ -162,7 +162,7 @@ To provision your live cloud Supabase instance:
 ## 👤 How to Create the First Organizer Account
 
 1. In Supabase Dashboard, go to **Authentication → Users** and click **Add User**.
-2. Enter email `organizer@makebreak.tech` and a secure password.
+2. Enter email `organizer@spark.tech` and a secure password.
 3. In the **User Metadata** JSON, set:
    ```json
    {
@@ -175,7 +175,7 @@ To provision your live cloud Supabase instance:
    ```sql
    UPDATE public.profiles 
    SET role = 'organizer', approved = true 
-   WHERE email = 'organizer@makebreak.tech';
+   WHERE email = 'organizer@spark.tech';
    ```
 5. You can now log into `/login` with full organizer privileges.
 
@@ -241,4 +241,4 @@ To provision your live cloud Supabase instance:
 ---
 
 ## 📜 License
-Built for the **MAKE//BREAK Inter-School Tech Fest 2026**. Open source under the MIT License.
+Built for the **SPARK Inter-School Tech Fest 2026**. Open source under the MIT License.

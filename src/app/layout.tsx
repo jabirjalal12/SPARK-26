@@ -1,4 +1,4 @@
-﻿import type { Metadata, Viewport } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { FestStoreProvider } from "@/lib/store";
@@ -14,14 +14,14 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "MAKE//BREAK 2026 — Inter-School College Tech Fest",
+  title: "SPARK 2026 — Inter-School College Tech Fest",
   description:
-    "Production-ready mobile-first manager for MAKE//BREAK inter-school college tech fest. Tracks: Robotics, Build from Scrap, Useless Projects.",
+    "Production-ready mobile-first manager for SPARK inter-school college tech fest. Tracks: Robotics, Build from Scrap, Useless Projects.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "MAKE//BREAK",
+    title: "SPARK",
   },
 };
 

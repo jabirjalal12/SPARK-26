@@ -1,4 +1,4 @@
-﻿import {
+import {
   Track,
   School,
   Team,
@@ -289,7 +289,7 @@ export const initialSchedule: ScheduleItem[] = [
 export const initialAnnouncements: Announcement[] = [
   {
     id: "ann-1",
-    title: "Welcome to MAKE//BREAK 2026! 🚀",
+    title: "Welcome to SPARK 2026! 🚀",
     body: "Helpdesks are operational at Central Quad. Faculty leads, please verify your school rosters and retrieve ID lanyard passes.",
     audience: "all",
     track_id: null,
@@ -343,7 +343,7 @@ export const demoProfiles: Record<string, Profile> = {
     role: "organizer",
     school_id: null,
     full_name: "Prof. Vikram Malhotra (Chief Organizer)",
-    email: "organizer@makebreak.tech",
+    email: "organizer@spark.tech",
     phone: "+91 98765 00001",
     avatar_url: null,
     approved: true,
@@ -369,7 +369,7 @@ export const demoProfiles: Record<string, Profile> = {
     role: "volunteer",
     school_id: null,
     full_name: "Farhan Siddiqui",
-    email: "farhan.vol@makebreak.tech",
+    email: "farhan.vol@spark.tech",
     phone: "+91 98234 56789",
     avatar_url: null,
     approved: true,
@@ -382,7 +382,7 @@ export const demoProfiles: Record<string, Profile> = {
     role: "judge",
     school_id: null,
     full_name: "Dr. Sunita Sen (Robotics Jury)",
-    email: "judge.sunita@makebreak.tech",
+    email: "judge.sunita@spark.tech",
     phone: "+91 98111 22334",
     avatar_url: null,
     approved: true,

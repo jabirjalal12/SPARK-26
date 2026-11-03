@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState } from "react";
 import jsPDF from "jspdf";
@@ -49,7 +49,7 @@ export function CertificateGenerator({ certificate }: CertificateGeneratorProps)
       doc.setTextColor(244, 244, 245);
       doc.setFont("helvetica", "bold");
       doc.setFontSize(26);
-      doc.text("MAKE // BREAK 2026", width / 2, 35, { align: "center" });
+      doc.text("SPARK 2026", width / 2, 35, { align: "center" });
 
       doc.setFontSize(11);
       doc.setFont("helvetica", "normal");
@@ -86,7 +86,7 @@ export function CertificateGenerator({ certificate }: CertificateGeneratorProps)
       doc.text(`representing ${schoolName}`, width / 2, 108, { align: "center" });
 
       doc.text(
-        `for outstanding technical performance in the ${trackName} track during MAKE//BREAK 2026.`,
+        `for outstanding technical performance in the ${trackName} track during SPARK 2026.`,
         width / 2,
         118,
         { align: "center" }
@@ -114,13 +114,13 @@ export function CertificateGenerator({ certificate }: CertificateGeneratorProps)
       doc.setFontSize(10);
       doc.line(width - 95, 160, width - 40, 160);
       doc.text("Prof. Vikram Malhotra", width - 67.5, 166, { align: "center" });
-      doc.text("Convener, MAKE//BREAK", width - 67.5, 171, { align: "center" });
+      doc.text("Convener, SPARK", width - 67.5, 171, { align: "center" });
 
       // Verification code & date footer
       doc.setFontSize(9);
       doc.setTextColor(148, 163, 184);
       doc.text(`Certificate ID: ${certificate.cert_code}`, 20, height - 16);
-      doc.text("Verify authentic at: makebreak.tech/verify", width - 20, height - 16, { align: "right" });
+      doc.text("Verify authentic at: spark.tech/verify", width - 20, height - 16, { align: "right" });
 
       // Save PDF
       doc.save(`${studentName.toLowerCase().replace(/\s+/g, "_")}_certificate.pdf`);
@@ -148,7 +148,7 @@ export function CertificateGenerator({ certificate }: CertificateGeneratorProps)
           <span className="font-mono text-[11px] text-slate-400">{certificate.cert_code}</span>
         </div>
 
-        <h3 className="text-lg font-black tracking-tight text-white uppercase">MAKE//BREAK 2026</h3>
+        <h3 className="text-lg font-black tracking-tight text-white uppercase">SPARK 2026</h3>
         <p className="text-xs text-indigo-300 font-semibold tracking-wide uppercase mt-0.5">
           {certType}
         </p>

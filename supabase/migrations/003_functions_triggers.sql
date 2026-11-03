@@ -1,5 +1,5 @@
-﻿-- ==============================================================================
--- MAKE//BREAK DATABASE FUNCTIONS & TRIGGERS - 003_functions_triggers.sql
+-- ==============================================================================
+-- SPARK DATABASE FUNCTIONS & TRIGGERS - 003_functions_triggers.sql
 -- Handles auth hooks, audit logging, realtime, and result calculations
 -- ==============================================================================
 

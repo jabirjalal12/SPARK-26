@@ -76,11 +76,11 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-18 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3 group">
             <div className="h-10 w-10 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-pink-500 flex items-center justify-center shadow-lg shadow-indigo-600/30 group-hover:scale-105 transition-transform">
-              <span className="text-white font-black text-base tracking-tighter">{"M//B"}</span>
+              <Sparkles className="h-5 w-5 text-white" />
             </div>
             <div>
               <span className="font-black text-xl text-white tracking-tight leading-none block">
-                MAKE<span className="text-indigo-400">{"//"}</span>BREAK
+                SPARK
               </span>
               <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block mt-0.5">
                 Tech Fest 2026
@@ -365,7 +365,7 @@ export default function LandingPage() {
                 </div>
               </a>
               <a
-                href="mailto:support@makebreak.tech"
+                href="mailto:support@spark.tech"
                 className="flex items-center gap-3 p-3.5 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
               >
                 <div className="p-2.5 rounded-xl bg-blue-500/20 text-blue-300">
@@ -373,7 +373,7 @@ export default function LandingPage() {
                 </div>
                 <div>
                   <p className="text-[11px] text-slate-400 font-semibold uppercase">Official Desk</p>
-                  <p className="text-sm font-bold text-white">support@makebreak.tech</p>
+                  <p className="text-sm font-bold text-white">support@spark.tech</p>
                 </div>
               </a>
             </div>
@@ -381,7 +381,7 @@ export default function LandingPage() {
         </GlassCard>
 
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400 pt-6 border-t border-white/10">
-          <p>© 2026 MAKE//BREAK. St. Andrews College of Engineering & Technology.</p>
+          <p>© 2026 SPARK. St. Andrews College of Engineering & Technology.</p>
           <div className="flex items-center gap-4">
             <Link href="/login" className="hover:text-white transition-colors">Admin Portal</Link>
             <Link href="/schedule" className="hover:text-white transition-colors">Schedule</Link>

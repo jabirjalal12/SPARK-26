@@ -1,5 +1,5 @@
-﻿-- ==============================================================================
--- MAKE//BREAK SEED DATA - 004_seed_data.sql
+-- ==============================================================================
+-- SPARK SEED DATA - 004_seed_data.sql
 -- Pre-populates tracks, criteria, venues, settings, 5 schools, 20 students,
 -- teams, schedule items, and announcements.
 -- ==============================================================================
@@ -7,19 +7,19 @@
 -- 1. SETTINGS
 INSERT INTO public.settings (key, value, description) VALUES
 ('event_metadata', '{
-    "name": "MAKE//BREAK 2026",
+    "name": "SPARK 2026",
     "edition": "Annual Inter-School Tech Fest",
     "college": "St. Andrews College of Engineering & Technology",
     "tagline": "Build It. Break It. Re-engineer It.",
     "event_date": "2026-11-20",
     "location": "Main Campus, St. Andrews College, Tech Block",
-    "contact_email": "hello@makebreak.tech",
+    "contact_email": "hello@spark.tech",
     "contact_phone": "+91 98765 43210",
     "helpline_whatsapp": "+91 98765 43210"
 }'::jsonb, 'Global event information and contact details'),
 ('registration_deadline', '"2026-11-18T23:59:59Z"'::jsonb, 'Deadline for faculty to edit students and teams'),
 ('results_published', 'false'::jsonb, 'Global toggle to publish final winners and scores'),
-('live_stream_url', '"https://youtube.com/live/makebreak2026"'::jsonb, 'Official live stream link')
+('live_stream_url', '"https://youtube.com/live/spark2026"'::jsonb, 'Official live stream link')
 ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;
 
 -- 2. TRACKS
@@ -300,7 +300,7 @@ ON CONFLICT (id) DO NOTHING;
 INSERT INTO public.announcements (id, title, body, audience, track_id, urgent, published) VALUES
 (
     'd1111111-0001-0000-0000-000000000001',
-    'Welcome to MAKE//BREAK 2026! 🚀',
+    'Welcome to SPARK 2026! 🚀',
     'Registration desks are now open at Central Quad. Faculty members, please collect your official welcome packets and verify student rosters.',
     'all',
     NULL,

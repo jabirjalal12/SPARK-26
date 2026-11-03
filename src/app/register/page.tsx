@@ -105,7 +105,7 @@ export default function RegisterSchoolPage() {
 
             <h1 className="text-2xl font-black text-white">Registration Submitted!</h1>
             <p className="text-xs text-slate-300 max-w-md mx-auto mt-2 leading-relaxed">
-              Your institution <span className="font-bold text-white">{registeredSchool.name}</span> has been enrolled for MAKE//BREAK 2026.
+              Your institution <span className="font-bold text-white">{registeredSchool.name}</span> has been enrolled for SPARK 2026.
             </p>
 
             <div className="my-6 p-4 rounded-2xl bg-white/5 border border-white/10 max-w-xs mx-auto">

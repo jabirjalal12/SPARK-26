@@ -1,5 +1,5 @@
-﻿// MAKE//BREAK PWA Service Worker - Offline Cache
-const CACHE_NAME = "makebreak-cache-v1";
+// SPARK PWA Service Worker - Offline Cache
+const CACHE_NAME = "spark-cache-v1";
 const OFFLINE_URLS = [
   "/",
   "/schedule",

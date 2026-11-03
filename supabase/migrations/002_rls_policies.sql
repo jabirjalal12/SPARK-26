@@ -1,5 +1,5 @@
-﻿-- ==============================================================================
--- MAKE//BREAK DATABASE RLS POLICIES - 002_rls_policies.sql
+-- ==============================================================================
+-- SPARK DATABASE RLS POLICIES - 002_rls_policies.sql
 -- Role-based Row Level Security
 -- Roles: 'organizer', 'faculty', 'volunteer', 'judge', 'participant'
 -- ==============================================================================

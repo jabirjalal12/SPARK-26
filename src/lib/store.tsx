@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import {
@@ -66,7 +66,7 @@ interface FestStoreContextType {
 
 const FestStoreContext = createContext<FestStoreContextType | null>(null);
 
-const STORAGE_KEY = "makebreak_fest_state_v1";
+const STORAGE_KEY = "spark_fest_state_v1";
 
 export function FestStoreProvider({ children }: { children: React.ReactNode }) {
   const [currentRole, setCurrentRole] = useState<UserRole>("organizer");

@@ -1,6 +1,6 @@
-﻿export const en = {
+export const en = {
   common: {
-    appName: "MAKE//BREAK",
+    appName: "SPARK",
     tagline: "Build It. Break It. Re-engineer It.",
     edition: "Inter-School College Tech Fest 2026",
     loading: "Loading...",

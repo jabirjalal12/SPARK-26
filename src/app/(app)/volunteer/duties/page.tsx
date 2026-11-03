@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React from "react";
 import { useFestStore } from "@/lib/store";
@@ -26,7 +26,7 @@ export default function VolunteerDutiesPage() {
           My Duty Roster & Shifts
         </h1>
         <p className="text-xs text-slate-300 mt-1">
-          Review your time slots, designated venue locations, and course duties for MAKE//BREAK 2026.
+          Review your time slots, designated venue locations, and course duties for SPARK 2026.
         </p>
       </div>
 
