@@ -7,6 +7,7 @@ import { useFestStore } from "@/lib/store";
 import { schoolRegistrationSchema } from "@/lib/schemas";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Button } from "@/components/ui/button";
+import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import {
   School,
   ArrowRight,
@@ -41,7 +42,7 @@ export default function RegisterSchoolPage() {
   const [registeredSchool, setRegisteredSchool] = useState<any | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
 
@@ -59,17 +60,87 @@ export default function RegisterSchoolPage() {
 
     setIsSubmitting(true);
     try {
-      const school = addSchool({
-        name: formData.schoolName,
-        city: formData.city,
-        address: formData.address,
-        contact_email: formData.contactEmail,
-        contact_phone: formData.contactPhone,
-      });
+      if (isSupabaseConfigured()) {
+        const supabase = createClient();
 
-      setRegisteredSchool(school);
-    } catch {
-      setErrors({ form: "Registration could not be completed. Please try again." });
+        // 1. Sign up Supabase Auth user
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+          email: formData.facultyEmail,
+          password: formData.password,
+          options: {
+            data: {
+              full_name: formData.facultyName,
+              role: "faculty",
+            },
+          },
+        });
+
+        if (authError) {
+          setErrors({ form: authError.message });
+          setIsSubmitting(false);
+          return;
+        }
+
+        // 2. Generate unique school code
+        const code = `SCH-${formData.city.substring(0, 3).toUpperCase()}-${Math.floor(100 + Math.random() * 900)}`;
+
+        // 3. Insert School into Supabase
+        const { data: schoolData, error: schoolError } = await supabase
+          .from("schools")
+          .insert({
+            name: formData.schoolName,
+            code,
+            city: formData.city,
+            address: formData.address,
+            contact_email: formData.contactEmail,
+            contact_phone: formData.contactPhone,
+            status: "pending",
+            arrived: false,
+          })
+          .select()
+          .single();
+
+        if (schoolError) {
+          setErrors({ form: schoolError.message });
+          setIsSubmitting(false);
+          return;
+        }
+
+        // 4. Update Profile in Supabase
+        if (authData.user) {
+          await supabase.from("profiles").upsert({
+            id: authData.user.id,
+            role: "faculty",
+            full_name: formData.facultyName,
+            email: formData.facultyEmail,
+            phone: formData.contactPhone,
+            school_id: schoolData.id,
+          });
+        }
+
+        // 5. Generate School Ticket
+        const tokenHash = `TKT-${code}-${Math.random().toString(36).substring(2, 10)}`;
+        await supabase.from("school_tickets").insert({
+          school_id: schoolData.id,
+          token_hash: tokenHash,
+        });
+
+        setRegisteredSchool({
+          ...schoolData,
+          ticket_token: tokenHash,
+        });
+      } else {
+        const school = addSchool({
+          name: formData.schoolName,
+          city: formData.city,
+          address: formData.address,
+          contact_email: formData.contactEmail,
+          contact_phone: formData.contactPhone,
+        });
+        setRegisteredSchool(school);
+      }
+    } catch (err: any) {
+      setErrors({ form: err?.message || "Registration could not be completed. Please try again." });
     } finally {
       setIsSubmitting(false);
     }

@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useFestStore } from "@/lib/store";
+import { createClient } from "@/lib/supabase/client";
 import { UserRole, OrganizerSubRole } from "@/lib/types/database";
 import { cn } from "@/lib/utils";
 import {
@@ -192,113 +193,85 @@ export function PillNav() {
                 className="absolute right-0 mt-2 w-72 rounded-none border-4 border-black bg-white p-3 shadow-[6px_6px_0px_#000000] z-50 animate-in fade-in zoom-in-95 duration-100"
                 onClick={(e) => e.stopPropagation()}
               >
-                <div className="px-3 py-2 border-b-2 border-black bg-[#FFEB3B] mb-2">
-                  <p className="text-xs font-black text-black uppercase tracking-wider">Switch Test Role</p>
-                  <p className="text-[11px] font-bold text-slate-800">Preview without logging out</p>
+                <div className="px-3 py-2.5 border-b-2 border-black bg-[#FFEB3B] mb-2">
+                  <p className="text-xs font-black text-black uppercase tracking-wider">{currentProfile.full_name || "Authorized User"}</p>
+                  <p className="text-[11px] font-bold text-slate-800 truncate">{currentProfile.email}</p>
+                  <div className="mt-1.5 inline-block bg-black text-[#FFEB3B] px-2 py-0.5 text-[10px] font-black uppercase tracking-wider">
+                    {getRoleBadgeLabel()}
+                  </div>
                 </div>
 
-                <div className="space-y-1">
-                  <p className="text-[10px] font-black uppercase tracking-wider text-black px-2 pt-1">
-                    Organizer Sub-Roles
-                  </p>
-                  <button
-                    onClick={() => {
-                      switchOrganizerSubRole("super_admin");
-                      setRoleMenuOpen(false);
-                    }}
-                    className={cn(
-                      "w-full text-left px-3 py-2 text-xs font-bold flex items-center justify-between border-2 transition-colors cursor-pointer",
-                      role === "organizer" && activeOrganizerSubRole === "super_admin"
-                        ? "bg-black text-white border-black shadow-[2px_2px_0px_#2196F3]"
-                        : "text-black border-transparent hover:bg-[#FFEB3B] hover:border-black"
-                    )}
-                  >
-                    <span>Super Admin (Full Control)</span>
-                    {role === "organizer" && activeOrganizerSubRole === "super_admin" && (
-                      <CheckCircle2 className="w-4 h-4 text-[#FFEB3B]" />
-                    )}
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      switchOrganizerSubRole("event_coordinator");
-                      setRoleMenuOpen(false);
-                    }}
-                    className={cn(
-                      "w-full text-left px-3 py-2 text-xs font-bold flex items-center justify-between border-2 transition-colors cursor-pointer",
-                      role === "organizer" && activeOrganizerSubRole === "event_coordinator"
-                        ? "bg-black text-white border-black shadow-[2px_2px_0px_#2196F3]"
-                        : "text-black border-transparent hover:bg-[#FFEB3B] hover:border-black"
-                    )}
-                  >
-                    <span>Event Coordinator</span>
-                    {role === "organizer" && activeOrganizerSubRole === "event_coordinator" && (
-                      <CheckCircle2 className="w-4 h-4 text-[#FFEB3B]" />
-                    )}
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      switchOrganizerSubRole("registration_head");
-                      setRoleMenuOpen(false);
-                    }}
-                    className={cn(
-                      "w-full text-left px-3 py-2 text-xs font-bold flex items-center justify-between border-2 transition-colors cursor-pointer",
-                      role === "organizer" && activeOrganizerSubRole === "registration_head"
-                        ? "bg-black text-white border-black shadow-[2px_2px_0px_#2196F3]"
-                        : "text-black border-transparent hover:bg-[#FFEB3B] hover:border-black"
-                    )}
-                  >
-                    <span>Registration Head</span>
-                    {role === "organizer" && activeOrganizerSubRole === "registration_head" && (
-                      <CheckCircle2 className="w-4 h-4 text-[#FFEB3B]" />
-                    )}
-                  </button>
-
-                  <p className="text-[10px] font-black uppercase tracking-wider text-black px-2 pt-2">
-                    External Leads
-                  </p>
-                  <button
-                    onClick={() => {
-                      switchRole("faculty");
-                      setRoleMenuOpen(false);
-                    }}
-                    className={cn(
-                      "w-full text-left px-3 py-2 text-xs font-bold flex items-center justify-between border-2 transition-colors cursor-pointer",
-                      role === "faculty"
-                        ? "bg-black text-white border-black shadow-[2px_2px_0px_#2196F3]"
-                        : "text-black border-transparent hover:bg-[#FFEB3B] hover:border-black"
-                    )}
-                  >
-                    <span>Visiting Faculty Lead</span>
-                    {role === "faculty" && <CheckCircle2 className="w-4 h-4 text-[#FFEB3B]" />}
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      switchRole("volunteer");
-                      setRoleMenuOpen(false);
-                    }}
-                    className={cn(
-                      "w-full text-left px-3 py-2 text-xs font-bold flex items-center justify-between border-2 transition-colors cursor-pointer",
-                      role === "volunteer"
-                        ? "bg-black text-white border-black shadow-[2px_2px_0px_#2196F3]"
-                        : "text-black border-transparent hover:bg-[#FFEB3B] hover:border-black"
-                    )}
-                  >
-                    <span>Registration Desk Volunteer</span>
-                    {role === "volunteer" && <CheckCircle2 className="w-4 h-4 text-[#FFEB3B]" />}
-                  </button>
-                </div>
+                {role === "organizer" && (
+                  <div className="space-y-1 mb-2">
+                    <p className="text-[10px] font-black uppercase tracking-wider text-black px-2 pt-1">
+                      Active Sub-Role View
+                    </p>
+                    <button
+                      onClick={() => {
+                        switchOrganizerSubRole("super_admin");
+                        setRoleMenuOpen(false);
+                      }}
+                      className={cn(
+                        "w-full text-left px-3 py-1.5 text-xs font-bold flex items-center justify-between border-2 transition-colors cursor-pointer",
+                        activeOrganizerSubRole === "super_admin"
+                          ? "bg-black text-white border-black shadow-[2px_2px_0px_#2196F3]"
+                          : "text-black border-transparent hover:bg-[#FFFBEB] hover:border-black"
+                      )}
+                    >
+                      <span>Super Admin</span>
+                      {activeOrganizerSubRole === "super_admin" && <CheckCircle2 className="w-3.5 h-3.5 text-[#FFEB3B]" />}
+                    </button>
+                    <button
+                      onClick={() => {
+                        switchOrganizerSubRole("event_coordinator");
+                        setRoleMenuOpen(false);
+                      }}
+                      className={cn(
+                        "w-full text-left px-3 py-1.5 text-xs font-bold flex items-center justify-between border-2 transition-colors cursor-pointer",
+                        activeOrganizerSubRole === "event_coordinator"
+                          ? "bg-black text-white border-black shadow-[2px_2px_0px_#2196F3]"
+                          : "text-black border-transparent hover:bg-[#FFFBEB] hover:border-black"
+                      )}
+                    >
+                      <span>Event Coordinator</span>
+                      {activeOrganizerSubRole === "event_coordinator" && <CheckCircle2 className="w-3.5 h-3.5 text-[#FFEB3B]" />}
+                    </button>
+                    <button
+                      onClick={() => {
+                        switchOrganizerSubRole("registration_head");
+                        setRoleMenuOpen(false);
+                      }}
+                      className={cn(
+                        "w-full text-left px-3 py-1.5 text-xs font-bold flex items-center justify-between border-2 transition-colors cursor-pointer",
+                        activeOrganizerSubRole === "registration_head"
+                          ? "bg-black text-white border-black shadow-[2px_2px_0px_#2196F3]"
+                          : "text-black border-transparent hover:bg-[#FFFBEB] hover:border-black"
+                      )}
+                    >
+                      <span>Registration Head</span>
+                      {activeOrganizerSubRole === "registration_head" && <CheckCircle2 className="w-3.5 h-3.5 text-[#FFEB3B]" />}
+                    </button>
+                  </div>
+                )}
 
                 <div className="mt-3 pt-2 border-t-2 border-black flex justify-between items-center text-xs font-bold">
-                  <Link href="/" className="text-black hover:underline">
+                  <Link href="/" className="text-black hover:underline" onClick={() => setRoleMenuOpen(false)}>
                     Public Landing
                   </Link>
-                  <Link href="/login" className="text-black hover:bg-[#FF5252] px-2 py-0.5 border border-black flex items-center gap-1">
-                    <LogOut className="w-3 h-3" />
-                    <span>Login</span>
-                  </Link>
+                  <button
+                    onClick={async () => {
+                      try {
+                        const supabase = createClient();
+                        await supabase.auth.signOut();
+                      } catch {}
+                      setRoleMenuOpen(false);
+                      window.location.href = "/login";
+                    }}
+                    className="text-black hover:bg-[#FF5252] px-2.5 py-1 border-2 border-black flex items-center gap-1.5 font-black uppercase text-[11px] shadow-[2px_2px_0px_#000000] cursor-pointer"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                    <span>Sign Out</span>
+                  </button>
                 </div>
               </div>
             )}
