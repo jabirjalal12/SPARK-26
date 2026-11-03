@@ -108,7 +108,7 @@ export async function fetchUserProfile(userId: string): Promise<Profile | null> 
       const { data: roles } = await supabase
         .from("organizer_roles")
         .select("sub_role")
-        .eq("profile_id", userId);
+        .eq("user_id", userId);
 
       if (roles) {
         subRoles = roles.map((r: any) => r.sub_role as OrganizerSubRole);

@@ -27,7 +27,7 @@ UPDATE public.profiles SET school_id = NULL;
 
 -- 3. Remove fake/orphaned profiles that don't belong to a real Supabase Auth user
 DELETE FROM public.organizer_roles 
-WHERE profile_id NOT IN (SELECT id FROM auth.users);
+WHERE user_id NOT IN (SELECT id FROM auth.users);
 
 DELETE FROM public.profiles 
 WHERE id NOT IN (SELECT id FROM auth.users);
