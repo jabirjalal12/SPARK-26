@@ -10,11 +10,6 @@ import {
   Gavel,
   CheckCircle2,
   Lock,
-  Sparkles,
-  Trophy,
-  Sliders,
-  MessageSquare,
-  AlertCircle,
 } from "lucide-react";
 
 export default function JudgeScoringPage() {
@@ -97,35 +92,37 @@ export default function JudgeScoringPage() {
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-white/10">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b-3 border-black">
         <div>
           <div className="flex items-center gap-2 mb-1.5">
-            <Badge variant="track-blue">OFFICIAL JURY PANEL</Badge>
+            <Badge variant="outline" className="bg-[#2196F3] text-black border-2 border-black font-black">
+              OFFICIAL JURY PANEL
+            </Badge>
             {resultsPublished && (
-              <Badge variant="danger">
+              <Badge variant="danger" className="border-2 border-black font-black">
                 <Lock className="h-3 w-3 mr-1" />
                 Results Published (Locked)
               </Badge>
             )}
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-black text-black tracking-tight uppercase">
             Jury Scoring Deck — {selectedTrackObj.name}
           </h1>
-          <p className="text-xs text-slate-300 mt-1">
+          <p className="text-xs font-bold text-neutral-700 mt-1">
             Score each prototype against weighted technical rubrics. Weighted total is auto-calculated live.
           </p>
         </div>
 
         {/* Track switcher tabs */}
-        <div className="flex p-1 rounded-xl bg-white/5 border border-white/10">
+        <div className="flex p-1.5 bg-white border-3 border-black shadow-[4px_4px_0px_#000] gap-2">
           {tracks.map((t) => (
             <button
               key={t.id}
               onClick={() => setActiveTrackId(t.id)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+              className={`px-3 py-1.5 text-xs font-black uppercase border-2 border-black transition-all ${
                 activeTrackId === t.id
-                  ? "bg-indigo-600 text-white shadow"
-                  : "text-slate-400 hover:text-white"
+                  ? "bg-[#FFEB3B] text-black shadow-[2px_2px_0px_#000] -translate-x-0.5 -translate-y-0.5"
+                  : "bg-white text-black hover:bg-[#FFFBEB]"
               }`}
             >
               {t.name}
@@ -135,25 +132,27 @@ export default function JudgeScoringPage() {
       </div>
 
       {toastMessage && (
-        <div className="p-3 rounded-xl bg-emerald-500/20 border border-emerald-500/30 text-emerald-200 text-xs font-bold flex items-center gap-2 animate-in fade-in">
-          <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+        <div className="p-3 bg-[#4CAF50] text-black border-3 border-black shadow-[4px_4px_0px_#000] text-xs font-black uppercase flex items-center gap-2">
+          <CheckCircle2 className="h-4 w-4 text-black" />
           <span>{toastMessage}</span>
         </div>
       )}
 
       {/* Criteria Breakdown Card */}
-      <GlassCard className="p-5" glow="blue">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">
+      <GlassCard variant="white" className="p-5 border-4 border-black shadow-[6px_6px_0px_#000]">
+        <h3 className="text-xs font-black uppercase tracking-wider text-black mb-3">
           Scoring Rubric for {selectedTrackObj.name}
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {trackCriteria.map((crit) => (
-            <div key={crit.id} className="p-3 rounded-xl bg-white/5 border border-white/10">
+            <div key={crit.id} className="p-3 bg-[#FFFBEB] border-2 border-black shadow-[2px_2px_0px_#000]">
               <div className="flex items-center justify-between text-xs mb-1">
-                <span className="font-bold text-white">{crit.name}</span>
-                <span className="font-mono text-indigo-400 font-bold">{Math.round(crit.weight * 100)}%</span>
+                <span className="font-black text-black uppercase">{crit.name}</span>
+                <span className="font-mono text-black font-black bg-[#FFEB3B] px-1.5 py-0.5 border border-black">
+                  {Math.round(crit.weight * 100)}%
+                </span>
               </div>
-              <p className="text-[11px] text-slate-400 leading-tight">{crit.description}</p>
+              <p className="text-xs text-neutral-800 font-medium leading-tight">{crit.description}</p>
             </div>
           ))}
         </div>
@@ -161,7 +160,7 @@ export default function JudgeScoringPage() {
 
       {/* Competing Teams Grid */}
       <div>
-        <h2 className="text-lg font-black text-white mb-3">
+        <h2 className="text-lg font-black text-black uppercase mb-3">
           Competing Teams ({trackTeams.length})
         </h2>
 
@@ -172,10 +171,10 @@ export default function JudgeScoringPage() {
             const isScored = teamScores.length > 0;
 
             return (
-              <GlassCard key={team.id} className="p-5 flex flex-col justify-between" glow="purple">
+              <GlassCard key={team.id} variant="white" className="p-5 flex flex-col justify-between border-3 border-black shadow-[5px_5px_0px_#000]">
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="font-mono text-xs font-semibold text-indigo-300 bg-white/5 px-2 py-0.5 rounded">
+                    <span className="font-mono text-xs font-black bg-[#FFEB3B] text-black px-2 py-0.5 border border-black shadow-[1px_1px_0px_#000]">
                       Table: {team.table_number || "TBD"}
                     </span>
                     <Badge variant={isScored ? "success" : "warning"}>
@@ -183,31 +182,31 @@ export default function JudgeScoringPage() {
                     </Badge>
                   </div>
 
-                  <h3 className="text-xl font-bold text-white tracking-tight">{team.name}</h3>
-                  <p className="text-xs text-slate-400">{school?.name}</p>
+                  <h3 className="text-xl font-black text-black uppercase tracking-tight">{team.name}</h3>
+                  <p className="text-xs font-bold text-neutral-600">{school?.name}</p>
 
-                  <div className="my-3 p-3 rounded-xl bg-white/5 border border-white/10">
-                    <p className="text-xs font-bold text-indigo-300">{team.project_title}</p>
-                    <p className="text-xs text-slate-300 line-clamp-3 mt-1 leading-relaxed">
+                  <div className="my-3 p-3 bg-[#FFFBEB] border-2 border-black shadow-[2px_2px_0px_#000]">
+                    <p className="text-xs font-black text-black uppercase">{team.project_title}</p>
+                    <p className="text-xs text-neutral-800 font-medium line-clamp-3 mt-1 leading-relaxed">
                       {team.project_summary}
                     </p>
                   </div>
 
                   {team.score_total ? (
                     <div className="flex items-center justify-between text-xs pt-1">
-                      <span className="text-slate-400">Current Average:</span>
-                      <span className="text-base font-black text-emerald-400 font-mono">
+                      <span className="font-bold text-neutral-700">Current Average:</span>
+                      <span className="text-base font-black text-black bg-[#4CAF50] px-2 py-0.5 border border-black font-mono">
                         {team.score_total} / 10.0
                       </span>
                     </div>
                   ) : null}
                 </div>
 
-                <div className="mt-5 pt-3 border-t border-white/10">
+                <div className="mt-5 pt-3 border-t-2 border-black">
                   <Button
                     size="sm"
                     variant={isScored ? "secondary" : "primary"}
-                    className="w-full text-xs"
+                    className="w-full text-xs font-black"
                     disabled={resultsPublished}
                     onClick={() => openScoringForm(team)}
                   >
@@ -231,15 +230,15 @@ export default function JudgeScoringPage() {
       >
         <form onSubmit={handleSubmitScore} className="space-y-5">
           {/* Realtime Live Score Badge */}
-          <div className="p-4 rounded-2xl bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-pink-600/20 border border-white/20 flex items-center justify-between">
+          <div className="p-4 bg-[#FFEB3B] border-4 border-black shadow-[4px_4px_0px_#000] flex items-center justify-between">
             <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-slate-300">
+              <p className="text-xs font-black uppercase tracking-wider text-black">
                 Calculated Weighted Total
               </p>
-              <p className="text-[11px] text-slate-400">Sum of (Value × Weight) / Total Weight</p>
+              <p className="text-xs text-neutral-800 font-bold">Sum of (Value × Weight) / Total Weight</p>
             </div>
-            <div className="text-3xl font-black text-white font-mono bg-white/10 px-4 py-1.5 rounded-xl border border-white/20">
-              {computeWeightedTotal()} <span className="text-xs font-normal text-slate-400">/ 10</span>
+            <div className="text-3xl font-black text-black font-mono bg-white px-4 py-1.5 border-3 border-black shadow-[2px_2px_0px_#000]">
+              {computeWeightedTotal()} <span className="text-xs font-bold text-neutral-700">/ 10</span>
             </div>
           </div>
 
@@ -248,20 +247,20 @@ export default function JudgeScoringPage() {
             {trackCriteria.map((crit) => {
               const currentVal = criterionScores[crit.id] ?? 8.0;
               return (
-                <div key={crit.id} className="p-3.5 rounded-xl bg-white/5 border border-white/10 space-y-2">
+                <div key={crit.id} className="p-3.5 bg-[#FFFBEB] border-3 border-black shadow-[3px_3px_0px_#000] space-y-2">
                   <div className="flex items-center justify-between text-xs">
                     <div>
-                      <span className="font-bold text-white text-sm">{crit.name}</span>
-                      <span className="text-indigo-400 ml-2 font-mono">
-                        (Weight: {Math.round(crit.weight * 100)}%)
+                      <span className="font-black text-black uppercase text-sm">{crit.name}</span>
+                      <span className="text-black font-black ml-2 font-mono bg-[#FFEB3B] px-1 border border-black">
+                        {Math.round(crit.weight * 100)}%
                       </span>
                     </div>
-                    <span className="font-mono text-base font-bold text-white bg-white/10 px-2 py-0.5 rounded">
+                    <span className="font-mono text-base font-black text-black bg-white px-2 py-0.5 border-2 border-black">
                       {currentVal.toFixed(1)}
                     </span>
                   </div>
 
-                  <p className="text-[11px] text-slate-400">{crit.description}</p>
+                  <p className="text-xs text-neutral-800 font-medium">{crit.description}</p>
 
                   <input
                     type="range"
@@ -275,9 +274,9 @@ export default function JudgeScoringPage() {
                         [crit.id]: parseFloat(e.target.value),
                       })
                     }
-                    className="w-full accent-indigo-500 cursor-pointer"
+                    className="w-full accent-black cursor-pointer"
                   />
-                  <div className="flex justify-between text-[10px] text-slate-500 font-mono">
+                  <div className="flex justify-between text-[10px] text-black font-black uppercase font-mono">
                     <span>0 (Unacceptable)</span>
                     <span>5 (Average)</span>
                     <span>10 (Outstanding)</span>
@@ -289,7 +288,7 @@ export default function JudgeScoringPage() {
 
           {/* Judge Comments */}
           <div>
-            <label className="text-xs font-semibold text-slate-300 block mb-1">
+            <label className="text-xs font-black uppercase tracking-wide text-black block mb-1">
               Feedback & Deliberation Notes (Optional)
             </label>
             <textarea
@@ -297,12 +296,12 @@ export default function JudgeScoringPage() {
               value={feedback}
               onChange={(e) => setFeedback(e.target.value)}
               placeholder="Highlight strong engineering points, design flaws, or presentation nuances..."
-              className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/15 text-white text-xs placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              className="w-full px-3.5 py-2.5 bg-white border-3 border-black text-black text-xs font-medium placeholder-neutral-500 shadow-[2px_2px_0px_#000] focus:outline-none focus:ring-2 focus:ring-[#2196F3]"
             />
           </div>
 
           <div className="flex gap-2 justify-end pt-2">
-            <Button type="button" variant="ghost" onClick={() => setScoringModalOpen(false)}>
+            <Button type="button" variant="outline" onClick={() => setScoringModalOpen(false)}>
               Cancel
             </Button>
             <Button type="submit" variant="primary">

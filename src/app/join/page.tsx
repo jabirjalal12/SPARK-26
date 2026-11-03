@@ -1,28 +1,20 @@
-﻿"use client";
+"use client";
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useFestStore } from "@/lib/store";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { QRDisplay } from "@/components/qr/qr-display";
 import {
-  Sparkles,
-  ArrowRight,
   School as SchoolIcon,
   CheckCircle2,
-  UserCheck,
-  Search,
+  ArrowRight,
   ArrowLeft,
   ChevronRight,
-  Calendar,
-  MapPin,
 } from "lucide-react";
 
 export default function StudentJoinPage() {
-  const router = useRouter();
   const { schools, students, tracks, teams, switchRole } = useFestStore();
 
   const [schoolCode, setSchoolCode] = useState("");
@@ -67,39 +59,38 @@ export default function StudentJoinPage() {
     : null;
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-center items-center px-4 py-12 relative overflow-hidden">
-      {/* Background ambient gradient glow */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-purple-600/20 rounded-full blur-[130px] pointer-events-none -z-10" />
-
+    <div className="min-h-screen bg-[#FFFBEB] text-black flex flex-col justify-center items-center px-4 py-12 relative font-sans">
       <div className="w-full max-w-md">
-        {/* Header link back to landing */}
+        {/* Header link */}
         <div className="flex items-center justify-between mb-6">
           <Link
             href="/"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-white transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs font-black text-black hover:bg-[#FFEB3B] px-2 py-1 border border-black transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
-            <span>Back to Fest Landing</span>
+            <span>Back to Landing</span>
           </Link>
-          <span className="text-xs font-bold text-indigo-400 font-mono">STUDENT PORTAL</span>
+          <span className="text-xs font-black bg-[#FFEB3B] text-black px-2 py-0.5 border-2 border-black shadow-[2px_2px_0px_#000000]">
+            STUDENT PASS
+          </span>
         </div>
 
         {/* STEP 1: Enter School Code */}
         {!selectedSchool && (
-          <GlassCard className="p-6 sm:p-8" glow="purple">
+          <GlassCard className="p-6 sm:p-8 bg-white" color="white">
             <div className="text-center mb-6">
-              <div className="h-12 w-12 rounded-2xl bg-gradient-to-tr from-blue-600 to-pink-500 mx-auto flex items-center justify-center shadow-lg shadow-indigo-600/30 mb-3">
-                <SchoolIcon className="h-6 w-6 text-white" />
+              <div className="h-14 w-14 bg-[#FFEB3B] border-[3px] border-black shadow-[4px_4px_0px_#000000] mx-auto flex items-center justify-center mb-3">
+                <SchoolIcon className="h-7 w-7 text-black" />
               </div>
-              <h1 className="text-2xl font-black text-white tracking-tight">Enter School Code</h1>
-              <p className="text-xs text-slate-300 mt-1">
+              <h1 className="text-2xl font-black text-black tracking-tight">Enter School Code</h1>
+              <p className="text-xs font-medium text-slate-700 mt-1">
                 Your faculty coordinator was issued a 6-character code upon fest registration.
               </p>
             </div>
 
             <form onSubmit={handleLookupCode} className="space-y-4">
               <div>
-                <label className="text-xs font-bold uppercase tracking-wider text-slate-300 block mb-2">
+                <label className="text-xs font-black uppercase tracking-wider text-black block mb-2">
                   6-Digit Join Code
                 </label>
                 <input
@@ -108,13 +99,13 @@ export default function StudentJoinPage() {
                   value={schoolCode}
                   onChange={(e) => setSchoolCode(e.target.value.toUpperCase())}
                   placeholder="e.g. STJ771"
-                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/20 text-center font-mono text-xl font-bold tracking-widest text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                  className="w-full px-4 py-3 border-[3px] border-black text-center font-mono text-2xl font-black tracking-widest text-black bg-white shadow-[4px_4px_0px_#000000] focus:outline-none focus:ring-4 focus:ring-black"
                   autoFocus
                 />
               </div>
 
               {errorMessage && (
-                <p className="text-xs text-rose-400 font-medium bg-rose-500/10 border border-rose-500/20 p-2.5 rounded-lg text-center">
+                <p className="text-xs text-black font-bold bg-[#FF5252] border-2 border-black p-2.5 shadow-[2px_2px_0px_#000000] text-center">
                   {errorMessage}
                 </p>
               )}
@@ -125,11 +116,11 @@ export default function StudentJoinPage() {
               </Button>
             </form>
 
-            <div className="mt-6 pt-5 border-t border-white/10">
-              <p className="text-xs text-slate-400 text-center font-medium mb-2">
+            <div className="mt-6 pt-5 border-t-2 border-black">
+              <p className="text-xs text-black text-center font-bold mb-2">
                 Sample Demo Codes to test:
               </p>
-              <div className="flex flex-wrap justify-center gap-1.5 font-mono text-xs">
+              <div className="flex flex-wrap justify-center gap-2 font-mono text-xs">
                 {schools.slice(0, 3).map((s) => (
                   <button
                     key={s.id}
@@ -138,7 +129,7 @@ export default function StudentJoinPage() {
                       setSchoolCode(s.code);
                       setSelectedSchool(s);
                     }}
-                    className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/15 border border-white/10 text-indigo-300 transition-colors"
+                    className="px-2.5 py-1 bg-white border-2 border-black shadow-[2px_2px_0px_#000000] hover:bg-[#FFEB3B] font-bold text-black transition-all cursor-pointer"
                   >
                     {s.code} ({s.name.split(" ")[0]})
                   </button>
@@ -150,50 +141,50 @@ export default function StudentJoinPage() {
 
         {/* STEP 2: Pick Student Name */}
         {selectedSchool && !selectedStudent && (
-          <GlassCard className="p-6 sm:p-8" glow="blue">
-            <div className="flex items-center justify-between mb-4 pb-3 border-b border-white/10">
+          <GlassCard className="p-6 sm:p-8 bg-white" color="white">
+            <div className="flex items-center justify-between mb-4 pb-3 border-b-2 border-black">
               <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-400">
+                <span className="text-[10px] font-black uppercase tracking-wider bg-[#2196F3] text-black px-1.5 py-0.5 border border-black shadow-[1px_1px_0px_#000]">
                   School Verified
                 </span>
-                <h2 className="text-lg font-black text-white leading-tight">{selectedSchool.name}</h2>
-                <p className="text-xs text-slate-400">{selectedSchool.city}</p>
+                <h2 className="text-lg font-black text-black leading-tight mt-1">{selectedSchool.name}</h2>
+                <p className="text-xs font-semibold text-slate-700">{selectedSchool.city}</p>
               </div>
               <button
                 onClick={() => setSelectedSchool(null)}
-                className="text-xs text-slate-400 hover:text-white underline underline-offset-2"
+                className="text-xs font-bold text-black bg-[#FFEB3B] px-2 py-1 border border-black shadow-[2px_2px_0px_#000] hover:bg-white"
               >
                 Change
               </button>
             </div>
 
-            <p className="text-xs font-semibold text-slate-300 mb-3">
+            <p className="text-xs font-bold text-black mb-3">
               Select your name from the registered roster:
             </p>
 
-            <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+            <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
               {schoolStudents.map((s) => {
                 const tr = tracks.find((t) => t.id === s.track_id);
                 return (
                   <button
                     key={s.id}
                     onClick={() => handleSelectStudent(s)}
-                    className="w-full flex items-center justify-between p-3.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-left transition-all hover:scale-[1.01] active:scale-[0.99]"
+                    className="w-full flex items-center justify-between p-3.5 border-2 border-black bg-white shadow-[3px_3px_0px_#000000] hover:bg-[#FFEB3B] hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[4px_4px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 text-left transition-all cursor-pointer"
                   >
                     <div>
-                      <p className="font-bold text-sm text-white">{s.full_name}</p>
-                      <p className="text-xs text-slate-400 flex items-center gap-2 mt-0.5">
-                        <span className="font-mono text-[11px] text-indigo-300">{s.qr_token}</span>
+                      <p className="font-black text-sm text-black">{s.full_name}</p>
+                      <p className="text-xs font-bold text-slate-700 flex items-center gap-2 mt-0.5">
+                        <span className="font-mono text-xs bg-slate-100 px-1 border border-black">{s.qr_token}</span>
                         {tr && <span>• {tr.name}</span>}
                       </p>
                     </div>
-                    <ChevronRight className="h-4 w-4 text-slate-400" />
+                    <ChevronRight className="h-5 w-5 text-black" />
                   </button>
                 );
               })}
 
               {schoolStudents.length === 0 && (
-                <div className="text-center py-6 text-slate-400 text-xs">
+                <div className="text-center py-6 text-slate-700 font-bold text-xs bg-[#FFFBEB] border-2 border-black">
                   No students uploaded yet by your faculty coordinator.
                 </div>
               )}
@@ -203,14 +194,14 @@ export default function StudentJoinPage() {
 
         {/* STEP 3: Student Pass Ready */}
         {selectedStudent && (
-          <GlassCard className="p-6 sm:p-8 text-center" glow="green">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-bold mb-4">
-              <CheckCircle2 className="h-3.5 w-3.5" />
-              <span>Verified Participant Pass</span>
+          <GlassCard className="p-6 sm:p-8 text-center bg-white" color="white">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#4CAF50] text-black border-2 border-black text-xs font-black shadow-[2px_2px_0px_#000000] mb-4">
+              <CheckCircle2 className="h-4 w-4" />
+              <span>VERIFIED PARTICIPANT PASS</span>
             </div>
 
-            <h2 className="text-2xl font-black text-white">{selectedStudent.full_name}</h2>
-            <p className="text-xs text-slate-300 mt-0.5">{selectedSchool.name}</p>
+            <h2 className="text-2xl font-black text-black">{selectedStudent.full_name}</h2>
+            <p className="text-xs font-bold text-slate-700 mt-0.5">{selectedSchool.name}</p>
 
             <div className="my-5">
               <QRDisplay
@@ -221,18 +212,18 @@ export default function StudentJoinPage() {
               />
             </div>
 
-            <div className="space-y-2 text-left bg-white/5 border border-white/10 rounded-xl p-3.5 text-xs mb-6">
-              <div className="flex justify-between py-1 border-b border-white/5">
-                <span className="text-slate-400">Assigned Track:</span>
-                <span className="font-bold text-white">{studentTrack?.name || "General Track"}</span>
+            <div className="space-y-2 text-left bg-[#FFFBEB] border-2 border-black p-3.5 text-xs mb-6 shadow-[3px_3px_0px_#000000]">
+              <div className="flex justify-between py-1 border-b border-black">
+                <span className="font-bold text-slate-700">Assigned Track:</span>
+                <span className="font-black text-black">{studentTrack?.name || "General Track"}</span>
               </div>
-              <div className="flex justify-between py-1 border-b border-white/5">
-                <span className="text-slate-400">Team:</span>
-                <span className="font-bold text-white">{studentTeam?.name || "Solo Participant"}</span>
+              <div className="flex justify-between py-1 border-b border-black">
+                <span className="font-bold text-slate-700">Team:</span>
+                <span className="font-black text-black">{studentTeam?.name || "Solo Participant"}</span>
               </div>
               <div className="flex justify-between py-1">
-                <span className="text-slate-400">Table Number:</span>
-                <span className="font-bold text-indigo-300 font-mono">{studentTeam?.table_number || "TBD"}</span>
+                <span className="font-bold text-slate-700">Table Number:</span>
+                <span className="font-black text-black font-mono">{studentTeam?.table_number || "TBD"}</span>
               </div>
             </div>
 

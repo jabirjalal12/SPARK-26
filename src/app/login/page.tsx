@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState } from "react";
 import Link from "next/link";
@@ -7,13 +7,10 @@ import { useFestStore } from "@/lib/store";
 import { UserRole } from "@/lib/types/database";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   Lock,
   Mail,
   ArrowRight,
-  ShieldAlert,
-  Sparkles,
   ArrowLeft,
   KeyRound,
   CheckCircle2,
@@ -54,7 +51,6 @@ export default function LoginPage() {
         return;
       }
 
-      // Check role heuristics or fallback to organizer
       if (email.includes("fac")) {
         switchRole("faculty");
       } else if (email.includes("vol")) {
@@ -79,42 +75,41 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-center items-center px-4 py-12 relative overflow-hidden">
-      {/* Background glow */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-indigo-600/20 rounded-full blur-[130px] pointer-events-none -z-10" />
-
+    <div className="min-h-screen bg-[#FFFBEB] text-black flex flex-col justify-center items-center px-4 py-12 relative font-sans">
       <div className="w-full max-w-md">
         <div className="flex items-center justify-between mb-6">
           <Link
             href="/"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-white transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs font-black text-black hover:bg-[#FFEB3B] px-2 py-1 border-2 border-black transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
             <span>Back to Landing</span>
           </Link>
-          <span className="text-xs font-bold text-indigo-400 font-mono">STAFF & JURY</span>
+          <span className="text-xs font-black bg-[#2196F3] text-black px-2 py-0.5 border-2 border-black shadow-[2px_2px_0px_#000000]">
+            STAFF & JURY
+          </span>
         </div>
 
-        <GlassCard className="p-6 sm:p-8" glow="purple">
+        <GlassCard className="p-6 sm:p-8 bg-white border-[4px] border-black shadow-[8px_8px_0px_#000000]" color="white">
           <div className="text-center mb-6">
-            <div className="h-12 w-12 rounded-2xl bg-gradient-to-tr from-purple-600 to-pink-500 mx-auto flex items-center justify-center shadow-lg shadow-purple-600/30 mb-3">
-              <Lock className="h-6 w-6 text-white" />
+            <div className="h-14 w-14 bg-[#FFEB3B] border-[3px] border-black shadow-[4px_4px_0px_#000000] mx-auto flex items-center justify-center mb-3">
+              <Lock className="h-7 w-7 text-black" />
             </div>
-            <h1 className="text-2xl font-black text-white tracking-tight">Staff Portal Sign In</h1>
-            <p className="text-xs text-slate-300 mt-1">
+            <h1 className="text-2xl font-black text-black tracking-tight">Staff Portal Sign In</h1>
+            <p className="text-xs font-medium text-slate-700 mt-1">
               For Organizers, Approved Faculty Coordinators, Volunteers, and Jury.
             </p>
           </div>
 
           {/* Toggle Password vs Magic Link */}
-          <div className="flex p-1 rounded-xl bg-white/5 border border-white/10 mb-5">
+          <div className="flex border-[3px] border-black mb-5 bg-[#FFFBEB] p-1 shadow-[3px_3px_0px_#000000]">
             <button
               type="button"
               onClick={() => { setMode("password"); setMagicLinkSent(false); }}
-              className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+              className={`flex-1 py-1.5 text-xs font-black transition-colors border-2 ${
                 mode === "password"
-                  ? "bg-indigo-600 text-white shadow"
-                  : "text-slate-400 hover:text-white"
+                  ? "bg-black text-white border-black"
+                  : "bg-transparent text-black border-transparent hover:bg-white"
               }`}
             >
               Password Login
@@ -122,10 +117,10 @@ export default function LoginPage() {
             <button
               type="button"
               onClick={() => setMode("magic-link")}
-              className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+              className={`flex-1 py-1.5 text-xs font-black transition-colors border-2 ${
                 mode === "magic-link"
-                  ? "bg-indigo-600 text-white shadow"
-                  : "text-slate-400 hover:text-white"
+                  ? "bg-black text-white border-black"
+                  : "bg-transparent text-black border-transparent hover:bg-white"
               }`}
             >
               Magic Link Email
@@ -134,12 +129,12 @@ export default function LoginPage() {
 
           {magicLinkSent ? (
             <div className="text-center py-6 space-y-3">
-              <div className="h-10 w-10 rounded-full bg-emerald-500/20 text-emerald-400 mx-auto flex items-center justify-center border border-emerald-500/30">
-                <CheckCircle2 className="h-6 w-6" />
+              <div className="h-12 w-12 bg-[#4CAF50] text-black border-[3px] border-black shadow-[3px_3px_0px_#000000] mx-auto flex items-center justify-center">
+                <CheckCircle2 className="h-7 w-7" />
               </div>
-              <h3 className="text-base font-bold text-white">Magic Link Sent!</h3>
-              <p className="text-xs text-slate-300 max-w-xs mx-auto">
-                Check your inbox at <span className="font-semibold text-white">{email}</span>. Click the link to securely sign in.
+              <h3 className="text-base font-black text-black">Magic Link Sent!</h3>
+              <p className="text-xs font-medium text-slate-800 max-w-xs mx-auto">
+                Check your inbox at <span className="font-bold underline">{email}</span>. Click the link to securely sign in.
               </p>
               <Button
                 variant="secondary"
@@ -153,43 +148,43 @@ export default function LoginPage() {
           ) : (
             <form onSubmit={handleSignIn} className="space-y-4">
               <div>
-                <label className="text-xs font-bold uppercase tracking-wider text-slate-300 block mb-1.5">
+                <label className="text-xs font-black uppercase tracking-wider text-black block mb-1.5">
                   Institutional Email
                 </label>
                 <div className="relative">
-                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-black" />
                   <input
                     type="email"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="coordinator@college.edu"
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/5 border border-white/15 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                    className="w-full pl-10 pr-4 py-2.5 border-[3px] border-black bg-white text-black font-semibold placeholder-slate-500 text-sm shadow-[3px_3px_0px_#000000] focus:outline-none focus:ring-4 focus:ring-black"
                   />
                 </div>
               </div>
 
               {mode === "password" && (
                 <div>
-                  <label className="text-xs font-bold uppercase tracking-wider text-slate-300 block mb-1.5">
+                  <label className="text-xs font-black uppercase tracking-wider text-black block mb-1.5">
                     Password
                   </label>
                   <div className="relative">
-                    <KeyRound className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    <KeyRound className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-black" />
                     <input
                       type="password"
                       required
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="••••••••"
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/5 border border-white/15 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                      className="w-full pl-10 pr-4 py-2.5 border-[3px] border-black bg-white text-black font-semibold placeholder-slate-500 text-sm shadow-[3px_3px_0px_#000000] focus:outline-none focus:ring-4 focus:ring-black"
                     />
                   </div>
                 </div>
               )}
 
               {errorMessage && (
-                <p className="text-xs text-rose-400 bg-rose-500/10 border border-rose-500/20 p-2.5 rounded-lg text-center font-medium">
+                <p className="text-xs text-black font-bold bg-[#FF5252] border-2 border-black p-2.5 shadow-[2px_2px_0px_#000000] text-center">
                   {errorMessage}
                 </p>
               )}
@@ -202,45 +197,45 @@ export default function LoginPage() {
           )}
 
           {/* Quick 1-click Demo Role Logins */}
-          <div className="mt-6 pt-5 border-t border-white/10">
-            <p className="text-[11px] uppercase font-bold tracking-wider text-slate-400 text-center mb-2.5">
+          <div className="mt-6 pt-5 border-t-2 border-black">
+            <p className="text-[11px] uppercase font-black tracking-wider text-black text-center mb-2.5 bg-[#FFEB3B] py-1 border border-black shadow-[2px_2px_0px_#000000]">
               1-Click Instant Demo Login:
             </p>
             <div className="grid grid-cols-2 gap-2 text-xs">
               <button
                 type="button"
                 onClick={() => handleQuickDemoLogin("organizer")}
-                className="p-2 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-300 hover:bg-amber-500/25 font-semibold text-center transition-colors"
+                className="p-2 border-[2px] border-black bg-[#FFEB3B] text-black font-black text-center shadow-[3px_3px_0px_#000000] hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer"
               >
                 Organizer (Admin)
               </button>
               <button
                 type="button"
                 onClick={() => handleQuickDemoLogin("faculty")}
-                className="p-2 rounded-xl bg-blue-500/15 border border-blue-500/30 text-blue-300 hover:bg-blue-500/25 font-semibold text-center transition-colors"
+                className="p-2 border-[2px] border-black bg-[#2196F3] text-black font-black text-center shadow-[3px_3px_0px_#000000] hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer"
               >
                 Faculty Coordinator
               </button>
               <button
                 type="button"
                 onClick={() => handleQuickDemoLogin("volunteer")}
-                className="p-2 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/25 font-semibold text-center transition-colors"
+                className="p-2 border-[2px] border-black bg-[#4CAF50] text-black font-black text-center shadow-[3px_3px_0px_#000000] hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer"
               >
                 Volunteer
               </button>
               <button
                 type="button"
                 onClick={() => handleQuickDemoLogin("judge")}
-                className="p-2 rounded-xl bg-purple-500/15 border border-purple-500/30 text-purple-300 hover:bg-purple-500/25 font-semibold text-center transition-colors"
+                className="p-2 border-[2px] border-black bg-[#FF9800] text-black font-black text-center shadow-[3px_3px_0px_#000000] hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer"
               >
                 Judge (Scoring)
               </button>
             </div>
           </div>
 
-          <div className="mt-5 text-center text-xs text-slate-400">
+          <div className="mt-5 text-center text-xs font-bold text-black">
             New visiting school?{" "}
-            <Link href="/register" className="text-indigo-400 hover:underline font-semibold">
+            <Link href="/register" className="underline font-black text-black hover:bg-[#FFEB3B]">
               Register Institution
             </Link>
           </div>

@@ -1,16 +1,12 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { FestStoreProvider } from "@/lib/store";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const spaceGrotesk = Space_Grotesk({
+  variable: "--font-space-grotesk",
   subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  weight: ["400", "500", "700"],
 });
 
 export const metadata: Metadata = {
@@ -26,7 +22,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0f172a",
+  themeColor: "#FFEB3B",
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
@@ -38,14 +34,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark h-full antialiased">
+    <html lang="en" className="h-full">
       <head>
         <link rel="icon" href="/favicon.ico" sizes="any" />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} font-sans min-h-full flex flex-col bg-slate-950 text-slate-100 selection:bg-indigo-500 selection:text-white`}>
-        <FestStoreProvider>
-          {children}
-        </FestStoreProvider>
+      <body
+        className={`${spaceGrotesk.variable} font-sans min-h-full flex flex-col bg-[#FFFBEB] text-black selection:bg-[#FFEB3B] selection:text-black`}
+      >
+        <FestStoreProvider>{children}</FestStoreProvider>
       </body>
     </html>
   );

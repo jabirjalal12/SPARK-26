@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { Html5Qrcode } from "html5-qrcode";
@@ -151,21 +151,21 @@ export function QRScannerModal({ isOpen, onClose, onScanSuccess }: QRScannerModa
     >
       <div className="space-y-4">
         {/* Live Camera Viewport */}
-        <div className="relative overflow-hidden rounded-2xl bg-black border border-white/20 aspect-square max-h-64 sm:max-h-72 w-full flex items-center justify-center">
+        <div className="relative overflow-hidden bg-black border-4 border-black shadow-[6px_6px_0px_#000] aspect-square max-h-64 sm:max-h-72 w-full flex items-center justify-center">
           <div id={readerElementId} className="w-full h-full" />
           
           {/* Laser guide overlay */}
           <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-            <div className="w-48 h-48 border-2 border-indigo-400/80 rounded-2xl relative">
-              <div className="absolute inset-x-0 h-0.5 bg-gradient-to-r from-transparent via-pink-500 to-transparent animate-pulse top-1/2 -translate-y-1/2" />
+            <div className="w-48 h-48 border-4 border-[#FFEB3B] relative">
+              <div className="absolute inset-x-0 h-1 bg-[#FF5252] animate-pulse top-1/2 -translate-y-1/2" />
             </div>
           </div>
 
           {!scannerActive && (
-            <div className="absolute inset-0 bg-slate-950/80 flex flex-col items-center justify-center p-4 text-center">
-              <Camera className="h-10 w-10 text-indigo-400 mb-2 opacity-80" />
-              <p className="text-sm font-semibold text-white">Camera active or initializing...</p>
-              <p className="text-xs text-slate-300 mt-1 max-w-xs">
+            <div className="absolute inset-0 bg-white/95 flex flex-col items-center justify-center p-4 text-center">
+              <Camera className="h-10 w-10 text-black mb-2" />
+              <p className="text-sm font-black uppercase text-black">Camera active or initializing...</p>
+              <p className="text-xs font-bold text-neutral-700 mt-1 max-w-xs">
                 If permissions are blocked, use the lightning-fast manual search below.
               </p>
             </div>
@@ -175,24 +175,24 @@ export function QRScannerModal({ isOpen, onClose, onScanSuccess }: QRScannerModa
         {/* Scan Status Toast in Modal */}
         {lastScannedResult && (
           <div
-            className={`p-3.5 rounded-xl border flex items-start gap-3 animate-in fade-in zoom-in-95 duration-200 ${
+            className={`p-3.5 border-3 border-black shadow-[4px_4px_0px_#000] flex items-start gap-3 ${
               lastScannedResult.success
-                ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-200"
-                : "bg-rose-500/20 border-rose-500/40 text-rose-200"
+                ? "bg-[#4CAF50] text-black"
+                : "bg-[#FF5252] text-white"
             }`}
           >
             {lastScannedResult.success ? (
-              <CheckCircle2 className="h-5 w-5 text-emerald-400 flex-shrink-0 mt-0.5" />
+              <CheckCircle2 className="h-5 w-5 text-black flex-shrink-0 mt-0.5" />
             ) : (
-              <AlertCircle className="h-5 w-5 text-rose-400 flex-shrink-0 mt-0.5" />
+              <AlertCircle className="h-5 w-5 text-white flex-shrink-0 mt-0.5" />
             )}
             <div className="min-w-0 flex-1">
-              <p className="font-bold text-xs uppercase tracking-wider">{lastScannedResult.message}</p>
-              <p className="text-sm font-medium mt-0.5">{lastScannedResult.details}</p>
+              <p className="font-black text-xs uppercase tracking-wider">{lastScannedResult.message}</p>
+              <p className="text-sm font-bold mt-0.5">{lastScannedResult.details}</p>
             </div>
             <button
               onClick={() => setLastScannedResult(null)}
-              className="text-white/60 hover:text-white"
+              className="text-black hover:opacity-70 p-0.5"
             >
               <X className="h-4 w-4" />
             </button>
@@ -200,19 +200,19 @@ export function QRScannerModal({ isOpen, onClose, onScanSuccess }: QRScannerModa
         )}
 
         {/* Manual Fast Search Fallback */}
-        <div className="space-y-2 pt-2 border-t border-white/10">
-          <label className="text-xs font-semibold text-slate-300 flex items-center justify-between">
+        <div className="space-y-2 pt-2 border-t-2 border-black">
+          <label className="text-xs font-black uppercase tracking-wide text-black flex items-center justify-between">
             <span>Fast Search Fallback (Under 3 seconds)</span>
-            <span className="text-[10px] text-indigo-300">Type school name or student name</span>
+            <span className="text-[10px] text-neutral-600 font-bold">Type school or student name</span>
           </label>
           <div className="relative">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-black" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search e.g. 'Aarav', 'St. Joseph', 'STJ771'..."
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/5 border border-white/15 text-white placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              className="w-full pl-10 pr-4 py-2.5 bg-white border-3 border-black text-black placeholder-neutral-500 font-mono text-sm font-bold shadow-[2px_2px_0px_#000] focus:outline-none focus:ring-2 focus:ring-[#2196F3]"
             />
           </div>
 
@@ -222,15 +222,15 @@ export function QRScannerModal({ isOpen, onClose, onScanSuccess }: QRScannerModa
               {filteredSchools.map((school) => (
                 <div
                   key={school.id}
-                  className="flex items-center justify-between p-2.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
+                  className="flex items-center justify-between p-2.5 bg-[#FFFBEB] border-2 border-black shadow-[2px_2px_0px_#000]"
                 >
                   <div>
-                    <p className="text-xs font-bold text-white">{school.name}</p>
-                    <p className="text-[11px] text-slate-400 font-mono">Code: {school.code}</p>
+                    <p className="text-xs font-black uppercase text-black">{school.name}</p>
+                    <p className="text-[11px] text-black font-mono font-bold bg-[#FFEB3B] px-1 inline-block border border-black mt-0.5">Code: {school.code}</p>
                   </div>
                   <Button
                     size="sm"
-                    variant={school.checked_in ? "secondary" : "primary"}
+                    variant={school.checked_in ? "outline" : "primary"}
                     disabled={school.checked_in}
                     onClick={() => handleScanCode(school.code)}
                   >
@@ -242,15 +242,15 @@ export function QRScannerModal({ isOpen, onClose, onScanSuccess }: QRScannerModa
               {filteredStudents.map((stud) => (
                 <div
                   key={stud.id}
-                  className="flex items-center justify-between p-2.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
+                  className="flex items-center justify-between p-2.5 bg-[#FFFBEB] border-2 border-black shadow-[2px_2px_0px_#000]"
                 >
                   <div>
-                    <p className="text-xs font-bold text-white">{stud.full_name}</p>
-                    <p className="text-[11px] text-indigo-300 font-mono">{stud.qr_token}</p>
+                    <p className="text-xs font-black uppercase text-black">{stud.full_name}</p>
+                    <p className="text-[11px] text-black font-mono font-bold bg-[#2196F3] px-1 inline-block border border-black mt-0.5">{stud.qr_token}</p>
                   </div>
                   <Button
                     size="sm"
-                    variant={stud.checked_in ? "secondary" : "gradient"}
+                    variant={stud.checked_in ? "outline" : "primary"}
                     disabled={stud.checked_in}
                     onClick={() => handleScanCode(stud.qr_token)}
                   >
@@ -260,25 +260,25 @@ export function QRScannerModal({ isOpen, onClose, onScanSuccess }: QRScannerModa
               ))}
 
               {filteredSchools.length === 0 && filteredStudents.length === 0 && (
-                <p className="text-xs text-slate-400 text-center py-2">No matching records found.</p>
+                <p className="text-xs text-neutral-600 font-bold text-center py-2">No matching records found.</p>
               )}
             </div>
           )}
         </div>
 
         {/* Quick Demo Scan shortcuts for fast testing */}
-        <div className="pt-2 border-t border-white/10 flex items-center justify-between text-xs text-slate-400">
+        <div className="pt-2 border-t-2 border-black flex items-center justify-between text-xs text-black font-bold">
           <span>Demo Quick-Scan:</span>
-          <div className="flex gap-1.5">
+          <div className="flex gap-2">
             <button
               onClick={() => handleScanCode("STJ771")}
-              className="px-2 py-1 rounded bg-white/10 hover:bg-white/20 text-indigo-300 font-mono text-[11px]"
+              className="px-2 py-1 bg-[#FFEB3B] text-black font-mono font-black text-xs border-2 border-black shadow-[2px_2px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 transition-all"
             >
               School STJ771
             </button>
             <button
               onClick={() => handleScanCode("QR-APX-01")}
-              className="px-2 py-1 rounded bg-white/10 hover:bg-white/20 text-pink-300 font-mono text-[11px]"
+              className="px-2 py-1 bg-[#2196F3] text-black font-mono font-black text-xs border-2 border-black shadow-[2px_2px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 transition-all"
             >
               Pass QR-APX-01
             </button>

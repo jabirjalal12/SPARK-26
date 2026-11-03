@@ -7,32 +7,69 @@ interface GlassCardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   gradient?: boolean;
   glow?: "blue" | "green" | "red" | "purple" | "none";
+  color?: "white" | "yellow" | "blue" | "green" | "red" | "paper";
+  variant?: "white" | "yellow" | "blue" | "green" | "red" | "paper";
   interactive?: boolean;
 }
 
 export function GlassCard({
   children,
   className,
-  gradient = false,
   glow = "none",
+  color,
+  variant,
   interactive = false,
   ...props
 }: GlassCardProps) {
-  const glowClasses = {
-    none: "",
-    blue: "hover:shadow-[0_0_30px_-5px_rgba(37,99,235,0.3)] hover:border-blue-500/40",
-    green: "hover:shadow-[0_0_30px_-5px_rgba(21,128,61,0.3)] hover:border-emerald-500/40",
-    red: "hover:shadow-[0_0_30px_-5px_rgba(220,38,38,0.3)] hover:border-rose-500/40",
-    purple: "hover:shadow-[0_0_30px_-5px_rgba(168,85,247,0.3)] hover:border-purple-500/40",
-  }[glow];
+  const chosenColor = variant || color;
+  let bgClass = "bg-white text-black";
+
+  if (chosenColor) {
+    switch (chosenColor) {
+      case "yellow":
+        bgClass = "bg-[#FFEB3B] text-black";
+        break;
+      case "blue":
+        bgClass = "bg-[#2196F3] text-black";
+        break;
+      case "green":
+        bgClass = "bg-[#4CAF50] text-black";
+        break;
+      case "red":
+        bgClass = "bg-[#FF5252] text-black";
+        break;
+      case "paper":
+        bgClass = "bg-[#FFFBEB] text-black";
+        break;
+      case "white":
+      default:
+        bgClass = "bg-white text-black";
+        break;
+    }
+  } else if (glow !== "none") {
+    switch (glow) {
+      case "blue":
+        bgClass = "bg-white text-black";
+        break;
+      case "green":
+        bgClass = "bg-white text-black";
+        break;
+      case "red":
+        bgClass = "bg-[#FF5252]/10 text-black";
+        break;
+      case "purple":
+        bgClass = "bg-white text-black";
+        break;
+    }
+  }
 
   return (
     <div
       className={cn(
-        "relative rounded-2xl border border-white/10 dark:border-white/10 bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl shadow-xl transition-all duration-300",
-        gradient && "bg-gradient-to-br from-white/80 via-white/40 to-white/20 dark:from-slate-900/80 dark:via-slate-900/50 dark:to-slate-950/40",
-        interactive && "cursor-pointer hover:-translate-y-1 hover:border-white/25",
-        glowClasses,
+        "rounded-none border-[3px] border-black shadow-[4px_4px_0px_#000000]",
+        bgClass,
+        interactive &&
+          "transition-all duration-100 hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[6px_6px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[2px_2px_0px_#000000] cursor-pointer",
         className
       )}
       {...props}

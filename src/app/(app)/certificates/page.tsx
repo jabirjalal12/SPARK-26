@@ -5,11 +5,10 @@ import { useFestStore } from "@/lib/store";
 import { CertificateGenerator } from "@/components/certificates/certificate-generator";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Award, ShieldCheck, Download, Search } from "lucide-react";
+import { Search } from "lucide-react";
 
 export default function CertificatesPage() {
-  const { certificates, currentProfile, schools } = useFestStore();
+  const { certificates, currentProfile } = useFestStore();
   const [search, setSearch] = useState("");
 
   const role = currentProfile.role;
@@ -17,7 +16,6 @@ export default function CertificatesPage() {
   // Filter certificates based on role
   const userCertificates = certificates.filter((cert) => {
     if (role === "participant") {
-      // Participant sees their own or first matching student
       return true;
     }
     if (role === "faculty") {
@@ -33,28 +31,30 @@ export default function CertificatesPage() {
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-white/10">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b-3 border-black">
         <div>
-          <Badge variant="warning" className="mb-1.5">OFFICIAL CREDENTIALS</Badge>
-          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+          <Badge variant="outline" className="mb-1.5 bg-[#FFEB3B] text-black border-2 border-black font-black">
+            OFFICIAL CREDENTIALS
+          </Badge>
+          <h1 className="text-2xl sm:text-3xl font-black text-black tracking-tight uppercase">
             Verified Participation & Winner Certificates
           </h1>
-          <p className="text-xs text-slate-300 mt-1">
+          <p className="text-xs font-bold text-neutral-700 mt-1">
             Tamper-proof digital credentials with unique authentication codes. Direct vector PDF download.
           </p>
         </div>
       </div>
 
       {role !== "participant" && (
-        <GlassCard className="p-4">
+        <GlassCard variant="white" className="p-4 border-3 border-black shadow-[4px_4px_0px_#000]">
           <div className="relative">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-black" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search student name or certificate code (e.g. CERT-STJ-01-2026)..."
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/5 border border-white/15 text-white placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              className="w-full pl-10 pr-4 py-2.5 bg-white border-3 border-black text-black placeholder-neutral-500 font-mono text-sm font-bold shadow-[2px_2px_0px_#000] focus:outline-none focus:ring-2 focus:ring-[#2196F3]"
             />
           </div>
         </GlassCard>
@@ -67,7 +67,7 @@ export default function CertificatesPage() {
         ))}
 
         {filteredCerts.length === 0 && (
-          <GlassCard className="col-span-full p-8 text-center text-xs text-slate-400">
+          <GlassCard variant="white" className="col-span-full p-8 text-center text-xs font-black uppercase text-black border-4 border-black shadow-[6px_6px_0px_#000]">
             No matching certificates found.
           </GlassCard>
         )}

@@ -10,9 +10,6 @@ import {
   Calendar,
   Clock,
   MapPin,
-  Bot,
-  Wrench,
-  Sparkles,
   Plus,
 } from "lucide-react";
 
@@ -28,13 +25,15 @@ export default function SchedulePage() {
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-white/10">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b-3 border-black">
         <div>
-          <Badge variant="info" className="mb-1.5">TIMELINE & VENUES</Badge>
-          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+          <Badge variant="outline" className="mb-1.5 bg-[#FFEB3B] text-black border-2 border-black font-black">
+            TIMELINE & VENUES
+          </Badge>
+          <h1 className="text-2xl sm:text-3xl font-black text-black tracking-tight uppercase">
             Official Schedule — Nov 20, 2026
           </h1>
-          <p className="text-xs text-slate-300 mt-1">
+          <p className="text-xs font-bold text-neutral-700 mt-1">
             Opening ceremony, arena heats, lunch timings, and the grand championship valedictory.
           </p>
         </div>
@@ -50,19 +49,19 @@ export default function SchedulePage() {
       </div>
 
       {/* Filter tabs */}
-      <div className="flex p-1 rounded-xl bg-white/5 border border-white/10 overflow-x-auto">
+      <div className="flex p-1.5 bg-white border-3 border-black shadow-[4px_4px_0px_#000] overflow-x-auto gap-2">
         <button
           onClick={() => setFilterTrack("all")}
-          className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-colors ${
-            filterTrack === "all" ? "bg-indigo-600 text-white" : "text-slate-400 hover:text-white"
+          className={`px-3 py-1.5 text-xs font-black uppercase whitespace-nowrap border-2 border-black transition-all ${
+            filterTrack === "all" ? "bg-[#FFEB3B] text-black shadow-[2px_2px_0px_#000] -translate-x-0.5 -translate-y-0.5" : "bg-white text-black hover:bg-[#FFFBEB]"
           }`}
         >
           All Events
         </button>
         <button
           onClick={() => setFilterTrack("general")}
-          className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-colors ${
-            filterTrack === "general" ? "bg-indigo-600 text-white" : "text-slate-400 hover:text-white"
+          className={`px-3 py-1.5 text-xs font-black uppercase whitespace-nowrap border-2 border-black transition-all ${
+            filterTrack === "general" ? "bg-[#FFEB3B] text-black shadow-[2px_2px_0px_#000] -translate-x-0.5 -translate-y-0.5" : "bg-white text-black hover:bg-[#FFFBEB]"
           }`}
         >
           General & Ceremonies
@@ -71,8 +70,8 @@ export default function SchedulePage() {
           <button
             key={t.id}
             onClick={() => setFilterTrack(t.id)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-colors ${
-              filterTrack === t.id ? "bg-indigo-600 text-white" : "text-slate-400 hover:text-white"
+            className={`px-3 py-1.5 text-xs font-black uppercase whitespace-nowrap border-2 border-black transition-all ${
+              filterTrack === t.id ? "bg-[#FFEB3B] text-black shadow-[2px_2px_0px_#000] -translate-x-0.5 -translate-y-0.5" : "bg-white text-black hover:bg-[#FFFBEB]"
             }`}
           >
             {t.name}
@@ -81,7 +80,7 @@ export default function SchedulePage() {
       </div>
 
       {/* Timeline List */}
-      <div className="space-y-3.5 relative before:absolute before:inset-0 before:left-7 before:w-0.5 before:bg-white/10">
+      <div className="space-y-4 relative before:absolute before:inset-0 before:left-7 before:w-1 before:bg-black">
         {filteredSchedule.map((item) => {
           const track = tracks.find((t) => t.id === item.track_id);
           const startTime = new Date(item.starts_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
@@ -90,22 +89,19 @@ export default function SchedulePage() {
           return (
             <div key={item.id} className="relative flex items-start gap-4 pl-3">
               {/* Timeline marker node */}
-              <div className="h-8 w-8 rounded-full bg-slate-900 border-2 border-indigo-500 flex items-center justify-center flex-shrink-0 z-10 shadow-lg shadow-indigo-500/20">
-                <Clock className="h-3.5 w-3.5 text-indigo-400" />
+              <div className="h-9 w-9 bg-[#FFEB3B] border-3 border-black flex items-center justify-center flex-shrink-0 z-10 shadow-[3px_3px_0px_#000]">
+                <Clock className="h-4 w-4 text-black" />
               </div>
 
               {/* Event card */}
-              <GlassCard className="flex-1 p-4 sm:p-5" glow="purple">
+              <GlassCard variant="white" className="flex-1 p-4 sm:p-5 border-3 border-black shadow-[5px_5px_0px_#000]">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-2">
                   <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs font-bold text-indigo-300 bg-white/5 border border-white/10 px-2 py-0.5 rounded">
+                    <span className="font-mono text-xs font-black bg-[#2196F3] text-black border border-black px-2 py-0.5 shadow-[1px_1px_0px_#000]">
                       {startTime} – {endTime}
                     </span>
                     {track && (
-                      <span
-                        style={{ color: track.color, borderColor: `${track.color}40` }}
-                        className="text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border bg-white/5"
-                      >
+                      <span className="text-[11px] font-black uppercase tracking-wider px-2 py-0.5 border border-black bg-[#FFEB3B] text-black">
                         {track.name}
                       </span>
                     )}
@@ -126,13 +122,13 @@ export default function SchedulePage() {
                   </Badge>
                 </div>
 
-                <h3 className="text-base font-bold text-white tracking-tight">{item.title}</h3>
+                <h3 className="text-base font-black text-black uppercase tracking-tight">{item.title}</h3>
                 {item.description && (
-                  <p className="text-xs text-slate-300 mt-1 leading-relaxed">{item.description}</p>
+                  <p className="text-xs font-medium text-neutral-800 mt-1 leading-relaxed">{item.description}</p>
                 )}
 
-                <div className="mt-3 pt-2.5 border-t border-white/5 flex items-center gap-1.5 text-xs text-slate-400">
-                  <MapPin className="h-3.5 w-3.5 text-pink-400" />
+                <div className="mt-3 pt-2.5 border-t-2 border-black flex items-center gap-1.5 text-xs font-bold text-neutral-700">
+                  <MapPin className="h-3.5 w-3.5 text-black" />
                   <span>
                     Venue: {item.venue_id ? "Campus Arena & Tech Block" : "Sir CV Raman Auditorium"}
                   </span>

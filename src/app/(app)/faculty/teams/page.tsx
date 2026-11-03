@@ -11,10 +11,6 @@ import {
   Plus,
   Users,
   Edit2,
-  Trash2,
-  AlertCircle,
-  Bot,
-  Wrench,
 } from "lucide-react";
 
 export default function FacultyTeamsPage() {
@@ -104,13 +100,15 @@ export default function FacultyTeamsPage() {
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-white/10">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b-3 border-black">
         <div>
-          <Badge variant="track-blue" className="mb-1.5">SQUAD ROSTER</Badge>
-          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+          <Badge variant="outline" className="mb-1.5 bg-[#FFEB3B] text-black border-2 border-black font-black">
+            SQUAD ROSTER
+          </Badge>
+          <h1 className="text-2xl sm:text-3xl font-black text-black tracking-tight uppercase">
             Teams — {facultySchool?.name}
           </h1>
-          <p className="text-xs text-slate-300 mt-1">
+          <p className="text-xs font-bold text-neutral-700 mt-1">
             Configure your school squad for each track (1 team per track allowed).
           </p>
         </div>
@@ -124,48 +122,45 @@ export default function FacultyTeamsPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         {schoolTeams.map((team) => {
           const track = tracks.find((t) => t.id === team.track_id);
-          const squadMembers = students.filter((s) => s.team_id === team.id || s.school_id === facultySchool.id && s.track_id === team.track_id);
+          const squadMembers = students.filter((s) => s.team_id === team.id || (s.school_id === facultySchool.id && s.track_id === team.track_id));
 
           return (
-            <GlassCard key={team.id} className="p-6 flex flex-col justify-between" glow="purple">
+            <GlassCard key={team.id} variant="white" className="p-6 flex flex-col justify-between border-4 border-black shadow-[6px_6px_0px_#000]">
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <span
-                    style={{ color: track?.color, borderColor: `${track?.color}40` }}
-                    className="text-xs font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border bg-white/5"
-                  >
+                  <span className="text-xs font-black uppercase tracking-wider px-2.5 py-0.5 border-2 border-black bg-[#2196F3] text-black shadow-[2px_2px_0px_#000]">
                     {track?.name}
                   </span>
-                  <span className="font-mono text-xs font-bold text-slate-400 bg-white/5 px-2 py-0.5 rounded">
+                  <span className="font-mono text-xs font-bold bg-[#FFEB3B] text-black px-2 py-0.5 border border-black">
                     Table: {team.table_number || "TBD"}
                   </span>
                 </div>
 
-                <h3 className="text-xl font-black text-white tracking-tight">{team.name}</h3>
-                <p className="text-sm font-semibold text-indigo-300 mt-1">{team.project_title}</p>
-                <p className="text-xs text-slate-300 mt-2 leading-relaxed">{team.project_summary}</p>
+                <h3 className="text-xl font-black text-black uppercase tracking-tight">{team.name}</h3>
+                <p className="text-sm font-bold text-black mt-1 bg-[#FFFBEB] p-1 border border-black">{team.project_title}</p>
+                <p className="text-xs text-neutral-800 font-medium mt-2 leading-relaxed">{team.project_summary}</p>
 
                 {/* Team members count */}
-                <div className="mt-4 pt-3 border-t border-white/10">
-                  <div className="flex items-center gap-2 text-xs text-slate-400 mb-2">
+                <div className="mt-4 pt-3 border-t-2 border-black">
+                  <div className="flex items-center gap-2 text-xs font-black text-black uppercase mb-2">
                     <Users className="h-4 w-4" />
                     <span>Members ({squadMembers.length})</span>
                   </div>
                   <div className="flex flex-wrap gap-1.5">
                     {squadMembers.map((m) => (
-                      <span key={m.id} className="text-[11px] bg-white/10 px-2 py-0.5 rounded text-white font-medium">
+                      <span key={m.id} className="text-[11px] bg-white border border-black px-2 py-0.5 text-black font-bold shadow-[1px_1px_0px_#000]">
                         {m.full_name}
                       </span>
                     ))}
                     {squadMembers.length === 0 && (
-                      <span className="text-xs text-slate-500 italic">No students assigned to track</span>
+                      <span className="text-xs text-neutral-500 italic">No students assigned to track</span>
                     )}
                   </div>
                 </div>
               </div>
 
-              <div className="mt-6 pt-3 border-t border-white/10 flex justify-end">
-                <Button size="sm" variant="secondary" className="text-xs" onClick={() => openEditModal(team)}>
+              <div className="mt-6 pt-3 border-t-2 border-black flex justify-end">
+                <Button size="sm" variant="secondary" className="text-xs font-bold" onClick={() => openEditModal(team)}>
                   <Edit2 className="h-3.5 w-3.5 mr-1" />
                   <span>Edit Team Info</span>
                 </Button>
@@ -175,7 +170,7 @@ export default function FacultyTeamsPage() {
         })}
 
         {schoolTeams.length === 0 && (
-          <GlassCard className="col-span-full p-8 text-center text-slate-400 text-xs">
+          <GlassCard variant="white" className="col-span-full p-8 text-center text-black font-bold text-xs border-4 border-black shadow-[6px_6px_0px_#000]">
             No teams created yet. Register a team for Robotics, Build from Scrap, or Useless Projects.
           </GlassCard>
         )}
@@ -190,24 +185,24 @@ export default function FacultyTeamsPage() {
       >
         <form onSubmit={handleSaveTeam} className="space-y-4">
           <div>
-            <label className="text-xs font-semibold text-slate-300 block mb-1">Team Squad Name *</label>
+            <label className="text-xs font-black uppercase tracking-wide text-black block mb-1">Team Squad Name *</label>
             <input
               type="text"
               required
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               placeholder="e.g. Apex Botsmiths"
-              className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/15 text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              className="w-full px-3.5 py-2.5 bg-white border-3 border-black text-black text-sm font-medium shadow-[2px_2px_0px_#000] focus:outline-none focus:ring-2 focus:ring-[#2196F3]"
             />
           </div>
 
           <div>
-            <label className="text-xs font-semibold text-slate-300 block mb-1">Track *</label>
+            <label className="text-xs font-black uppercase tracking-wide text-black block mb-1">Track *</label>
             <select
               disabled={!!editingTeamId}
               value={formData.trackId}
               onChange={(e) => setFormData({ ...formData, trackId: e.target.value })}
-              className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-white/15 text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 disabled:opacity-60"
+              className="w-full px-3.5 py-2.5 bg-white border-3 border-black text-black text-sm font-bold shadow-[2px_2px_0px_#000] focus:outline-none focus:ring-2 focus:ring-[#2196F3] disabled:opacity-60"
             >
               {tracks.map((t) => (
                 <option key={t.id} value={t.id}>
@@ -218,37 +213,37 @@ export default function FacultyTeamsPage() {
           </div>
 
           <div>
-            <label className="text-xs font-semibold text-slate-300 block mb-1">Project Invention Title *</label>
+            <label className="text-xs font-black uppercase tracking-wide text-black block mb-1">Project Invention Title *</label>
             <input
               type="text"
               required
               value={formData.projectTitle}
               onChange={(e) => setFormData({ ...formData, projectTitle: e.target.value })}
               placeholder="e.g. VortexCrawler X4"
-              className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/15 text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              className="w-full px-3.5 py-2.5 bg-white border-3 border-black text-black text-sm font-medium shadow-[2px_2px_0px_#000] focus:outline-none focus:ring-2 focus:ring-[#2196F3]"
             />
           </div>
 
           <div>
-            <label className="text-xs font-semibold text-slate-300 block mb-1">Project Concept / Pitch *</label>
+            <label className="text-xs font-black uppercase tracking-wide text-black block mb-1">Project Concept / Pitch *</label>
             <textarea
               required
               rows={3}
               value={formData.projectSummary}
               onChange={(e) => setFormData({ ...formData, projectSummary: e.target.value })}
               placeholder="Brief summary for judges..."
-              className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/15 text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              className="w-full px-3.5 py-2.5 bg-white border-3 border-black text-black text-sm font-medium shadow-[2px_2px_0px_#000] focus:outline-none focus:ring-2 focus:ring-[#2196F3]"
             />
           </div>
 
           {error && (
-            <p className="text-xs text-rose-400 bg-rose-500/10 border border-rose-500/20 p-2.5 rounded-lg font-medium">
+            <p className="text-xs font-bold text-white bg-[#FF5252] border-2 border-black p-2.5 shadow-[2px_2px_0px_#000]">
               {error}
             </p>
           )}
 
           <div className="flex gap-2 justify-end pt-2">
-            <Button type="button" variant="ghost" onClick={() => setModalOpen(false)}>
+            <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>
               Cancel
             </Button>
             <Button type="submit" variant="primary">
