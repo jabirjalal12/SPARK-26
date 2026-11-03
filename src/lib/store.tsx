@@ -1,5 +1,16 @@
 "use client";
 
+function generateSafeUUID(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
+    const r = (Math.random() * 16) | 0;
+    const v = c === "x" ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
+
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from "react";
 import {
   UserRole,
@@ -20,10 +31,12 @@ import {
   Certificate,
   Checkin,
   Result,
+  Venue,
 } from "./types/database";
 import {
   initialTracks,
   initialCriteria,
+  initialVenues,
   initialSchools,
   initialSchoolTickets,
   initialTeams,
@@ -58,6 +71,7 @@ interface FestStoreContextType {
   teams: Team[];
   tracks: Track[];
   criteria: ScoringCriterion[];
+  venues: Venue[];
   scores: Score[];
   schedule: ScheduleItem[];
   announcements: Announcement[];
@@ -92,6 +106,8 @@ interface FestStoreContextType {
   resolveIssue: (id: string, notes: string) => void;
   addScheduleItem: (item: Omit<ScheduleItem, "id">) => void;
   deleteScheduleItem: (id: string) => void;
+  addVenue: (venue: Omit<Venue, "id" | "created_at">) => Promise<Venue>;
+  deleteVenue: (id: string) => Promise<void>;
   resetAllData: () => void;
 }
 
@@ -111,6 +127,7 @@ export function FestStoreProvider({ children }: { children: React.ReactNode }) {
   const [teams, setTeams] = useState<Team[]>(initialTeams);
   const [tracks, setTracks] = useState<Track[]>(initialTracks);
   const [criteria] = useState<ScoringCriterion[]>(initialCriteria);
+  const [venues, setVenues] = useState<Venue[]>(initialVenues);
   const [scores, setScores] = useState<Score[]>([]);
   const [schedule, setSchedule] = useState<ScheduleItem[]>(initialSchedule);
   const [announcements, setAnnouncements] = useState<Announcement[]>(initialAnnouncements);
@@ -147,6 +164,7 @@ export function FestStoreProvider({ children }: { children: React.ReactNode }) {
           const liveData = await fetchFestDataFromSupabase();
           if (liveData) {
             if (liveData.tracks.length > 0) setTracks(liveData.tracks);
+            if (liveData.venues && liveData.venues.length > 0) setVenues(liveData.venues);
             if (liveData.schools.length > 0) setSchools(liveData.schools);
             if (liveData.schoolTickets.length > 0) setSchoolTickets(liveData.schoolTickets);
             if (liveData.teams.length > 0) setTeams(liveData.teams);
@@ -179,7 +197,21 @@ export function FestStoreProvider({ children }: { children: React.ReactNode }) {
 
           // 4. Subscribe to Realtime Postgres Changes
           unsubscribeRealtime = subscribeToFestRealtime((payload) => {
-            if (payload.table === "announcements") {
+            if (payload.table === "venues") {
+              if (payload.event === "INSERT") {
+                setVenues((prev) => [...prev.filter((v) => v.id !== payload.record.id), payload.record]);
+              } else if (payload.event === "DELETE") {
+                setVenues((prev) => prev.filter((v) => v.id !== payload.record.id));
+              } else if (payload.event === "UPDATE") {
+                setVenues((prev) => prev.map((v) => (v.id === payload.record.id ? { ...v, ...payload.record } : v)));
+              }
+            } else if (payload.table === "schedule_items") {
+              if (payload.event === "INSERT" || payload.event === "UPDATE") {
+                setSchedule((prev) => [...prev.filter((s) => s.id !== payload.record.id), payload.record].sort((a, b) => new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime()));
+              } else if (payload.event === "DELETE") {
+                setSchedule((prev) => prev.filter((s) => s.id !== payload.record.id));
+              }
+            } else if (payload.table === "announcements") {
               if (payload.event === "INSERT") {
                 setAnnouncements((prev) => [payload.record, ...prev.filter((a) => a.id !== payload.record.id)]);
               } else if (payload.event === "DELETE") {
@@ -739,7 +771,7 @@ export function FestStoreProvider({ children }: { children: React.ReactNode }) {
   // ANNOUNCEMENTS
   const addAnnouncement = (ann: { title: string; body: string; audience: "all" | "faculty" | "volunteers"; urgent: boolean }) => {
     const newAnn: Announcement = {
-      id: "ann-" + Date.now(),
+      id: generateSafeUUID(),
       title: ann.title,
       body: ann.body,
       audience: ann.audience,
@@ -814,25 +846,66 @@ export function FestStoreProvider({ children }: { children: React.ReactNode }) {
     logAudit("RESOLVE_ISSUE", "issue_reports", id, null, { notes, resolved_by: currentProfile.id });
   };
 
-  // SCHEDULE ITEMS
-  const addScheduleItem = (item: Omit<ScheduleItem, "id">) => {
+  // VENUES (PLACES)
+  const addVenue = async (venueData: Omit<Venue, "id" | "created_at">): Promise<Venue> => {
+    const newVenue: Venue = {
+      id: generateSafeUUID(),
+      ...venueData,
+      created_at: new Date().toISOString(),
+    };
+    setVenues((prev) => [...prev, newVenue]);
+
+    if (isSupabaseConfigured()) {
+      try {
+        await createClient().from("venues").insert(newVenue);
+      } catch (e) {
+        console.warn("Failed inserting venue into Supabase:", e);
+      }
+    }
+
+    logAudit("ADD_VENUE", "venues", newVenue.id, null, newVenue);
+    return newVenue;
+  };
+
+  const deleteVenue = async (id: string) => {
+    setVenues((prev) => prev.filter((v) => v.id !== id));
+    if (isSupabaseConfigured()) {
+      try {
+        await createClient().from("venues").delete().eq("id", id);
+      } catch (e) {
+        console.warn("Failed deleting venue from Supabase:", e);
+      }
+    }
+    logAudit("DELETE_VENUE", "venues", id, null, null);
+  };
+
+  // SCHEDULE ITEMS (EVENTS)
+  const addScheduleItem = async (item: Omit<ScheduleItem, "id">) => {
     const newItem: ScheduleItem = {
       ...item,
-      id: "sc-" + Date.now(),
+      id: generateSafeUUID(),
     };
     setSchedule((prev) => [...prev, newItem].sort((a, b) => new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime()));
 
     if (isSupabaseConfigured()) {
-      createClient().from("schedule_items").insert(newItem).then();
+      try {
+        await createClient().from("schedule_items").insert(newItem);
+      } catch (e) {
+        console.warn("Failed inserting schedule item into Supabase:", e);
+      }
     }
 
     logAudit("ADD_SCHEDULE_ITEM", "schedule_items", newItem.id, null, newItem);
   };
 
-  const deleteScheduleItem = (id: string) => {
+  const deleteScheduleItem = async (id: string) => {
     setSchedule((prev) => prev.filter((s) => s.id !== id));
     if (isSupabaseConfigured()) {
-      createClient().from("schedule_items").delete().eq("id", id).then();
+      try {
+        await createClient().from("schedule_items").delete().eq("id", id);
+      } catch (e) {
+        console.warn("Failed deleting schedule item from Supabase:", e);
+      }
     }
   };
 
@@ -843,6 +916,7 @@ export function FestStoreProvider({ children }: { children: React.ReactNode }) {
     setTeams(initialTeams);
     setTracks(initialTracks);
     setScores([]);
+    setVenues(initialVenues);
     setSchedule(initialSchedule);
     setAnnouncements(initialAnnouncements);
     setCheckins([]);
@@ -872,6 +946,7 @@ export function FestStoreProvider({ children }: { children: React.ReactNode }) {
     tracks,
     criteria,
     scores,
+    venues,
     schedule,
     announcements,
     volunteerDuties,
@@ -903,6 +978,8 @@ export function FestStoreProvider({ children }: { children: React.ReactNode }) {
     resolveIssue,
     addScheduleItem,
     deleteScheduleItem,
+    addVenue,
+    deleteVenue,
     resetAllData,
   };
 

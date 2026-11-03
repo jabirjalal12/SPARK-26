@@ -1,9 +1,7 @@
-﻿"use client";
+"use client";
 
 import React, { useState } from "react";
 import { useFestStore } from "@/lib/store";
-import { GlassCard } from "@/components/ui/glass-card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import {
@@ -13,6 +11,7 @@ import {
   Trash2,
   Clock,
   Radio,
+  Sparkles,
 } from "lucide-react";
 
 export default function AnnouncementsPage() {
@@ -22,7 +21,6 @@ export default function AnnouncementsPage() {
     deleteAnnouncement,
     isSuperAdmin,
     isEventCoordinator,
-    currentProfile,
   } = useFestStore();
 
   const [modalOpen, setModalOpen] = useState(false);
@@ -36,11 +34,11 @@ export default function AnnouncementsPage() {
     urgent: false,
   });
 
-  const handlePost = (e: React.FormEvent) => {
+  const handlePost = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.title || !formData.body) return;
 
-    addAnnouncement({
+    await addAnnouncement({
       title: formData.title,
       body: formData.body,
       audience: formData.audience,
@@ -57,39 +55,43 @@ export default function AnnouncementsPage() {
   });
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-white/10">
+    <div className="space-y-6 max-w-4xl mx-auto font-sans">
+      {/* Header Banner */}
+      <div className="p-6 sm:p-8 bg-[#FFEB3B] border-[3px] border-black shadow-[6px_6px_0px_#000000] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <Badge variant="outline" className="mb-1.5">
+          <div className="inline-block bg-black text-white px-2.5 py-0.5 text-xs font-black uppercase tracking-wider mb-2">
             CAMPUS BROADCASTS
-          </Badge>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-white">
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-black text-black tracking-tight">
             Official Notices & Bulletins
           </h1>
-          <p className="text-xs text-slate-400 mt-1">
-            Real-time emergency alerts, venue announcements, and faculty advisories.
+          <p className="text-xs sm:text-sm font-bold text-slate-900 mt-1">
+            Real-time emergency alerts, arena pit calls, and visiting faculty advisories.
           </p>
         </div>
 
         {canBroadcast && (
-          <Button variant="gradient" size="sm" onClick={() => setModalOpen(true)} className="text-xs">
-            <Radio className="h-4 w-4 mr-1.5" />
-            <span>Post Broadcast</span>
+          <Button
+            size="sm"
+            onClick={() => setModalOpen(true)}
+            className="text-xs uppercase font-black bg-black text-white border-2 border-black shadow-[3px_3px_0px_#ffffff] hover:bg-slate-800"
+          >
+            <Radio className="h-3.5 w-3.5 mr-1.5" />
+            <span>Post Notice</span>
           </Button>
         )}
       </div>
 
       {/* Filter Tabs */}
-      <div className="flex gap-1.5 p-1 bg-black/40 rounded-xl border border-white/10 w-fit">
+      <div className="flex gap-2 p-1.5 bg-white border-[3px] border-black shadow-[4px_4px_0px_#000000]">
         {(["all", "faculty", "volunteers"] as const).map((aud) => (
           <button
             key={aud}
             onClick={() => setFilterAudience(aud)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all cursor-pointer ${
+            className={`px-3.5 py-1.5 text-xs font-black uppercase tracking-wider border-2 border-black transition-all cursor-pointer ${
               filterAudience === aud
-                ? "bg-indigo-600 text-white shadow-md"
-                : "text-slate-400 hover:text-white"
+                ? "bg-[#FFEB3B] text-black shadow-[3px_3px_0px_#000000] translate-x-[-1px] translate-y-[-1px]"
+                : "bg-white text-black hover:bg-[#FFFBEB]"
             }`}
           >
             {aud === "all" ? "All Notices" : aud}
@@ -97,52 +99,71 @@ export default function AnnouncementsPage() {
         ))}
       </div>
 
-      {/* Announcements List */}
+      {/* Announcements List or Empty State */}
       <div className="space-y-4">
-        {filteredAnnouncements.map((ann) => (
-          <GlassCard
-            key={ann.id}
-            className={`p-5 sm:p-6 border-white/15 ${
-              ann.urgent
-                ? "border-rose-500/40 bg-gradient-to-r from-rose-950/40 to-slate-900/80 shadow-lg shadow-rose-950/30"
-                : "bg-slate-900/70"
-            }`}
-          >
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
-              <div className="flex items-center gap-2">
-                {ann.urgent && (
-                  <Badge variant="danger" className="animate-pulse">
-                    URGENT ALERT
-                  </Badge>
-                )}
-                <Badge variant="outline" className="capitalize text-[10px]">
-                  Audience: {ann.audience}
-                </Badge>
-              </div>
-
-              <span className="font-mono text-[11px] text-slate-400 flex items-center gap-1">
-                <Clock className="w-3.5 h-3.5 text-slate-500" />
-                {new Date(ann.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-              </span>
+        {filteredAnnouncements.length === 0 ? (
+          <div className="p-8 sm:p-12 border-[3px] border-dashed border-black bg-white shadow-[6px_6px_0px_#000000] text-center space-y-3">
+            <div className="w-12 h-12 bg-[#FFEB3B] border-2 border-black shadow-[2px_2px_0px_#000000] flex items-center justify-center mx-auto">
+              <Bell className="w-6 h-6 text-black" />
             </div>
-
-            <h3 className="text-lg font-bold text-white mb-1.5">{ann.title}</h3>
-            <p className="text-xs text-slate-300 leading-relaxed">{ann.body}</p>
-
+            <h3 className="text-xl font-black text-black">No Campus Notices Published Yet</h3>
+            <p className="text-xs sm:text-sm font-bold text-slate-700 max-w-md mx-auto">
+              Urgent bulletins, pit calls, and track schedule revisions will appear here in realtime once posted by Organizers.
+            </p>
             {canBroadcast && (
-              <div className="mt-4 pt-3 border-t border-white/10 flex justify-end">
-                <button
-                  onClick={() => deleteAnnouncement(ann.id)}
-                  className="p-1 rounded text-rose-400 hover:text-white hover:bg-rose-950/60 transition-colors text-xs flex items-center gap-1 cursor-pointer"
-                  title="Delete notice"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                  <span>Remove Broadcast</span>
-                </button>
-              </div>
+              <Button
+                onClick={() => setModalOpen(true)}
+                className="mt-2 text-xs uppercase font-black bg-[#FFEB3B] text-black border-2 border-black shadow-[3px_3px_0px_#000000]"
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                Post First Notice
+              </Button>
             )}
-          </GlassCard>
-        ))}
+          </div>
+        ) : (
+          filteredAnnouncements.map((ann) => (
+            <div
+              key={ann.id}
+              className={`p-5 sm:p-6 border-[3px] border-black shadow-[5px_5px_0px_#000000] ${
+                ann.urgent ? "bg-[#FF5252]/10 border-[#FF5252]" : "bg-white"
+              }`}
+            >
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                <div className="flex items-center gap-2">
+                  {ann.urgent && (
+                    <span className="px-2 py-0.5 bg-[#FF5252] text-black border-2 border-black font-black text-[10px] uppercase animate-pulse shadow-[2px_2px_0px_#000000]">
+                      URGENT ALERT
+                    </span>
+                  )}
+                  <span className="px-2 py-0.5 bg-[#FFFBEB] text-black border border-black font-black text-[10px] uppercase">
+                    Audience: {ann.audience}
+                  </span>
+                </div>
+
+                <span className="font-mono text-[11px] font-bold text-slate-600 flex items-center gap-1">
+                  <Clock className="w-3.5 h-3.5 text-black" />
+                  {new Date(ann.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                </span>
+              </div>
+
+              <h3 className="text-lg font-black text-black mb-1.5">{ann.title}</h3>
+              <p className="text-xs sm:text-sm font-medium text-slate-800 leading-relaxed">{ann.body}</p>
+
+              {canBroadcast && (
+                <div className="mt-4 pt-3 border-t-2 border-black flex justify-end">
+                  <button
+                    onClick={() => deleteAnnouncement(ann.id)}
+                    className="p-1.5 border border-black bg-[#FF5252] text-black font-black text-xs flex items-center gap-1 shadow-[2px_2px_0px_#000000] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all cursor-pointer"
+                    title="Delete notice"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Remove Notice</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          ))
+        )}
       </div>
 
       {/* Post Modal */}
@@ -150,65 +171,76 @@ export default function AnnouncementsPage() {
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
         title="Broadcast Campus Notice"
-        description="Broadcast an announcement to all campus screens and participant panels."
+        description="Publish an official announcement to campus screens and participant portals."
       >
-        <form onSubmit={handlePost} className="space-y-4">
+        <form onSubmit={handlePost} className="space-y-4 font-sans text-black">
           <div>
-            <label className="text-xs font-semibold text-slate-300 block mb-1">Notice Title *</label>
+            <label className="text-xs font-black text-black block mb-1">Notice Title *</label>
             <input
               type="text"
               required
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               placeholder="e.g. Schedule Amendment for Robotics Trials"
-              className="w-full px-3 py-2.5 glass-input text-xs"
+              className="w-full px-3 py-2 border-2 border-black bg-[#FFFBEB] text-xs font-bold text-black"
             />
           </div>
 
           <div>
-            <label className="text-xs font-semibold text-slate-300 block mb-1">Target Audience</label>
+            <label className="text-xs font-black text-black block mb-1">Target Audience</label>
             <select
               value={formData.audience}
               onChange={(e) => setFormData({ ...formData, audience: e.target.value as any })}
-              className="w-full px-3 py-2.5 glass-input text-xs bg-slate-900 text-white"
+              className="w-full px-3 py-2 border-2 border-black bg-white text-xs font-bold text-black"
             >
-              <option value="all">Everyone on Campus</option>
+              <option value="all">Public / All Attendees</option>
               <option value="faculty">Visiting Faculty Only</option>
-              <option value="volunteers">Crew & Volunteers Only</option>
+              <option value="volunteers">Desk Volunteers Only</option>
             </select>
           </div>
 
           <div>
-            <label className="text-xs font-semibold text-slate-300 block mb-1">Message Content *</label>
+            <label className="text-xs font-black text-black block mb-1">Notice Content *</label>
             <textarea
               rows={4}
               required
               value={formData.body}
               onChange={(e) => setFormData({ ...formData, body: e.target.value })}
-              placeholder="Detailed announcement information..."
-              className="w-full px-3 py-2.5 glass-input text-xs"
+              placeholder="Detailed instructions or alert text..."
+              className="w-full px-3 py-2 border-2 border-black bg-[#FFFBEB] text-xs font-medium text-black"
             />
           </div>
 
-          <div className="p-3 rounded-xl bg-white/[0.04] border border-white/10 flex items-center gap-2">
+          <div className="flex items-center gap-2 p-2.5 bg-[#FFFBEB] border-2 border-black">
             <input
               type="checkbox"
               id="urgent"
               checked={formData.urgent}
               onChange={(e) => setFormData({ ...formData, urgent: e.target.checked })}
-              className="w-4 h-4 rounded text-rose-600 focus:ring-rose-500 cursor-pointer"
+              className="h-4 w-4 border-2 border-black rounded-none cursor-pointer"
             />
-            <label htmlFor="urgent" className="text-xs font-bold text-rose-300 cursor-pointer">
-              Mark as URGENT (Displays top banner across all screens)
+            <label htmlFor="urgent" className="text-xs font-black text-black cursor-pointer flex items-center gap-1.5">
+              <AlertTriangle className="w-3.5 h-3.5 text-[#FF5252]" />
+              <span>Mark as High-Priority Urgent Alert</span>
             </label>
           </div>
 
-          <div className="flex justify-end gap-2 pt-3 border-t border-white/10">
-            <Button type="button" variant="ghost" size="sm" onClick={() => setModalOpen(false)}>
+          <div className="flex justify-end gap-2 pt-3 border-t-2 border-black">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setModalOpen(false)}
+              className="border-2 border-black text-xs font-black"
+            >
               Cancel
             </Button>
-            <Button type="submit" variant="gradient" size="sm">
-              Publish Broadcast
+            <Button
+              type="submit"
+              size="sm"
+              className="bg-[#FFEB3B] text-black border-2 border-black shadow-[3px_3px_0px_#000000] text-xs font-black uppercase"
+            >
+              Broadcast Now
             </Button>
           </div>
         </form>

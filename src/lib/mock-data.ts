@@ -28,8 +28,8 @@ export const initialTracks: Track[] = [
     name: "Build from Scrap",
     slug: "build-from-scrap",
     color: "#166534", // Deep Green
-    description: "Transform discarded electronic components, mechanical gears, plumbing pipes, and scrap materials into a functional mechanical or electrical machine in 4 hours.",
-    rules: "1. Minimum 70% of machine components must be sourced from the event scrap yard.\n2. Maximum 30% standard fasteners, glue, or microcontrollers permitted.\n3. Safety eyewear and cut-resistant gloves mandatory at all times.\n4. Machines are evaluated on scrap re-use, mechanical ingenuity, and reliability under load.",
+    description: "Transform unadulterated junkyard scrap, discarded motors, and e-waste into working, functional electro-mechanical machines on the clock.",
+    rules: "1. 100% of base materials must be sourced from the allotment junkyard dump.\n2. Fasteners, adhesives, and wiring provided at central tool station.\n3. 4-hour strict build window. No pre-assembled subsystems permitted.\n4. Working prototype demonstration required during judging.",
     scores_locked: false,
     created_at: "2026-11-01T08:00:00Z",
   },
@@ -38,8 +38,8 @@ export const initialTracks: Track[] = [
     name: "Useless Projects",
     slug: "useless-projects",
     color: "#991B1B", // Crimson
-    description: "Over-engineer an astonishingly complex, fully functional machine that solves a problem nobody has or fails delightfully in dramatic, hilarious fashion.",
-    rules: "1. Machine MUST actually work mechanically and electronically.\n2. Must achieve a completely useless, absurd, or delightfully counterproductive end goal.\n3. Points awarded for technical over-engineering, mechanism complexity, and deadpan serious pitch delivery.",
+    description: "Channel peak over-engineering absurdity to engineer hyper-complex, impeccably fabricated machines that solve utterly trivial problems.",
+    rules: "1. Machine must genuinely function and perform its stated useless task with zero human intervention.\n2. Must integrate at least one active electronic, micro-controller, or mechanical actuator.\n3. 3-minute deadpan stage pitch required before judges.\n4. Safety scrutiny applies: no mains AC voltage or hazardous chemicals.",
     scores_locked: false,
     created_at: "2026-11-01T08:00:00Z",
   },
@@ -60,158 +60,33 @@ export const initialCriteria: ScoringCriterion[] = [
   { id: "cc3", track_id: "33333333-3333-3333-3333-333333333333", name: "Deadpan Stage Presentation", weight: 0.20, max_score: 10 },
 ];
 
-export const initialVenues: Venue[] = [
-  { id: "e1111111-1111-1111-1111-111111111111", name: "Main Auditorium", location: "Second Floor, Central Hub", capacity: 600 },
-  { id: "e2222222-2222-2222-2222-222222222222", name: "Robotics Arena Alpha", location: "Mechanical Workshop Ground Hall", capacity: 250 },
-  { id: "e3333333-3333-3333-3333-333333333333", name: "Open Maker Quad", location: "Central Quadrangle Ground Floor", capacity: 400 },
-  { id: "v-yard", name: "Scrap Fabrication Yard", location: "Industrial Bay 4 (Rear Compound)", capacity: 180 },
-  { id: "v-tinker", name: "Innovation Tinkering Lab", location: "Room 304, Tech Complex", capacity: 150 },
-];
+// All places / venues are dynamically added and updated by Admin
+export const initialVenues: Venue[] = [];
 
-// No hardcoded demo schools - populated dynamically from live Supabase registrations
+// All schools register dynamically or are added by admin
 export const initialSchools: School[] = [];
 
-// No hardcoded demo tickets
+// Tickets generated dynamically per registered school
 export const initialSchoolTickets: SchoolTicket[] = [];
 
-// No hardcoded demo teams
+// Teams added by registered schools
 export const initialTeams: Team[] = [];
 
-// No hardcoded demo students
+// Students added by registered faculty or desk walk-in
 export const initialStudents: Student[] = [];
 
-// Official Fest Schedule (Starts 05/11/2026 at 07:00 AM)
-export const initialSchedule: ScheduleItem[] = [
-  {
-    id: "sc-1",
-    title: "Gates Open & Fast-Pass Registration Desk",
-    description: "Visiting school delegations check in at Central Quad with their Master School Ticket QR pass. Credentials and badges issued.",
-    track_id: null,
-    venue_id: "e3333333-3333-3333-3333-333333333333",
-    starts_at: "2026-11-05T07:00:00",
-    ends_at: "2026-11-05T08:00:00",
-    type: "break",
-  },
-  {
-    id: "sc-2",
-    title: "Visiting Faculty & Delegation Welcome Breakfast",
-    description: "Complimentary hot breakfast buffet and networking lounge for visiting faculty coordinators and student participants.",
-    track_id: null,
-    venue_id: "e3333333-3333-3333-3333-333333333333",
-    starts_at: "2026-11-05T07:45:00",
-    ends_at: "2026-11-05T08:30:00",
-    type: "break",
-  },
-  {
-    id: "sc-3",
-    title: "Grand Inaugural Ceremony & Rules Keynote",
-    description: "Welcome address, unveiling of the SPARK 2026 Rolling Trophy, safety briefing, and introduction of jury panellists.",
-    track_id: null,
-    venue_id: "e1111111-1111-1111-1111-111111111111",
-    starts_at: "2026-11-05T08:30:00",
-    ends_at: "2026-11-05T09:30:00",
-    type: "ceremony",
-  },
-  {
-    id: "sc-4",
-    title: "Arena Safety Pit Scrutiny & Tool Allotment",
-    description: "Chassis weight and voltage inspection for Robotics; scrap yard safety gear and tool kit disbursement for builders.",
-    track_id: null,
-    venue_id: "e2222222-2222-2222-2222-222222222222",
-    starts_at: "2026-11-05T09:30:00",
-    ends_at: "2026-11-05T10:00:00",
-    type: "competition",
-  },
-  {
-    id: "sc-5",
-    title: "Robotics: Obstacle Navigation Qualifiers (Round 1)",
-    description: "Round 1 speed trials, obstacle course traversal, ramp climbs, and payload delivery in the main arena.",
-    track_id: "11111111-1111-1111-1111-111111111111",
-    venue_id: "e2222222-2222-2222-2222-222222222222",
-    starts_at: "2026-11-05T10:00:00",
-    ends_at: "2026-11-05T13:00:00",
-    type: "competition",
-  },
-  {
-    id: "sc-6",
-    title: "Build from Scrap: 4-Hour Prototyping Scramble",
-    description: "4-hour non-stop rapid fabrication from discarded motors, scrap pipes, sheet metal, and junk electronics in Industrial Bay 4.",
-    track_id: "22222222-2222-2222-2222-222222222222",
-    venue_id: "v-yard",
-    starts_at: "2026-11-05T10:00:00",
-    ends_at: "2026-11-05T14:00:00",
-    type: "competition",
-  },
-  {
-    id: "sc-7",
-    title: "Useless Projects: Stage Pitch Session Round 1",
-    description: "Absurdly over-engineered, functioning machines demonstrated live on stage with completely deadpan comedic delivery.",
-    track_id: "33333333-3333-3333-3333-333333333333",
-    venue_id: "v-tinker",
-    starts_at: "2026-11-05T10:30:00",
-    ends_at: "2026-11-05T12:30:00",
-    type: "judging",
-  },
-  {
-    id: "sc-8",
-    title: "Delegation Lunch & Interactive Tech Showcase",
-    description: "Hot catered lunch at Central Quadrangle. Interactive college robotics and AI project exhibits open for all visiting schools.",
-    track_id: null,
-    venue_id: "e3333333-3333-3333-3333-333333333333",
-    starts_at: "2026-11-05T13:00:00",
-    ends_at: "2026-11-05T14:00:00",
-    type: "break",
-  },
-  {
-    id: "sc-9",
-    title: "Robotics: Grand Arena Championship Finals",
-    description: "Top 4 qualifying robots go head-to-head on the multi-terrain arena with high-difficulty hazards and automated flag captures.",
-    track_id: "11111111-1111-1111-1111-111111111111",
-    venue_id: "e2222222-2222-2222-2222-222222222222",
-    starts_at: "2026-11-05T14:00:00",
-    ends_at: "2026-11-05T15:30:00",
-    type: "competition",
-  },
-  {
-    id: "sc-10",
-    title: "Build from Scrap & Useless Projects Final Evaluation",
-    description: "Jury walkthrough, mechanical stress-testing, endurance tests, deadpan question-and-answer, and final score calibration.",
-    track_id: "22222222-2222-2222-2222-222222222222",
-    venue_id: "v-yard",
-    starts_at: "2026-11-05T14:30:00",
-    ends_at: "2026-11-05T16:00:00",
-    type: "judging",
-  },
-  {
-    id: "sc-11",
-    title: "Grand Valedictory & Awards Gala",
-    description: "Official results announcement, distribution of ₹75,000+ cash prizes, rolling institution trophies, and participation certificates.",
-    track_id: null,
-    venue_id: "e1111111-1111-1111-1111-111111111111",
-    starts_at: "2026-11-05T16:30:00",
-    ends_at: "2026-11-05T18:00:00",
-    type: "ceremony",
-  },
-];
+// Event timeline slots are added and managed dynamically by Admin / Event Coordinators
+export const initialSchedule: ScheduleItem[] = [];
 
-export const initialAnnouncements: Announcement[] = [
-  {
-    id: "ann-1",
-    title: "Welcome to SPARK 2026! ⚙️",
-    body: "Helpdesks are active at Central Quad. Visiting faculty leads, please proceed to Booth 1 with your School Ticket QR code to check in your student delegations.",
-    audience: "all",
-    urgent: false,
-    author_id: "organizer-super-admin",
-    created_at: "2026-11-05T07:00:00Z",
-  },
-];
+// Notices are posted dynamically by Admin / Event Coordinators
+export const initialAnnouncements: Announcement[] = [];
 
 export const defaultProfile: Profile = {
   id: "organizer-default",
   role: "organizer",
   sub_roles: ["super_admin", "event_coordinator", "registration_head"],
   school_id: null,
-  full_name: "Super Admin",
+  full_name: "Lead Organizer",
   email: "admin@spark.edu",
   phone: "+91 98765 00001",
   created_at: new Date().toISOString(),

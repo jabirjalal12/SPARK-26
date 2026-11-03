@@ -34,7 +34,7 @@ import {
 } from "lucide-react";
 
 export default function LandingPage() {
-  const { tracks, schedule, teams, schools, resultsPublished } = useFestStore();
+  const { tracks, schedule, venues, teams, schools, resultsPublished } = useFestStore();
 
   // Program starts 5/11/2026 at 7:00 AM local time
   const targetDate = new Date("2026-11-05T07:00:00").getTime();
@@ -415,7 +415,7 @@ export default function LandingPage() {
                 Official Event Schedules
               </h2>
               <p className="text-slate-800 font-bold max-w-2xl mt-2 text-sm sm:text-base">
-                11 carefully timed phases across 5 campus venues. Registration desk opens at 07:00 AM; competitions run continuously until the 04:30 PM Grand Valedictory.
+                Timed competition phases across campus arenas. Registration desk opens 05/11/2026 at 07:00 AM sharp; competitions run continuously until the 04:30 PM Grand Valedictory.
               </p>
             </div>
 
@@ -469,78 +469,94 @@ export default function LandingPage() {
 
           {/* Schedule List */}
           <div className="space-y-4">
-            {filteredSchedule.map((item, index) => {
-              const startTime = new Date(item.starts_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-              const endTime = new Date(item.ends_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+            {filteredSchedule.length === 0 ? (
+              <div className="p-8 sm:p-12 border-[3px] border-dashed border-black bg-white shadow-[6px_6px_0px_#000000] text-center space-y-3">
+                <div className="w-12 h-12 bg-[#FFEB3B] border-2 border-black shadow-[2px_2px_0px_#000000] flex items-center justify-center mx-auto">
+                  <Clock className="w-6 h-6 text-black" />
+                </div>
+                <h3 className="text-xl font-black text-black">Official Itinerary in Preparation</h3>
+                <p className="text-xs sm:text-sm font-bold text-slate-700 max-w-md mx-auto">
+                  Event slots, arena heats, and safety scrutiny rounds starting 05 November 2026 at 07:00 AM are currently being configured by Event Coordinators in the Organizer Window.
+                </p>
+                <div className="pt-2">
+                  <Link href="/register">
+                    <Button variant="yellow" size="sm" className="text-xs uppercase font-black tracking-wider shadow-[3px_3px_0px_#000000]">
+                      Register Visiting Delegation
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              filteredSchedule.map((item, index) => {
+                const venue = venues.find((v) => v.id === item.venue_id);
+                const venueName = venue ? `${venue.name} (${venue.location})` : (item.venue_id || "Campus Venue");
+                const startTime = new Date(item.starts_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+                const endTime = new Date(item.ends_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
-              let typeColor = "bg-[#4CAF50]";
-              if (item.type === "competition") typeColor = "bg-[#FF5252]";
-              if (item.type === "ceremony") typeColor = "bg-[#FFEB3B]";
-              if (item.type === "judging") typeColor = "bg-[#2196F3]";
+                let typeColor = "bg-[#4CAF50]";
+                if (item.type === "competition") typeColor = "bg-[#FF5252]";
+                if (item.type === "ceremony") typeColor = "bg-[#FFEB3B]";
+                if (item.type === "judging") typeColor = "bg-[#2196F3]";
 
-              return (
-                <div
-                  key={item.id}
-                  className="p-5 sm:p-6 bg-white border-[3px] border-black shadow-[5px_5px_0px_#000000] flex flex-col md:flex-row items-start md:items-center justify-between gap-4 hover:-translate-y-0.5 hover:shadow-[7px_7px_0px_#000000] transition-all"
-                >
-                  <div className="flex items-start gap-4 flex-1">
-                    {/* Time block */}
-                    <div className="flex-shrink-0 text-center min-w-[110px]">
-                      <div className="p-2 bg-[#FFFBEB] border-2 border-black shadow-[2px_2px_0px_#000000]">
-                        <span className="font-mono font-black text-sm text-black block leading-none">
-                          {startTime}
-                        </span>
-                        <span className="text-[10px] font-black uppercase text-slate-600 block mt-1">
-                          to {endTime}
+                return (
+                  <div
+                    key={item.id}
+                    className="p-5 sm:p-6 bg-white border-[3px] border-black shadow-[5px_5px_0px_#000000] flex flex-col md:flex-row items-start md:items-center justify-between gap-4 hover:-translate-y-0.5 hover:shadow-[7px_7px_0px_#000000] transition-all"
+                  >
+                    <div className="flex items-start gap-4 flex-1">
+                      {/* Time block */}
+                      <div className="flex-shrink-0 text-center min-w-[110px]">
+                        <div className="p-2 bg-[#FFFBEB] border-2 border-black shadow-[2px_2px_0px_#000000]">
+                          <span className="font-mono font-black text-sm text-black block leading-none">
+                            {startTime}
+                          </span>
+                          <span className="text-[10px] font-black uppercase text-slate-600 block mt-1">
+                            to {endTime}
+                          </span>
+                        </div>
+                        <span className={`inline-block mt-2 px-2 py-0.5 border border-black text-[10px] font-black uppercase ${typeColor} text-black`}>
+                          {item.type}
                         </span>
                       </div>
-                      <span className={`inline-block mt-2 px-2 py-0.5 border border-black text-[10px] font-black uppercase ${typeColor} text-black`}>
-                        {item.type}
+
+                      {/* Details */}
+                      <div className="space-y-1.5 min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="font-mono font-black text-xs text-black bg-[#FFEB3B] px-1.5 border border-black">
+                            #{String(index + 1).padStart(2, "0")}
+                          </span>
+                          <h3 className="font-black text-lg sm:text-xl text-black leading-tight">
+                            {item.title}
+                          </h3>
+                        </div>
+                        <p className="text-xs sm:text-sm font-medium text-slate-800 leading-relaxed">
+                          {item.description}
+                        </p>
+
+                        <div className="flex flex-wrap items-center gap-3 pt-2 text-xs font-bold text-black">
+                          <span className="flex items-center gap-1.5 bg-[#FFFBEB] border border-black px-2.5 py-1">
+                            <MapPin className="w-3.5 h-3.5 text-black" />
+                            {venueName}
+                          </span>
+
+                          {item.track_id && (
+                            <span className="bg-[#2196F3] text-black border border-black px-2 py-1 font-black text-[11px] uppercase">
+                              {tracks.find((t) => t.id === item.track_id)?.name || "Competition Track"}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex-shrink-0 self-end md:self-center">
+                      <span className="px-3 py-1.5 border-2 border-black bg-[#FFFBEB] text-black text-xs font-black uppercase shadow-[2px_2px_0px_#000000]">
+                        05 NOV 2026
                       </span>
                     </div>
-
-                    {/* Details */}
-                    <div className="space-y-1.5 min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-mono font-black text-xs text-black bg-[#FFEB3B] px-1.5 border border-black">
-                          #{String(index + 1).padStart(2, "0")}
-                        </span>
-                        <h3 className="font-black text-lg sm:text-xl text-black leading-tight">
-                          {item.title}
-                        </h3>
-                      </div>
-                      <p className="text-xs sm:text-sm font-medium text-slate-800 leading-relaxed">
-                        {item.description}
-                      </p>
-
-                      <div className="flex flex-wrap items-center gap-3 pt-2 text-xs font-bold text-black">
-                        <span className="flex items-center gap-1.5 bg-[#FFFBEB] border border-black px-2.5 py-1">
-                          <MapPin className="w-3.5 h-3.5 text-black" />
-                          {item.venue_id === "v-quad" && "Central Quadrangle (Ground Floor)"}
-                          {item.venue_id === "v-audi" && "Main Auditorium (Second Floor)"}
-                          {item.venue_id === "v-arena" && "Robotics Arena Alpha (Mech Workshop)"}
-                          {item.venue_id === "v-yard" && "Scrap Fabrication Yard (Industrial Bay 4)"}
-                          {item.venue_id === "v-tinker" && "Tinkering Lab Stage (Room 304)"}
-                          {!["v-quad", "v-audi", "v-arena", "v-yard", "v-tinker"].includes(item.venue_id || "") && (item.venue_id || "Campus Venue")}
-                        </span>
-
-                        {item.track_id && (
-                          <span className="bg-[#2196F3] text-black border border-black px-2 py-1 font-black text-[11px] uppercase">
-                            {tracks.find((t) => t.id === item.track_id)?.name || "Competition Track"}
-                          </span>
-                        )}
-                      </div>
-                    </div>
                   </div>
-
-                  <div className="flex-shrink-0 self-end md:self-center">
-                    <span className="px-3 py-1.5 border-2 border-black bg-[#FFFBEB] text-black text-xs font-black uppercase shadow-[2px_2px_0px_#000000]">
-                      05 NOV 2026
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
         </div>
       </section>

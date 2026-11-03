@@ -9,14 +9,11 @@ import {
   Clock,
   MapPin,
   Plus,
-  Sparkles,
-  Bot,
-  Wrench,
-  CheckCircle,
+  ArrowRight,
 } from "lucide-react";
 
 export default function SchedulePage() {
-  const { schedule, tracks, isSuperAdmin, isEventCoordinator } = useFestStore();
+  const { schedule, venues, tracks, isSuperAdmin, isEventCoordinator } = useFestStore();
   const [filterTrack, setFilterTrack] = useState<string>("all");
   const canEdit = isSuperAdmin || isEventCoordinator;
 
@@ -57,7 +54,7 @@ export default function SchedulePage() {
   };
 
   return (
-    <div className="space-y-8 max-w-5xl mx-auto">
+    <div className="space-y-8 max-w-5xl mx-auto font-sans">
       {/* Header Banner */}
       <div className="p-6 sm:p-8 bg-[#FFEB3B] border-[3px] border-black shadow-[6px_6px_0px_#000000] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
         <div>
@@ -68,15 +65,15 @@ export default function SchedulePage() {
             Fest Schedule: 05 November 2026
           </h1>
           <p className="text-sm sm:text-base font-bold text-black mt-2 max-w-2xl leading-relaxed">
-            All events kick off at <span className="underline decoration-black decoration-2">07:00 AM sharp</span> at Central Quadrangle. Visiting delegations must complete fast-pass QR check-in prior to the 08:30 AM Inauguration.
+            All events kick off at <span className="underline decoration-black decoration-2">07:00 AM sharp</span>. Visiting delegations must complete fast-pass QR check-in prior to competition heats.
           </p>
         </div>
 
         {canEdit && (
           <Link href="/organizer/schedule" className="flex-shrink-0">
-            <Button variant="primary" size="md" className="text-xs uppercase font-black tracking-wider shadow-[4px_4px_0px_#000000]">
+            <Button variant="primary" size="md" className="text-xs uppercase font-black tracking-wider bg-black text-white border-2 border-black shadow-[4px_4px_0px_#ffffff] hover:bg-slate-800">
               <Plus className="h-4 w-4 mr-1.5" />
-              <span>Manage Slots</span>
+              <span>Manage Slots & Places</span>
             </Button>
           </Link>
         )}
@@ -122,69 +119,88 @@ export default function SchedulePage() {
         ))}
       </div>
 
-      {/* Timeline items */}
+      {/* Timeline items or Empty State */}
       <div className="space-y-4">
-        {filteredSchedule.map((item, idx) => {
-          const startTime = new Date(item.starts_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-          const endTime = new Date(item.ends_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+        {filteredSchedule.length === 0 ? (
+          <div className="p-8 sm:p-12 border-[3px] border-dashed border-black bg-white shadow-[6px_6px_0px_#000000] text-center space-y-3">
+            <div className="w-12 h-12 bg-[#FFEB3B] border-2 border-black shadow-[2px_2px_0px_#000000] flex items-center justify-center mx-auto">
+              <Calendar className="w-6 h-6 text-black" />
+            </div>
+            <h3 className="text-xl font-black text-black">No Timeline Events Published Yet</h3>
+            <p className="text-xs sm:text-sm font-bold text-slate-700 max-w-md mx-auto">
+              The official event itinerary for 05 November 2026 is currently being configured by Event Coordinators in the Organizer window.
+            </p>
+            {canEdit && (
+              <Link href="/organizer/schedule" className="inline-block mt-2">
+                <Button className="text-xs uppercase font-black bg-[#FFEB3B] text-black border-2 border-black shadow-[3px_3px_0px_#000000]">
+                  <Plus className="h-4 w-4 mr-1" />
+                  Configure Schedule Slots
+                </Button>
+              </Link>
+            )}
+          </div>
+        ) : (
+          filteredSchedule.map((item) => {
+            const venue = venues.find((v) => v.id === item.venue_id);
+            const venueName = venue ? `${venue.name} (${venue.location})` : (item.venue_id || "Campus Venue");
+            const startTime = new Date(item.starts_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+            const endTime = new Date(item.ends_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
-          return (
-            <div
-              key={item.id}
-              className="p-5 sm:p-6 bg-white border-[3px] border-black shadow-[6px_6px_0px_#000000] flex flex-col md:flex-row items-start md:items-center justify-between gap-4 hover:-translate-y-0.5 transition-all"
-            >
-              <div className="flex items-start gap-4 flex-1">
-                {/* Time badge */}
-                <div className="flex-shrink-0 text-center min-w-[110px]">
-                  <div className="p-2 bg-[#FFFBEB] border-2 border-black shadow-[3px_3px_0px_#000000]">
-                    <span className="font-mono font-black text-sm text-black block leading-tight">
-                      {startTime}
-                    </span>
-                    <span className="text-[10px] font-black uppercase text-slate-600 block mt-0.5">
-                      to {endTime}
+            return (
+              <div
+                key={item.id}
+                className="p-5 sm:p-6 bg-white border-[3px] border-black shadow-[6px_6px_0px_#000000] flex flex-col md:flex-row items-start md:items-center justify-between gap-4 hover:-translate-y-0.5 transition-all"
+              >
+                <div className="flex items-start gap-4 flex-1">
+                  {/* Time badge */}
+                  <div className="flex-shrink-0 text-center min-w-[110px]">
+                    <div className="p-2 bg-[#FFFBEB] border-2 border-black shadow-[3px_3px_0px_#000000]">
+                      <span className="font-mono font-black text-sm text-black block leading-tight">
+                        {startTime}
+                      </span>
+                      <span className="text-[10px] font-black uppercase text-slate-600 block mt-0.5">
+                        to {endTime}
+                      </span>
+                    </div>
+                    <span className={`inline-block mt-2 px-2 py-0.5 border border-black text-[10px] font-black uppercase ${getTypeBadge(item.type)}`}>
+                      {item.type}
                     </span>
                   </div>
-                  <span className={`inline-block mt-2 px-2 py-0.5 border border-black text-[10px] font-black uppercase ${getTypeBadge(item.type)}`}>
-                    {item.type}
+
+                  {/* Content */}
+                  <div className="space-y-1.5 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="font-black text-lg sm:text-xl text-black leading-tight">
+                        {item.title}
+                      </h3>
+                    </div>
+                    {item.description && (
+                      <p className="text-xs sm:text-sm font-medium text-slate-800 leading-relaxed">
+                        {item.description}
+                      </p>
+                    )}
+
+                    <div className="flex flex-wrap items-center gap-3 pt-2 text-xs font-bold text-black">
+                      <span className="flex items-center gap-1.5 bg-[#FFFBEB] border border-black px-2.5 py-1">
+                        <MapPin className="w-3.5 h-3.5 text-black" />
+                        {venueName}
+                      </span>
+
+                      {getTrackBadge(item.track_id)}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Date Pill */}
+                <div className="flex-shrink-0 self-end md:self-center">
+                  <span className="px-3 py-1.5 border-2 border-black bg-[#FFFBEB] text-black text-xs font-black uppercase shadow-[2px_2px_0px_#000000]">
+                    05 NOV 2026
                   </span>
                 </div>
-
-                {/* Content */}
-                <div className="space-y-1.5 min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="font-black text-lg sm:text-xl text-black leading-tight">
-                      {item.title}
-                    </h3>
-                  </div>
-                  <p className="text-xs sm:text-sm font-medium text-slate-800 leading-relaxed">
-                    {item.description}
-                  </p>
-
-                  <div className="flex flex-wrap items-center gap-3 pt-2 text-xs font-bold text-black">
-                    <span className="flex items-center gap-1.5 bg-[#FFFBEB] border border-black px-2.5 py-1">
-                      <MapPin className="w-3.5 h-3.5 text-black" />
-                      {item.venue_id === "v-quad" && "Central Quadrangle (Ground Floor)"}
-                      {item.venue_id === "v-audi" && "Main Auditorium (Second Floor)"}
-                      {item.venue_id === "v-arena" && "Robotics Arena Alpha (Mech Workshop)"}
-                      {item.venue_id === "v-yard" && "Scrap Fabrication Yard (Industrial Bay 4)"}
-                      {item.venue_id === "v-tinker" && "Tinkering Lab Stage (Room 304)"}
-                      {!["v-quad", "v-audi", "v-arena", "v-yard", "v-tinker"].includes(item.venue_id || "") && (item.venue_id || "Campus Venue")}
-                    </span>
-
-                    {getTrackBadge(item.track_id)}
-                  </div>
-                </div>
               </div>
-
-              {/* Status Pill */}
-              <div className="flex-shrink-0 self-end md:self-center">
-                <span className="px-3 py-1.5 border-2 border-black bg-[#FFFBEB] text-black text-xs font-black uppercase shadow-[2px_2px_0px_#000000]">
-                  5/11/2026
-                </span>
-              </div>
-            </div>
-          );
-        })}
+            );
+          })
+        )}
       </div>
     </div>
   );
