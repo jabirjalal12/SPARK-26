@@ -1,5 +1,5 @@
 ﻿-- ============================================================================
--- MAKE//BREAK TECH FEST MANAGER - INITIAL SCHEMA MIGRATION
+-- SPARK TECH FEST MANAGER - INITIAL SCHEMA MIGRATION
 -- Database: Supabase PostgreSQL (Postgres 15+)
 -- ============================================================================
 

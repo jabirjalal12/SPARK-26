@@ -65,18 +65,16 @@ export default function OrganizerScoringPage() {
 
   const computeWeightedTotal = () => {
     let total = 0;
-    let totalWeight = 0;
     trackCriteria.forEach((crit) => {
-      const val = criterionScores[crit.id] || 0;
+      const val = criterionScores[crit.id] ?? 8.0;
       total += val * crit.weight;
-      totalWeight += crit.weight;
     });
-    return totalWeight > 0 ? (total / totalWeight).toFixed(2) : "0.00";
+    return total.toFixed(2);
   };
 
   const handleSaveAll = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedTeam || isLocked) return;
+    if (!selectedTeam) return;
 
     trackCriteria.forEach((crit) => {
       saveScore({
@@ -95,21 +93,21 @@ export default function OrganizerScoringPage() {
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-white/10">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b-[3px] border-black">
         <div>
-          <Badge variant="outline" className="mb-1.5">
+          <Badge variant="default" className="mb-1.5">
             COMPETITION JURY & EVALUATION
           </Badge>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-white">
+          <h1 className="text-2xl sm:text-4xl font-black text-black">
             Score Entry by Track
           </h1>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs font-bold text-slate-800 mt-1">
             Super Admin and Event Coordinators evaluate teams across all 3 tracks.
           </p>
         </div>
 
         {isLocked && (
-          <span className="px-3 py-1 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/40 text-xs font-bold flex items-center gap-1.5">
+          <span className="px-3 py-1 bg-[#FF5252] text-black border-2 border-black shadow-[2px_2px_0px_#000000] text-xs font-black uppercase flex items-center gap-1.5">
             <Lock className="w-3.5 h-3.5" />
             Scores Locked by Super Admin
           </span>
@@ -117,47 +115,47 @@ export default function OrganizerScoringPage() {
       </div>
 
       {toastMessage && (
-        <div className="p-3.5 rounded-xl bg-emerald-950/70 border border-emerald-500/30 text-emerald-200 text-xs flex items-center gap-2">
-          <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+        <div className="p-3.5 border-2 border-black bg-[#4CAF50] text-black text-xs font-black flex items-center gap-2 shadow-[3px_3px_0px_#000000]">
+          <CheckCircle2 className="w-4 h-4 text-black" />
           <span>{toastMessage}</span>
         </div>
       )}
 
       {/* Track Tabs */}
-      <div className="flex gap-2 p-1.5 bg-black/40 rounded-2xl border border-white/10 overflow-x-auto">
+      <div className="flex gap-2 p-1.5 bg-white border-[3px] border-black shadow-[4px_4px_0px_#000000] overflow-x-auto">
         {tracks.map((t) => {
           const isActive = t.id === activeTrackId;
           return (
             <button
               key={t.id}
               onClick={() => setActiveTrackId(t.id)}
-              className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer flex items-center gap-2 ${
+              className={`px-4 py-2 text-xs font-black border-2 transition-all whitespace-nowrap cursor-pointer flex items-center gap-2 ${
                 isActive
-                  ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-indigo-500/30"
-                  : "text-slate-400 hover:text-white"
+                  ? "bg-black text-white border-black shadow-[2px_2px_0px_#2196F3]"
+                  : "bg-[#FFFBEB] text-black border-black hover:bg-[#FFEB3B]"
               }`}
             >
               <span>{t.name}</span>
-              {t.scores_locked && <Lock className="w-3 h-3 text-rose-400" />}
+              {t.scores_locked && <Lock className="w-3 h-3 text-[#FF5252]" />}
             </button>
           );
         })}
       </div>
 
       {/* Track Criteria Overview Bar */}
-      <GlassCard className="p-4 border-white/10">
-        <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
+      <div className="p-5 border-[3px] border-black bg-white shadow-[4px_4px_0px_#000000]">
+        <p className="text-xs font-black uppercase tracking-wider text-black mb-3">
           Scoring Weights for {activeTrack?.name}:
         </p>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
           {trackCriteria.map((crit) => (
-            <div key={crit.id} className="p-2.5 rounded-lg bg-white/[0.04] border border-white/10">
-              <span className="font-semibold text-white block truncate">{crit.name}</span>
-              <span className="text-indigo-400 font-mono text-[11px]">Weight: {(crit.weight * 100).toFixed(0)}% • Max 10 pts</span>
+            <div key={crit.id} className="p-3 border-2 border-black bg-[#FFFBEB] shadow-[2px_2px_0px_#000000]">
+              <span className="font-black text-black block truncate">{crit.name}</span>
+              <span className="text-black font-mono font-bold text-[11px] block mt-0.5">Weight: {(crit.weight * 100).toFixed(0)}% • Max 10 pts</span>
             </div>
           ))}
         </div>
-      </GlassCard>
+      </div>
 
       {/* Teams Scoring List */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -166,10 +164,10 @@ export default function OrganizerScoringPage() {
           const hasScore = (team.score_total || 0) > 0;
 
           return (
-            <GlassCard key={team.id} className="p-5 border-white/15 flex flex-col justify-between">
+            <div key={team.id} className="p-5 border-[3px] border-black bg-white shadow-[6px_6px_0px_#000000] flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between gap-2 mb-2">
-                  <span className="text-[11px] font-mono text-indigo-300 bg-white/10 px-2 py-0.5 rounded">
+                  <span className="text-[11px] font-mono font-black text-black bg-[#FFEB3B] border border-black px-2 py-0.5">
                     Table: {team.table_number || "TBD"}
                   </span>
                   <Badge variant={hasScore ? "success" : "warning"}>
@@ -177,28 +175,28 @@ export default function OrganizerScoringPage() {
                   </Badge>
                 </div>
 
-                <h3 className="text-lg font-bold text-white mb-0.5">{team.name}</h3>
-                <p className="text-xs font-semibold text-indigo-300 mb-1">{team.project_title}</p>
-                <p className="text-xs text-slate-400 mb-4">{school?.name}</p>
+                <h3 className="text-lg font-black text-black mb-0.5">{team.name}</h3>
+                <p className="text-xs font-bold text-black mb-1 underline">{team.project_title}</p>
+                <p className="text-xs font-medium text-slate-800 mb-4">{school?.name}</p>
               </div>
 
-              <div className="pt-3 border-t border-white/10 flex items-center justify-between">
+              <div className="pt-3 border-t-2 border-black flex items-center justify-between">
                 <div>
-                  <span className="text-[11px] text-slate-400 block">Weighted Score</span>
-                  <span className="text-xl font-black font-mono text-white">
+                  <span className="text-[11px] font-bold text-slate-700 block uppercase">Weighted Score</span>
+                  <span className="text-xl font-black font-mono text-black">
                     {team.score_total ? team.score_total.toFixed(2) : "0.00"}
                   </span>
                 </div>
 
                 <Button
                   size="sm"
-                  variant={isLocked ? "outline" : "gradient"}
+                  variant={isLocked ? "outline" : "yellow"}
                   disabled={isLocked || !canScore}
                   onClick={() => openScoringModal(team)}
                   className="text-xs h-9 px-4"
                 >
                   {isLocked ? (
-                    <span className="flex items-center gap-1 text-slate-500">
+                    <span className="flex items-center gap-1 text-slate-700 font-bold">
                       <Lock className="w-3.5 h-3.5" /> Locked
                     </span>
                   ) : (
@@ -206,7 +204,7 @@ export default function OrganizerScoringPage() {
                   )}
                 </Button>
               </div>
-            </GlassCard>
+            </div>
           );
         })}
       </div>
@@ -222,13 +220,13 @@ export default function OrganizerScoringPage() {
           {trackCriteria.map((crit) => {
             const currentVal = criterionScores[crit.id] ?? 8.0;
             return (
-              <div key={crit.id} className="p-3.5 rounded-xl bg-white/[0.04] border border-white/10 space-y-2">
+              <div key={crit.id} className="p-3.5 border-2 border-black bg-[#FFFBEB] shadow-[2px_2px_0px_#000000] space-y-2">
                 <div className="flex items-center justify-between text-xs">
                   <div>
-                    <span className="font-bold text-white">{crit.name}</span>
-                    <span className="text-slate-400 text-[11px] ml-2">({(crit.weight * 100).toFixed(0)}% weight)</span>
+                    <span className="font-black text-black">{crit.name}</span>
+                    <span className="text-slate-800 font-bold text-[11px] ml-2">({(crit.weight * 100).toFixed(0)}% weight)</span>
                   </div>
-                  <span className="font-mono font-black text-indigo-300 text-sm">{currentVal.toFixed(1)} / 10</span>
+                  <span className="font-mono font-black text-black text-sm bg-[#FFEB3B] border border-black px-1.5">{currentVal.toFixed(1)} / 10</span>
                 </div>
 
                 <input
@@ -243,14 +241,14 @@ export default function OrganizerScoringPage() {
                       [crit.id]: parseFloat(e.target.value),
                     })
                   }
-                  className="w-full accent-indigo-500 cursor-pointer"
+                  className="w-full accent-black cursor-pointer"
                 />
               </div>
             );
           })}
 
           <div>
-            <label className="text-xs font-semibold text-slate-300 block mb-1">
+            <label className="text-xs font-black text-black block mb-1">
               Jury Feedback & Technical Notes
             </label>
             <textarea
@@ -258,20 +256,20 @@ export default function OrganizerScoringPage() {
               value={feedback}
               onChange={(e) => setFeedback(e.target.value)}
               placeholder="Strengths, mechanism durability, suggestions for improvement..."
-              className="w-full p-2.5 glass-input text-xs"
+              className="w-full p-2.5 nb-input text-xs"
             />
           </div>
 
-          <div className="p-3.5 rounded-xl bg-indigo-950/40 border border-indigo-500/30 flex items-center justify-between text-xs">
-            <span className="font-semibold text-slate-300">Total Computed Weighted Score:</span>
-            <span className="text-xl font-black font-mono text-indigo-300">{computeWeightedTotal()} / 10</span>
+          <div className="p-3.5 border-2 border-black bg-[#FFEB3B] flex items-center justify-between text-xs shadow-[2px_2px_0px_#000000]">
+            <span className="font-black text-black">Total Computed Weighted Score:</span>
+            <span className="text-xl font-black font-mono text-black">{computeWeightedTotal()} / 10</span>
           </div>
 
-          <div className="flex justify-end gap-2 pt-2 border-t border-white/10">
+          <div className="flex justify-end gap-2 pt-2 border-t-2 border-black">
             <Button type="button" variant="ghost" size="sm" onClick={() => setModalOpen(false)}>
               Cancel
             </Button>
-            <Button type="submit" variant="gradient" size="sm">
+            <Button type="submit" variant="primary" size="sm">
               Save & Apply Score
             </Button>
           </div>

@@ -531,7 +531,7 @@ export const initialSchedule: ScheduleItem[] = [
 export const initialAnnouncements: Announcement[] = [
   {
     id: "ann-1",
-    title: "Welcome to MAKE//BREAK 2026! ⚙️",
+    title: "Welcome to SPARK 2026! ⚙️",
     body: "Helpdesks are active at Central Quad. Visiting faculty leads, please proceed to Booth 1 with your School Ticket QR code to check in your student delegations.",
     audience: "all",
     urgent: false,

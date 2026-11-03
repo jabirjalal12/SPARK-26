@@ -788,7 +788,7 @@ export function FestStoreProvider({ children }: { children: React.ReactNode }) {
           id: "cert-" + s.id,
           school_id: s.school_id,
           student_name: s.name,
-          track_name: track?.name || "MAKE//BREAK Tech Fest",
+          track_name: track?.name || "SPARK Tech Fest",
           type,
           cert_code: `MB-${(school?.code || "SCH").replace(/[^A-Za-z0-9]/g, "")}-${s.id.slice(-4).toUpperCase()}-2026`,
           created_at: "2026-11-20T17:00:00Z",

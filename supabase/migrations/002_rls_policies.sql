@@ -1,5 +1,5 @@
 ﻿-- ============================================================================
--- MAKE//BREAK TECH FEST MANAGER - ROW LEVEL SECURITY (RLS) POLICIES
+-- SPARK TECH FEST MANAGER - ROW LEVEL SECURITY (RLS) POLICIES
 -- Strict role and sub-role matrix enforcement at Postgres database level
 -- ============================================================================
 

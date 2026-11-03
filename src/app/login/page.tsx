@@ -58,129 +58,121 @@ export default function LoginPage() {
         switchRole("faculty");
       } else if (email.includes("vol")) {
         switchRole("volunteer");
-      } else if (email.includes("coord") || email.includes("event")) {
-        switchOrganizerSubRole("event_coordinator");
-      } else if (email.includes("reg") || email.includes("head")) {
-        switchOrganizerSubRole("registration_head");
       } else {
-        switchOrganizerSubRole("super_admin");
+        switchRole("organizer");
       }
 
       router.push("/dashboard");
     } catch {
-      setErrorMessage("Authentication failed. Please check your credentials.");
+      setErrorMessage("Authentication failed. Please check credentials.");
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleQuickDemoLogin = (role: UserRole, subRole?: OrganizerSubRole) => {
-    if (role === "organizer" && subRole) {
+    switchRole(role);
+    if (subRole) {
       switchOrganizerSubRole(subRole);
-    } else {
-      switchRole(role);
     }
     router.push("/dashboard");
   };
 
   return (
-    <div className="min-h-screen text-slate-100 flex flex-col justify-center items-center px-4 py-12 relative font-sans">
-      <div className="w-full max-w-md">
-        <div className="flex items-center justify-between mb-6">
+    <div className="min-h-screen bg-[#FFFBEB] flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div className="sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="mb-6 text-center">
           <Link
             href="/"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-300 hover:text-white transition-colors"
+            className="inline-flex items-center gap-2 text-xs font-black text-black hover:bg-[#FFEB3B] px-3 py-1.5 border-2 border-black shadow-[2px_2px_0px_#000000] transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
-            <span>Back to Landing</span>
+            <span>Back to Public Landing</span>
           </Link>
-          <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-            STAFF & FACULTY ACCESS
-          </span>
         </div>
 
-        <GlassCard className="p-6 sm:p-8 border-white/15 bg-slate-900/80 backdrop-blur-2xl">
+        <div className="p-6 sm:p-8 border-[3px] border-black bg-white shadow-[8px_8px_0px_#000000]">
           <div className="text-center mb-6">
-            <div className="h-12 w-12 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-rose-600 flex items-center justify-center mx-auto mb-3 shadow-lg shadow-indigo-500/30">
-              <Lock className="h-6 w-6 text-white" />
+            <div className="h-12 w-12 bg-[#FFEB3B] border-[3px] border-black shadow-[3px_3px_0px_#000000] flex items-center justify-center mx-auto mb-3">
+              <Lock className="h-6 w-6 text-black" />
             </div>
-            <h1 className="text-2xl font-bold text-white tracking-tight">Staff Portal Sign In</h1>
-            <p className="text-xs text-slate-400 mt-1">
+            <h1 className="text-2xl font-black text-black tracking-tight">Staff Portal Sign In</h1>
+            <p className="text-xs font-bold text-slate-800 mt-1">
               Authorized access for Organizers, Visiting Faculty, and Desk Volunteers.
             </p>
           </div>
 
           {/* Quick 1-Click Evaluation Switcher */}
-          <div className="mb-6 p-4 rounded-xl bg-white/[0.04] border border-white/10">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-indigo-300 mb-2">
-              ⚡ 1-Click Test Access (Instant Login)
+          <div className="mb-6 p-4 border-2 border-black bg-[#FFFBEB] shadow-[2px_2px_0px_#000000]">
+            <p className="text-[11px] font-black uppercase tracking-wider text-black mb-2.5">
+              ⚡ 1-Click Test Access (Instant Switch)
             </p>
             <div className="grid grid-cols-2 gap-2 text-xs">
               <Button
                 type="button"
                 size="sm"
-                variant="secondary"
+                variant="outline"
                 onClick={() => handleQuickDemoLogin("organizer", "super_admin")}
-                className="justify-start text-xs font-medium h-9"
+                className="justify-start text-xs font-black h-9"
               >
-                <ShieldCheck className="w-3.5 h-3.5 mr-1 text-indigo-400" />
+                <ShieldCheck className="w-3.5 h-3.5 mr-1" />
                 Super Admin
               </Button>
               <Button
                 type="button"
                 size="sm"
-                variant="secondary"
+                variant="outline"
                 onClick={() => handleQuickDemoLogin("organizer", "event_coordinator")}
-                className="justify-start text-xs font-medium h-9"
+                className="justify-start text-xs font-black h-9"
               >
-                <ShieldCheck className="w-3.5 h-3.5 mr-1 text-blue-400" />
-                Event Coordinator
+                <ShieldCheck className="w-3.5 h-3.5 mr-1" />
+                Coordinator
               </Button>
               <Button
                 type="button"
                 size="sm"
-                variant="secondary"
+                variant="outline"
                 onClick={() => handleQuickDemoLogin("organizer", "registration_head")}
-                className="justify-start text-xs font-medium h-9"
+                className="justify-start text-xs font-black h-9"
               >
-                <ShieldCheck className="w-3.5 h-3.5 mr-1 text-amber-400" />
-                Registration Head
+                <ShieldCheck className="w-3.5 h-3.5 mr-1" />
+                Reg. Head
               </Button>
               <Button
                 type="button"
                 size="sm"
-                variant="secondary"
+                variant="outline"
                 onClick={() => handleQuickDemoLogin("faculty")}
-                className="justify-start text-xs font-medium h-9"
+                className="justify-start text-xs font-black h-9"
               >
-                <Users className="w-3.5 h-3.5 mr-1 text-emerald-400" />
-                Visiting Faculty
+                <Users className="w-3.5 h-3.5 mr-1" />
+                Faculty Lead
               </Button>
             </div>
             <Button
               type="button"
               size="sm"
-              variant="secondary"
+              variant="outline"
               onClick={() => handleQuickDemoLogin("volunteer")}
-              className="w-full mt-2 justify-start text-xs font-medium h-9"
+              className="w-full mt-2 justify-start text-xs font-black h-9"
             >
-              <Scan className="w-3.5 h-3.5 mr-1 text-cyan-400" />
+              <Scan className="w-3.5 h-3.5 mr-1" />
               Registration Desk Volunteer
             </Button>
           </div>
 
           {/* Method tabs */}
-          <div className="grid grid-cols-2 gap-1 p-1 bg-black/40 rounded-xl mb-5 border border-white/10">
+          <div className="grid grid-cols-2 gap-1 p-1 bg-[#FFFBEB] border-2 border-black mb-5 shadow-[2px_2px_0px_#000000]">
             <button
               type="button"
               onClick={() => {
                 setMode("password");
                 setMagicLinkSent(false);
               }}
-              className={`py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+              className={`py-2 text-xs font-black border transition-all cursor-pointer ${
                 mode === "password"
-                  ? "bg-indigo-600 text-white shadow-md"
-                  : "text-slate-400 hover:text-white"
+                  ? "bg-black text-white border-black shadow-[2px_2px_0px_#2196F3]"
+                  : "text-black border-transparent hover:bg-[#FFEB3B]"
               }`}
             >
               Password
@@ -191,10 +183,10 @@ export default function LoginPage() {
                 setMode("magic-link");
                 setMagicLinkSent(false);
               }}
-              className={`py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+              className={`py-2 text-xs font-black border transition-all cursor-pointer ${
                 mode === "magic-link"
-                  ? "bg-indigo-600 text-white shadow-md"
-                  : "text-slate-400 hover:text-white"
+                  ? "bg-black text-white border-black shadow-[2px_2px_0px_#2196F3]"
+                  : "text-black border-transparent hover:bg-[#FFEB3B]"
               }`}
             >
               Magic Link
@@ -202,17 +194,17 @@ export default function LoginPage() {
           </div>
 
           {errorMessage && (
-            <div className="mb-4 p-3 rounded-xl bg-rose-950/60 border border-rose-500/30 text-rose-200 text-xs">
+            <div className="mb-4 p-3 border-2 border-black bg-[#FF5252] text-black text-xs font-black shadow-[2px_2px_0px_#000000]">
               {errorMessage}
             </div>
           )}
 
           {magicLinkSent ? (
             <div className="text-center py-6">
-              <CheckCircle2 className="h-12 w-12 text-emerald-400 mx-auto mb-3 animate-bounce" />
-              <h3 className="text-base font-bold text-white">Check Your Inbox</h3>
-              <p className="text-xs text-slate-300 mt-2">
-                We sent a secure login link to <strong className="text-white">{email}</strong>.
+              <CheckCircle2 className="h-12 w-12 text-[#4CAF50] mx-auto mb-3" />
+              <h3 className="text-base font-black text-black">Check Your Inbox</h3>
+              <p className="text-xs font-bold text-slate-800 mt-2">
+                We sent a secure login link to <strong className="text-black">{email}</strong>.
               </p>
               <Button
                 variant="outline"
@@ -226,18 +218,18 @@ export default function LoginPage() {
           ) : (
             <form onSubmit={handleSignIn} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className="block text-xs font-black text-black mb-1">
                   Institutional Email
                 </label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-black" />
                   <input
                     type="email"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="name@school.edu or staff@makebreak.edu"
-                    className="w-full pl-9 pr-3 py-2.5 glass-input text-xs"
+                    placeholder="name@school.edu or staff@spark.edu"
+                    className="w-full pl-9 pr-3 py-2.5 nb-input text-xs"
                   />
                 </div>
               </div>
@@ -245,20 +237,20 @@ export default function LoginPage() {
               {mode === "password" && (
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <label className="text-xs font-semibold text-slate-300">Password</label>
-                    <span className="text-[11px] text-indigo-400 hover:underline cursor-pointer">
+                    <label className="text-xs font-black text-black">Password</label>
+                    <span className="text-[11px] font-bold text-black hover:underline cursor-pointer">
                       Forgot?
                     </span>
                   </div>
                   <div className="relative">
-                    <KeyRound className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                    <KeyRound className="absolute left-3 top-3 h-4 w-4 text-black" />
                     <input
                       type="password"
                       required
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="••••••••"
-                      className="w-full pl-9 pr-3 py-2.5 glass-input text-xs"
+                      className="w-full pl-9 pr-3 py-2.5 nb-input text-xs"
                     />
                   </div>
                 </div>
@@ -266,7 +258,7 @@ export default function LoginPage() {
 
               <Button
                 type="submit"
-                variant="gradient"
+                variant="yellow"
                 className="w-full mt-2"
                 isLoading={isLoading}
               >
@@ -276,13 +268,13 @@ export default function LoginPage() {
             </form>
           )}
 
-          <div className="mt-6 pt-5 border-t border-white/10 text-center text-xs text-slate-400">
+          <div className="mt-6 pt-5 border-t-2 border-black text-center text-xs font-bold text-slate-800">
             <span>Visiting Faculty not yet registered? </span>
-            <Link href="/register" className="font-semibold text-indigo-400 hover:underline">
+            <Link href="/register" className="font-black text-black underline hover:bg-[#FFEB3B] px-1">
               Register School
             </Link>
           </div>
-        </GlassCard>
+        </div>
       </div>
     </div>
   );

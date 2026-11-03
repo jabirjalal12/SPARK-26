@@ -33,36 +33,36 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     ref
   ) => {
     const baseStyles =
-      "inline-flex items-center justify-center font-semibold tracking-tight rounded-xl transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 disabled:opacity-50 disabled:pointer-events-none select-none cursor-pointer";
+      "inline-flex items-center justify-center font-black tracking-tight rounded-none border-[3px] border-black transition-all duration-100 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-black focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none select-none cursor-pointer";
 
     const sizeStyles = {
-      sm: "h-9 px-3 text-xs gap-1.5",
-      md: "h-11 px-5 text-sm gap-2",
-      lg: "h-13 px-7 text-base font-bold gap-2.5",
-      icon: "h-10 w-10 p-0",
+      sm: "h-9 px-3 text-xs gap-1.5 shadow-[3px_3px_0px_#000000] hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[4px_4px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none",
+      md: "h-11 px-5 text-sm gap-2 shadow-[4px_4px_0px_#000000] hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[6px_6px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none",
+      lg: "h-13 px-7 text-base font-black gap-2.5 shadow-[5px_5px_0px_#000000] hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[7px_7px_0px_#000000] active:translate-x-1 active:translate-y-1 active:shadow-none",
+      icon: "h-10 w-10 p-0 shadow-[3px_3px_0px_#000000] hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[4px_4px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none",
     }[size];
 
     const variantStyles = {
       primary:
-        "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-indigo-500/25 hover:from-blue-500 hover:to-indigo-500 hover:shadow-indigo-500/40 active:scale-[0.98]",
+        "bg-black text-white hover:bg-black shadow-[4px_4px_0px_#2196F3] hover:shadow-[6px_6px_0px_#2196F3] active:shadow-none",
       secondary:
-        "bg-white/10 hover:bg-white/15 text-white border border-white/15 backdrop-blur-md active:scale-[0.98]",
+        "bg-white text-black hover:bg-[#FFEB3B]",
       outline:
-        "bg-transparent hover:bg-white/10 text-white border border-white/20 active:scale-[0.98]",
+        "bg-[#FFFBEB] text-black hover:bg-white",
       ghost:
-        "bg-transparent hover:bg-white/10 text-slate-200 hover:text-white",
+        "border-transparent shadow-none hover:bg-[#FFEB3B] hover:border-black hover:shadow-[3px_3px_0px_#000000]",
       danger:
-        "bg-gradient-to-r from-red-600 to-rose-700 text-white shadow-lg shadow-red-500/25 hover:from-red-500 hover:to-rose-600 active:scale-[0.98]",
+        "bg-[#FF5252] text-black hover:brightness-105",
       gradient:
-        "bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/30 hover:opacity-95 hover:shadow-indigo-500/50 active:scale-[0.98]",
-      blue:
-        "bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-500/30 active:scale-[0.98]",
-      green:
-        "bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-500/30 active:scale-[0.98]",
+        "bg-[#FFEB3B] text-black hover:bg-[#FFEB3B] shadow-[4px_4px_0px_#000000]",
       yellow:
-        "bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold shadow-lg shadow-amber-500/30 active:scale-[0.98]",
+        "bg-[#FFEB3B] text-black hover:brightness-105",
+      blue:
+        "bg-[#2196F3] text-black hover:brightness-105",
+      green:
+        "bg-[#4CAF50] text-black hover:brightness-105",
       purple:
-        "bg-purple-600 hover:bg-purple-500 text-white shadow-lg shadow-purple-500/30 active:scale-[0.98]",
+        "bg-[#FFEB3B] text-black hover:brightness-105",
     }[variant];
 
     return (

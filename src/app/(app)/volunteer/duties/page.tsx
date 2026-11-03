@@ -26,7 +26,7 @@ export default function VolunteerDutiesPage() {
           My Duty Roster & Shifts
         </h1>
         <p className="text-xs text-slate-400 mt-1">
-          Assigned shifts and marshaling stations for MAKE//BREAK 2026.
+          Assigned shifts and marshaling stations for SPARK 2026.
         </p>
       </div>
 

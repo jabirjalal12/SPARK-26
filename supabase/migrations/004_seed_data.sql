@@ -1,5 +1,5 @@
 ﻿-- ============================================================================
--- MAKE//BREAK TECH FEST MANAGER - SEED DATA
+-- SPARK TECH FEST MANAGER - SEED DATA
 -- 3 Tracks, Criteria, 5 Schools, Teams, 20 Students, Tickets, Venues, Schedule
 -- ============================================================================
 
@@ -101,6 +101,6 @@ INSERT INTO public.schedule_items (title, description, venue_id, track_id, start
 
 -- 9. ANNOUNCEMENTS
 INSERT INTO public.announcements (title, body, audience, urgent) VALUES
-('Welcome to MAKE//BREAK 2026!', 'Campus gates are open. Faculty coordinators must present their single school QR ticket at Central Registration.', 'all', false),
+('Welcome to SPARK 2026!', 'Campus gates are open. Faculty coordinators must present their single school QR ticket at Central Registration.', 'all', false),
 ('Power Strip Distribution at Maker Quad', 'Scrap track teams can collect 16A heavy-duty extension strips from Table 0.', 'all', false),
 ('Urgent: Robotics Heat 1 Pit Call', 'All line-following robots must report to inspection bay by 10:20 AM sharp.', 'all', true);

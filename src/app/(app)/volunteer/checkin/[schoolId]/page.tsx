@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -58,10 +58,10 @@ export default function SchoolCheckinPage() {
   if (!school) {
     return (
       <div className="max-w-md mx-auto py-12 text-center space-y-4">
-        <GlassCard className="p-8 border-white/15">
-          <AlertTriangle className="w-12 h-12 text-amber-400 mx-auto mb-3" />
-          <h2 className="text-xl font-bold text-white">School Not Found</h2>
-          <p className="text-xs text-slate-400 mt-1 mb-6">
+        <div className="p-8 border-[3px] border-black bg-white shadow-[6px_6px_0px_#000000]">
+          <AlertTriangle className="w-12 h-12 text-black mx-auto mb-3" />
+          <h2 className="text-xl font-black text-black">School Not Found</h2>
+          <p className="text-xs font-bold text-slate-800 mt-1 mb-6">
             No institutional record matches the scanned code.
           </p>
           <Link href="/volunteer/scan">
@@ -70,7 +70,7 @@ export default function SchoolCheckinPage() {
               <span>Return to Scanner</span>
             </Button>
           </Link>
-        </GlassCard>
+        </div>
       </div>
     );
   }
@@ -130,25 +130,25 @@ export default function SchoolCheckinPage() {
       <div className="flex items-center justify-between">
         <Link
           href="/volunteer/scan"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-300 hover:text-white transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs font-black text-black hover:bg-[#FFEB3B] px-2.5 py-1 border-2 border-black shadow-[2px_2px_0px_#000000] transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
           <span>Back to QR Scanner</span>
         </Link>
-        <span className="text-xs font-mono font-bold text-indigo-300 bg-white/10 px-2.5 py-1 rounded-full border border-white/15">
+        <span className="text-xs font-mono font-black text-black bg-[#FFEB3B] px-3 py-1 border-2 border-black shadow-[2px_2px_0px_#000000]">
           {school.code}
         </span>
       </div>
 
       {/* Duplicate Scan Warning Banner */}
       {school.arrived && (
-        <div className="p-4 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-200 text-xs flex items-start gap-3">
-          <AlertTriangle className="w-5 h-5 flex-shrink-0 text-amber-400 mt-0.5" />
+        <div className="p-4 border-[3px] border-black bg-[#FFEB3B] text-black shadow-[4px_4px_0px_#000000] flex items-start gap-3">
+          <AlertTriangle className="w-5 h-5 flex-shrink-0 text-black mt-0.5" />
           <div>
-            <p className="font-bold text-white uppercase tracking-wide">
+            <p className="font-black text-black uppercase tracking-wide">
               Duplicate Scan Notice: Delegation Already Arrived
             </p>
-            <p className="text-xs text-amber-200/90 mt-0.5">
+            <p className="text-xs font-bold text-slate-900 mt-0.5">
               This institution was already checked in earlier. Currently <strong>{alreadyCheckedInCount} of {schoolStudents.length} students</strong> have verified passes. You can check in any late-arriving squad members below.
             </p>
           </div>
@@ -157,39 +157,39 @@ export default function SchoolCheckinPage() {
 
       {/* Success Notification */}
       {feedback && (
-        <div className="p-4 rounded-xl bg-emerald-950/70 border border-emerald-500/40 text-emerald-200 text-xs flex items-center justify-between">
+        <div className="p-4 border-[3px] border-black bg-[#4CAF50] text-black text-xs flex items-center justify-between shadow-[4px_4px_0px_#000000]">
           <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-            <span className="font-semibold">{feedback.message}</span>
+            <CheckCircle2 className="w-5 h-5 text-black" />
+            <span className="font-black">{feedback.message}</span>
           </div>
-          <Button size="sm" variant="outline" onClick={() => router.push("/volunteer/scan")} className="text-xs h-8">
+          <Button size="sm" variant="secondary" onClick={() => router.push("/volunteer/scan")} className="text-xs h-8">
             Scan Next School
           </Button>
         </div>
       )}
 
       {/* Institution Details Header Card */}
-      <GlassCard className="p-6 border-white/15 bg-gradient-to-br from-slate-900/90 to-indigo-950/40">
+      <div className="p-6 border-[3px] border-black bg-white shadow-[6px_6px_0px_#000000]">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-1.5">
               <Badge variant={school.arrived ? "success" : "warning"}>
                 {school.arrived ? "Delegation Arrived" : "Awaiting Arrival"}
               </Badge>
-              <span className="text-xs text-slate-400">{school.city}</span>
+              <span className="text-xs font-bold text-slate-800">{school.city}</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-white">
+            <h1 className="text-2xl sm:text-3xl font-black text-black">
               {school.name}
             </h1>
-            <p className="text-xs text-slate-300 mt-1 flex items-center gap-4">
+            <p className="text-xs font-bold text-slate-800 mt-1 flex items-center gap-4">
               <span>Contact: {school.contact_phone}</span>
-              <span>â¢ Email: {school.contact_email}</span>
+              <span>• Email: {school.contact_email}</span>
             </p>
           </div>
 
           <Button
             size="sm"
-            variant="secondary"
+            variant="yellow"
             onClick={() => setWalkinModalOpen(true)}
             className="text-xs self-start sm:self-auto"
           >
@@ -197,17 +197,17 @@ export default function SchoolCheckinPage() {
             <span>Add Walk-in Student</span>
           </Button>
         </div>
-      </GlassCard>
+      </div>
 
       {/* Student Delegation Checklist */}
-      <GlassCard className="p-6 border-white/15">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/10 mb-5">
+      <div className="p-6 border-[3px] border-black bg-white shadow-[6px_6px_0px_#000000]">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b-2 border-black mb-5">
           <div>
-            <h2 className="text-lg font-bold text-white flex items-center gap-2">
-              <Users className="w-5 h-5 text-indigo-400" />
+            <h2 className="text-lg font-black text-black flex items-center gap-2">
+              <Users className="w-5 h-5 text-black" />
               <span>Student Delegation Checklist</span>
             </h2>
-            <p className="text-xs text-slate-400 mt-0.5">
+            <p className="text-xs font-bold text-slate-800 mt-0.5">
               Mark individual students present before confirming delegation check-in.
             </p>
           </div>
@@ -215,25 +215,25 @@ export default function SchoolCheckinPage() {
           <div className="flex items-center gap-2 text-xs">
             <button
               onClick={handleSelectAll}
-              className="text-indigo-400 hover:text-indigo-300 font-semibold cursor-pointer"
+              className="text-black font-black underline hover:bg-[#FFEB3B] px-1 cursor-pointer"
             >
               Select All
             </button>
-            <span className="text-slate-600">â¢</span>
+            <span className="font-bold">•</span>
             <button
               onClick={handleDeselectAll}
-              className="text-slate-400 hover:text-white cursor-pointer"
+              className="text-slate-800 font-bold hover:bg-[#FFEB3B] px-1 cursor-pointer"
             >
               Deselect All
             </button>
-            <span className="ml-2 font-mono font-bold text-white bg-white/10 px-2 py-0.5 rounded">
+            <span className="ml-2 font-mono font-black text-black bg-[#FFEB3B] border border-black px-2 py-0.5 shadow-[1px_1px_0px_#000]">
               {selectedStudentIds.length} / {schoolStudents.length} Selected
             </span>
           </div>
         </div>
 
         {schoolStudents.length === 0 ? (
-          <div className="text-center py-8 text-xs text-slate-400">
+          <div className="text-center py-8 text-xs font-bold text-slate-800">
             No students registered in roster for this institution. Use "Add Walk-in Student" to add members at the desk.
           </div>
         ) : (
@@ -246,10 +246,10 @@ export default function SchoolCheckinPage() {
                 <div
                   key={student.id}
                   onClick={() => handleToggleStudent(student.id)}
-                  className={`p-3.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between ${
+                  className={`p-3.5 border-2 border-black transition-all cursor-pointer flex items-center justify-between ${
                     isChecked
-                      ? "bg-indigo-950/40 border-indigo-500/40 text-white"
-                      : "bg-white/[0.02] border-white/10 text-slate-300 hover:bg-white/[0.05]"
+                      ? "bg-[#FFEB3B] text-black shadow-[3px_3px_0px_#000000] -translate-x-0.5 -translate-y-0.5"
+                      : "bg-[#FFFBEB] text-black hover:bg-white shadow-[2px_2px_0px_#000000]"
                   }`}
                 >
                   <div className="flex items-center gap-3 min-w-0">
@@ -257,33 +257,33 @@ export default function SchoolCheckinPage() {
                       type="checkbox"
                       checked={isChecked}
                       onChange={() => {}} // Controlled by row click
-                      className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                      className="w-5 h-5 border-2 border-black accent-black cursor-pointer"
                     />
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="font-bold text-sm text-white">{student.name}</span>
+                        <span className="font-black text-sm text-black">{student.name}</span>
                         {student.is_walkin && (
-                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold">
+                          <span className="text-[10px] px-1.5 py-0.5 border border-black bg-[#FF9800] text-black font-black uppercase">
                             Walk-in
                           </span>
                         )}
                         {student.checked_in && (
-                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold">
-                            Previously Checked In
+                          <span className="text-[10px] px-1.5 py-0.5 border border-black bg-[#4CAF50] text-black font-black uppercase">
+                            Arrived
                           </span>
                         )}
                       </div>
-                      <p className="text-xs text-slate-400 mt-0.5">
-                        Class: <span className="text-slate-300 font-mono">{student.class}</span> â¢ Track: <span className="text-slate-300">{track?.name || "General"}</span>
+                      <p className="text-xs font-bold text-slate-800 mt-0.5">
+                        Class: <span className="font-mono">{student.class}</span> • Track: <span>{track?.name || "General"}</span>
                       </p>
                     </div>
                   </div>
 
-                  <span className="text-xs font-semibold text-slate-400">
+                  <span className="text-xs font-black">
                     {isChecked ? (
-                      <span className="text-indigo-400">Marked Present</span>
+                      <span className="bg-black text-white px-2 py-0.5">Marked Present</span>
                     ) : (
-                      <span>Absent</span>
+                      <span className="text-slate-600">Absent</span>
                     )}
                   </span>
                 </div>
@@ -293,14 +293,14 @@ export default function SchoolCheckinPage() {
         )}
 
         {/* Check-in Action Bar */}
-        <div className="mt-8 pt-5 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="text-xs text-slate-400">
-            Scanning volunteer: <strong className="text-white">Farhan Siddiqui</strong>
+        <div className="mt-8 pt-5 border-t-2 border-black flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="text-xs font-bold text-slate-800">
+            Scanning volunteer: <strong className="text-black font-black">Farhan Siddiqui</strong>
           </div>
 
           <Button
             size="lg"
-            variant="gradient"
+            variant="primary"
             onClick={handleConfirmCheckin}
             disabled={selectedStudentIds.length === 0}
             className="w-full sm:w-auto text-sm px-8"
@@ -309,7 +309,7 @@ export default function SchoolCheckinPage() {
             <span>Check In Delegation ({selectedStudentIds.length} Present)</span>
           </Button>
         </div>
-      </GlassCard>
+      </div>
 
       {/* Desk Walk-in Registration Modal */}
       <Modal
@@ -320,7 +320,7 @@ export default function SchoolCheckinPage() {
       >
         <form onSubmit={handleAddWalkin} className="space-y-4">
           <div>
-            <label className="text-xs font-semibold text-slate-300 block mb-1">
+            <label className="text-xs font-black text-black block mb-1">
               Student Full Name *
             </label>
             <input
@@ -329,13 +329,13 @@ export default function SchoolCheckinPage() {
               value={walkinData.name}
               onChange={(e) => setWalkinData({ ...walkinData, name: e.target.value })}
               placeholder="e.g. Vikram Joseph"
-              className="w-full px-3 py-2.5 glass-input text-xs"
+              className="w-full px-3 py-2.5 nb-input text-xs"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-semibold text-slate-300 block mb-1">
+              <label className="text-xs font-black text-black block mb-1">
                 Class / Grade *
               </label>
               <input
@@ -344,21 +344,21 @@ export default function SchoolCheckinPage() {
                 value={walkinData.classGrade}
                 onChange={(e) => setWalkinData({ ...walkinData, classGrade: e.target.value })}
                 placeholder="e.g. 12-A"
-                className="w-full px-3 py-2.5 glass-input text-xs"
+                className="w-full px-3 py-2.5 nb-input text-xs"
               />
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-slate-300 block mb-1">
+              <label className="text-xs font-black text-black block mb-1">
                 Track *
               </label>
               <select
                 value={walkinData.trackId}
                 onChange={(e) => setWalkinData({ ...walkinData, trackId: e.target.value })}
-                className="w-full px-3 py-2.5 glass-input text-xs bg-slate-900 text-white"
+                className="w-full px-3 py-2.5 nb-input text-xs bg-white text-black"
               >
                 {tracks.map((t) => (
-                  <option key={t.id} value={t.id} className="bg-slate-900 text-white">
+                  <option key={t.id} value={t.id} className="bg-white text-black">
                     {t.name}
                   </option>
                 ))}
@@ -366,11 +366,11 @@ export default function SchoolCheckinPage() {
             </div>
           </div>
 
-          <div className="flex justify-end gap-2 pt-3 border-t border-white/10">
+          <div className="flex justify-end gap-2 pt-3 border-t-2 border-black">
             <Button type="button" variant="ghost" size="sm" onClick={() => setWalkinModalOpen(false)}>
               Cancel
             </Button>
-            <Button type="submit" variant="gradient" size="sm">
+            <Button type="submit" variant="yellow" size="sm">
               Enroll & Check In Walk-in
             </Button>
           </div>

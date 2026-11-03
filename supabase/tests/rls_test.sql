@@ -1,5 +1,5 @@
 ﻿-- ============================================================================
--- MAKE//BREAK TECH FEST MANAGER - AUTOMATED RLS VERIFICATION TESTS
+-- SPARK TECH FEST MANAGER - AUTOMATED RLS VERIFICATION TESTS
 -- Runs in pgTAP / PostgreSQL psql test harness
 -- ============================================================================
 

@@ -1,5 +1,5 @@
 ﻿-- ============================================================================
--- MAKE//BREAK TECH FEST MANAGER - FUNCTIONS & TRIGGERS
+-- SPARK TECH FEST MANAGER - FUNCTIONS & TRIGGERS
 -- Automatic audit logging, score recalculation, and ticket token generator
 -- ============================================================================
 

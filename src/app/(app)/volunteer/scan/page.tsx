@@ -64,22 +64,22 @@ export default function VolunteerScanPage() {
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-white/10">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b-[3px] border-black">
         <div>
-          <Badge variant="outline" className="mb-1.5">
+          <Badge variant="default" className="mb-1.5">
             REGISTRATION FAST-PASS DESK
           </Badge>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-white">
+          <h1 className="text-2xl sm:text-4xl font-black text-black">
             School QR Check-In
           </h1>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs font-bold text-slate-800 mt-1">
             Scan institutional pass or select below to open the student delegation checklist.
           </p>
         </div>
 
         <Button
           size="lg"
-          variant="gradient"
+          variant="yellow"
           onClick={() => setScannerOpen(true)}
           className="text-sm py-3 px-6"
         >
@@ -90,67 +90,67 @@ export default function VolunteerScanPage() {
 
       {/* Live Telemetry Counters */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <GlassCard className="p-4 sm:p-5 border-white/10 bg-slate-900/60">
-          <div className="flex items-center justify-between text-slate-400 mb-1">
-            <School className="h-5 w-5 text-indigo-400" />
-            <span className="text-xs font-mono font-bold text-indigo-300">
+        <div className="p-4 sm:p-5 border-[3px] border-black bg-[#2196F3] text-black shadow-[4px_4px_0px_#000000]">
+          <div className="flex items-center justify-between mb-1">
+            <School className="h-5 w-5 text-black" />
+            <span className="text-xs font-mono font-black bg-white px-2 py-0.5 border border-black">
               {Math.round((arrivedSchools / (totalSchools || 1)) * 100)}%
             </span>
           </div>
-          <div className="text-3xl font-black text-white">
-            {arrivedSchools} <span className="text-base font-normal text-slate-400">/ {totalSchools}</span>
+          <div className="text-3xl font-black text-black">
+            {arrivedSchools} <span className="text-base font-bold">/ {totalSchools}</span>
           </div>
-          <p className="text-xs text-slate-400 font-semibold uppercase mt-1">Schools Arrived</p>
-          <div className="w-full bg-white/10 rounded-full h-1.5 mt-3 overflow-hidden">
+          <p className="text-xs font-black uppercase mt-1">Schools Arrived</p>
+          <div className="w-full bg-white border border-black h-2 mt-3 overflow-hidden">
             <div
-              className="bg-indigo-500 h-full rounded-full transition-all duration-300"
+              className="bg-black h-full transition-all duration-300"
               style={{ width: `${(arrivedSchools / (totalSchools || 1)) * 100}%` }}
             />
           </div>
-        </GlassCard>
+        </div>
 
-        <GlassCard className="p-4 sm:p-5 border-white/10 bg-slate-900/60">
-          <div className="flex items-center justify-between text-slate-400 mb-1">
-            <Users className="h-5 w-5 text-emerald-400" />
-            <span className="text-xs font-mono font-bold text-emerald-300">
+        <div className="p-4 sm:p-5 border-[3px] border-black bg-[#4CAF50] text-black shadow-[4px_4px_0px_#000000]">
+          <div className="flex items-center justify-between mb-1">
+            <Users className="h-5 w-5 text-black" />
+            <span className="text-xs font-mono font-black bg-white px-2 py-0.5 border border-black">
               {Math.round((arrivedStudents / (totalStudents || 1)) * 100)}%
             </span>
           </div>
-          <div className="text-3xl font-black text-white">
-            {arrivedStudents} <span className="text-base font-normal text-slate-400">/ {totalStudents}</span>
+          <div className="text-3xl font-black text-black">
+            {arrivedStudents} <span className="text-base font-bold">/ {totalStudents}</span>
           </div>
-          <p className="text-xs text-slate-400 font-semibold uppercase mt-1">Students Verified</p>
-          <div className="w-full bg-white/10 rounded-full h-1.5 mt-3 overflow-hidden">
+          <p className="text-xs font-black uppercase mt-1">Students Verified</p>
+          <div className="w-full bg-white border border-black h-2 mt-3 overflow-hidden">
             <div
-              className="bg-emerald-500 h-full rounded-full transition-all duration-300"
+              className="bg-black h-full transition-all duration-300"
               style={{ width: `${(arrivedStudents / (totalStudents || 1)) * 100}%` }}
             />
           </div>
-        </GlassCard>
+        </div>
 
-        <GlassCard className="p-4 sm:p-5 border-white/10 bg-slate-900/60">
-          <div className="flex items-center justify-between text-slate-400 mb-1">
-            <Zap className="h-5 w-5 text-amber-400" />
-            <span className="text-xs font-mono font-bold text-amber-300">Desk Walk-in</span>
+        <div className="p-4 sm:p-5 border-[3px] border-black bg-[#FFEB3B] text-black shadow-[4px_4px_0px_#000000]">
+          <div className="flex items-center justify-between mb-1">
+            <Zap className="h-5 w-5 text-black" />
+            <span className="text-xs font-mono font-black bg-white px-2 py-0.5 border border-black">Gate</span>
           </div>
-          <div className="text-3xl font-black text-white">{walkinStudents}</div>
-          <p className="text-xs text-slate-400 font-semibold uppercase mt-1">Desk Walk-in Students</p>
-          <p className="text-[11px] text-amber-300/80 mt-2">Added directly at registration gate</p>
-        </GlassCard>
+          <div className="text-3xl font-black text-black">{walkinStudents}</div>
+          <p className="text-xs font-black uppercase mt-1">Desk Walk-in Students</p>
+          <p className="text-[11px] font-bold text-slate-800 mt-2">Added directly at registration gate</p>
+        </div>
       </div>
 
       {/* 1-Click Test Simulation Bar for Evaluators */}
-      <div className="p-4 rounded-2xl bg-white/[0.04] border border-white/10">
-        <p className="text-[11px] font-bold uppercase tracking-wider text-indigo-300 mb-2.5 flex items-center gap-1.5">
-          <Zap className="w-4 h-4 text-amber-400" />
+      <div className="p-5 border-[3px] border-black bg-white shadow-[4px_4px_0px_#000000]">
+        <p className="text-xs font-black uppercase tracking-wider text-black mb-3 flex items-center gap-1.5">
+          <Zap className="w-4 h-4 text-black" />
           <span>Quick Test Simulation (1-Click Scan Any School Ticket)</span>
         </p>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2.5">
           {schools.slice(0, 4).map((s) => (
             <Button
               key={s.id}
               size="sm"
-              variant="secondary"
+              variant="outline"
               onClick={() => router.push(`/volunteer/checkin/${s.id}`)}
               className="text-xs h-8"
             >
@@ -162,26 +162,26 @@ export default function VolunteerScanPage() {
       </div>
 
       {/* Manual Search & School Directory */}
-      <GlassCard className="p-5 border-white/15">
+      <div className="p-6 border-[3px] border-black bg-white shadow-[6px_6px_0px_#000000]">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-          <h2 className="text-base font-bold text-white flex items-center gap-2">
-            <School className="w-4 h-4 text-indigo-400" />
+          <h2 className="text-base font-black text-black flex items-center gap-2">
+            <School className="w-4 h-4 text-black" />
             <span>Select Institution Manually</span>
           </h2>
 
           <div className="relative w-full sm:w-64">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-black" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search school name or code..."
-              className="w-full pl-9 pr-3 py-2 glass-input text-xs"
+              className="w-full pl-9 pr-3 py-2 nb-input text-xs"
             />
           </div>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-2.5">
           {filteredSchools.map((s) => {
             const schoolDelegation = students.filter((stu) => stu.school_id === s.id);
             const arrivedCount = schoolDelegation.filter((stu) => stu.checked_in).length;
@@ -190,36 +190,36 @@ export default function VolunteerScanPage() {
               <div
                 key={s.id}
                 onClick={() => router.push(`/volunteer/checkin/${s.id}`)}
-                className="p-3.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] border border-white/10 transition-all cursor-pointer flex items-center justify-between"
+                className="p-3.5 border-2 border-black bg-[#FFFBEB] hover:bg-[#FFEB3B] shadow-[2px_2px_0px_#000000] hover:-translate-x-0.5 hover:-translate-y-0.5 transition-all cursor-pointer flex items-center justify-between"
               >
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center font-mono font-bold text-xs text-white border border-white/15">
+                  <div className="w-9 h-9 border-2 border-black bg-white flex items-center justify-center font-mono font-black text-xs text-black shadow-[1px_1px_0px_#000]">
                     {s.code.slice(0, 3)}
                   </div>
                   <div className="min-w-0">
-                    <p className="font-bold text-sm text-white truncate">{s.name}</p>
-                    <p className="text-xs text-slate-400 mt-0.5">
-                      Code: <span className="font-mono text-slate-300">{s.code}</span> • {s.city} • Contact: {s.contact_phone}
+                    <p className="font-black text-sm text-black truncate">{s.name}</p>
+                    <p className="text-xs font-bold text-slate-700 mt-0.5">
+                      Code: <span className="font-mono text-black">{s.code}</span> • {s.city} • Contact: {s.contact_phone}
                     </p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-3 flex-shrink-0">
                   <div className="text-right">
-                    <span className={`text-xs font-semibold block ${s.arrived ? "text-emerald-400" : "text-amber-400"}`}>
+                    <span className={`text-xs font-black block ${s.arrived ? "text-[#4CAF50]" : "text-[#FF9800]"}`}>
                       {s.arrived ? "Arrived" : "Expected"}
                     </span>
-                    <span className="text-[11px] text-slate-400">
+                    <span className="text-[11px] font-bold text-slate-800">
                       {arrivedCount} / {schoolDelegation.length} Students
                     </span>
                   </div>
-                  <ArrowRight className="w-4 h-4 text-slate-400" />
+                  <ArrowRight className="w-4 h-4 text-black" />
                 </div>
               </div>
             );
           })}
         </div>
-      </GlassCard>
+      </div>
 
       {/* QR Scanner Modal */}
       <QRScannerModal
