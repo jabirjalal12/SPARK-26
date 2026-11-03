@@ -85,23 +85,23 @@ INSERT INTO public.students (school_id, track_id, team_id, name, class) VALUES
 
 -- 7. VENUES
 INSERT INTO public.venues (id, name, location, capacity) VALUES
-('v1111111-1111-1111-1111-111111111111', 'Main Auditorium', 'Ground Floor, Tech Block', 500),
-('v2222222-2222-2222-2222-222222222222', 'Robotics Arena Alpha', 'Mechanical Labs 1st Floor', 150),
-('v3333333-3333-3333-3333-333333333333', 'Open Maker Quad', 'Central Courtyard', 300)
+('e1111111-1111-1111-1111-111111111111', 'Main Auditorium', 'Ground Floor, Tech Block', 500),
+('e2222222-2222-2222-2222-222222222222', 'Robotics Arena Alpha', 'Mechanical Labs 1st Floor', 150),
+('e3333333-3333-3333-3333-333333333333', 'Open Maker Quad', 'Central Courtyard', 300)
 ON CONFLICT (id) DO NOTHING;
 
 -- 8. SCHEDULE ITEMS
 INSERT INTO public.schedule_items (title, description, venue_id, track_id, starts_at, ends_at, type) VALUES
-('Gates Open & Fast-Pass Registration Desk', 'School delegations report at Central Quad with their master QR pass.', 'v1111111-1111-1111-1111-111111111111', NULL, '2026-11-05T07:00:00Z', '2026-11-05T08:00:00Z', 'break'),
-('Visiting Faculty & Delegation Welcome Breakfast', 'Networking lounge and breakfast buffet.', 'v1111111-1111-1111-1111-111111111111', NULL, '2026-11-05T07:45:00Z', '2026-11-05T08:30:00Z', 'break'),
-('Grand Inaugural Ceremony & Rules Keynote', 'Welcome keynote, rolling trophy unveiling, and safety briefing.', 'v1111111-1111-1111-1111-111111111111', NULL, '2026-11-05T08:30:00Z', '2026-11-05T09:30:00Z', 'ceremony'),
-('Arena Safety Pit Scrutiny & Tool Allotment', 'Robotics voltage inspection and scrap tools allotment.', 'v2222222-2222-2222-2222-222222222222', NULL, '2026-11-05T09:30:00Z', '2026-11-05T10:00:00Z', 'competition'),
-('Robotics Arena Trials (Heat 1)', 'Autonomous obstacle navigation qualifiers.', 'v2222222-2222-2222-2222-222222222222', '11111111-1111-1111-1111-111111111111', '2026-11-05T10:00:00Z', '2026-11-05T13:00:00Z', 'competition'),
-('Scrap Assembly & Build Sprint', '4-hour non-stop junkyard fabrication and prototype assembly.', 'v3333333-3333-3333-3333-333333333333', '22222222-2222-2222-2222-222222222222', '2026-11-05T10:00:00Z', '2026-11-05T14:00:00Z', 'competition'),
-('Useless Pitching & Demo Show', 'Live exhibition and deadpan stage demonstrations.', 'v1111111-1111-1111-1111-111111111111', '33333333-3333-3333-3333-333333333333', '2026-11-05T10:30:00Z', '2026-11-05T12:30:00Z', 'judging'),
-('Delegation Lunch & Tech Showcase', 'Buffet lunch and open engineering exhibits at Central Quad.', 'v1111111-1111-1111-1111-111111111111', NULL, '2026-11-05T13:00:00Z', '2026-11-05T14:00:00Z', 'break'),
-('Robotics Arena Championship Finals', 'Head-to-head top 4 bot championship trials.', 'v2222222-2222-2222-2222-222222222222', '11111111-1111-1111-1111-111111111111', '2026-11-05T14:00:00Z', '2026-11-05T15:30:00Z', 'competition'),
-('Valedictory & Grand Award Ceremony', 'Announcement of official winners, ₹75k+ cash, and certificates.', 'v1111111-1111-1111-1111-111111111111', NULL, '2026-11-05T16:30:00Z', '2026-11-05T18:00:00Z', 'ceremony');
+('Gates Open & Fast-Pass Registration Desk', 'School delegations report at Central Quad with their master QR pass.', 'e1111111-1111-1111-1111-111111111111', NULL, '2026-11-05T07:00:00Z', '2026-11-05T08:00:00Z', 'break'),
+('Visiting Faculty & Delegation Welcome Breakfast', 'Networking lounge and breakfast buffet.', 'e1111111-1111-1111-1111-111111111111', NULL, '2026-11-05T07:45:00Z', '2026-11-05T08:30:00Z', 'break'),
+('Grand Inaugural Ceremony & Rules Keynote', 'Welcome keynote, rolling trophy unveiling, and safety briefing.', 'e1111111-1111-1111-1111-111111111111', NULL, '2026-11-05T08:30:00Z', '2026-11-05T09:30:00Z', 'ceremony'),
+('Arena Safety Pit Scrutiny & Tool Allotment', 'Robotics voltage inspection and scrap tools allotment.', 'e2222222-2222-2222-2222-222222222222', NULL, '2026-11-05T09:30:00Z', '2026-11-05T10:00:00Z', 'competition'),
+('Robotics Arena Trials (Heat 1)', 'Autonomous obstacle navigation qualifiers.', 'e2222222-2222-2222-2222-222222222222', '11111111-1111-1111-1111-111111111111', '2026-11-05T10:00:00Z', '2026-11-05T13:00:00Z', 'competition'),
+('Scrap Assembly & Build Sprint', '4-hour non-stop junkyard fabrication and prototype assembly.', 'e3333333-3333-3333-3333-333333333333', '22222222-2222-2222-2222-222222222222', '2026-11-05T10:00:00Z', '2026-11-05T14:00:00Z', 'competition'),
+('Useless Pitching & Demo Show', 'Live exhibition and deadpan stage demonstrations.', 'e1111111-1111-1111-1111-111111111111', '33333333-3333-3333-3333-333333333333', '2026-11-05T10:30:00Z', '2026-11-05T12:30:00Z', 'judging'),
+('Delegation Lunch & Tech Showcase', 'Buffet lunch and open engineering exhibits at Central Quad.', 'e1111111-1111-1111-1111-111111111111', NULL, '2026-11-05T13:00:00Z', '2026-11-05T14:00:00Z', 'break'),
+('Robotics Arena Championship Finals', 'Head-to-head top 4 bot championship trials.', 'e2222222-2222-2222-2222-222222222222', '11111111-1111-1111-1111-111111111111', '2026-11-05T14:00:00Z', '2026-11-05T15:30:00Z', 'competition'),
+('Valedictory & Grand Award Ceremony', 'Announcement of official winners, ₹75k+ cash, and certificates.', 'e1111111-1111-1111-1111-111111111111', NULL, '2026-11-05T16:30:00Z', '2026-11-05T18:00:00Z', 'ceremony');
 
 -- 9. ANNOUNCEMENTS
 INSERT INTO public.announcements (title, body, audience, urgent) VALUES
