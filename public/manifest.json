@@ -1,0 +1,16 @@
+﻿{
+  "name": "MAKE//BREAK Tech Fest",
+  "short_name": "MAKE//BREAK",
+  "description": "Production-ready mobile-first manager for MAKE//BREAK inter-school college tech fest",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#090d16",
+  "theme_color": "#4f46e5",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    }
+  ]
+}
