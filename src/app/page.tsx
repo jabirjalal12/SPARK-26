@@ -254,106 +254,120 @@ export default function LandingPage() {
       </section>
 
       {/* ========================================================================= */}
-      {/* SECTION: ABOUT THE SPARK PROGRAM (DETAILED, HIGH-IMPACT NEUBRUTALISM)    */}
+      {/* SECTION: ABOUT SPARK — REWORKED, HIGH-IMPACT NEUBRUTALISM              */}
       {/* ========================================================================= */}
       <section id="about" className="px-4 sm:px-6 py-20 bg-white border-t-[3px] border-black">
         <div className="max-w-7xl mx-auto">
-          {/* Section Header */}
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <div className="inline-block bg-[#FFEB3B] text-black px-4 py-1.5 font-black text-xs uppercase tracking-widest border-2 border-black shadow-[3px_3px_0px_#000000] mb-4">
-              ABOUT THE FESTIVAL
+
+          {/* ── Header ── */}
+          <div className="mb-16">
+            <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
+              <div>
+                <div className="inline-flex items-center gap-2 bg-[#FFEB3B] text-black px-4 py-1.5 font-black text-xs uppercase tracking-widest border-2 border-black shadow-[3px_3px_0px_#000000] mb-5">
+                  <Sparkles className="w-3.5 h-3.5 fill-black" />
+                  ABOUT SPARK 2026 — 1ST EDITION
+                </div>
+                <h2 className="text-4xl sm:text-6xl font-black text-black tracking-tight leading-[1.05]">
+                  Student Projects &<br />
+                  <span className="bg-black text-[#FFEB3B] px-3 inline-block mt-1">Robo Kreations</span>
+                </h2>
+              </div>
+              <div className="lg:max-w-sm p-4 bg-[#FFFBEB] border-[3px] border-black shadow-[5px_5px_0px_#000000]">
+                <p className="text-sm font-black uppercase tracking-wider text-black mb-1">Hosted by</p>
+                <p className="text-xl font-black text-black leading-tight">ACE Engineering College</p>
+                <p className="text-xs font-bold text-slate-700 mt-1">Department of Mechanical &amp; Electronics Engineering</p>
+                <div className="mt-3 pt-3 border-t-2 border-black flex items-center gap-2 flex-wrap">
+                  <span className="bg-[#FF5252] text-black border border-black px-2 py-0.5 text-[10px] font-black uppercase">1st Edition</span>
+                  <span className="bg-[#4CAF50] text-black border border-black px-2 py-0.5 text-[10px] font-black uppercase">05 Nov 2026</span>
+                  <span className="bg-[#2196F3] text-black border border-black px-2 py-0.5 text-[10px] font-black uppercase">3 Arenas</span>
+                </div>
+              </div>
             </div>
-            <h2 className="text-4xl sm:text-6xl font-black text-black tracking-tight leading-tight">
-              What is the SPARK Program?
-            </h2>
-            <p className="mt-4 text-base sm:text-lg font-bold text-slate-800 leading-relaxed">
-              SPARK is our premier annual inter-school college tech festival created to move beyond traditional classroom theory and unleash hands-on, high-voltage engineering.
-            </p>
           </div>
 
-          {/* Main Story Bento Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-14">
-            {/* Story Card Left */}
-            <div className="lg:col-span-7 p-6 sm:p-8 bg-[#FFFBEB] border-[3px] border-black shadow-[8px_8px_0px_#000000] flex flex-col justify-between">
-              <div>
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-12 h-12 bg-[#FF5252] border-2 border-black shadow-[3px_3px_0px_#000000] flex items-center justify-center font-black text-black">
-                    <Flame className="w-7 h-7" />
-                  </div>
-                  <div>
-                    <span className="text-xs font-black uppercase text-black bg-[#FFEB3B] px-2 py-0.5 border border-black">
-                      FOUNDATIONAL MISSION
-                    </span>
-                    <h3 className="text-2xl sm:text-3xl font-black text-black mt-1">
-                      Pure Engineering. Zero Paperwork.
-                    </h3>
-                  </div>
-                </div>
+          {/* ── Mission Statement Callout ── */}
+          <div className="mb-12 p-6 sm:p-10 bg-black text-[#FFEB3B] border-[3px] border-black shadow-[8px_8px_0px_#FFEB3B]">
+            <p className="text-xs sm:text-sm font-black uppercase tracking-widest text-[#FFEB3B] opacity-70 mb-3">
+              Our Mission
+            </p>
+            <p className="text-xl sm:text-3xl font-black leading-snug text-[#FFEB3B]">
+              &quot;To replace foam boards and PowerPoints with solder, steel, and actual working machines — where engineering is proven, not presented.&quot;
+            </p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              {[
+                "Hands-On Hardware Competition",
+                "No Rote Presentations",
+                "Live Arena Judging",
+                "Real-Time Digital Scoring",
+                "Inter-School Glory",
+              ].map((tag) => (
+                <span key={tag} className="bg-[#FFEB3B] text-black border-2 border-black px-3 py-1 text-xs font-black uppercase shadow-[2px_2px_0px_#FFEB3B]">
+                  ✦ {tag}
+                </span>
+              ))}
+            </div>
+          </div>
 
-                <div className="space-y-4 text-sm sm:text-base font-medium text-slate-900 leading-relaxed">
-                  <p>
-                    For years, science exhibitions rewarded foam-board poster boards and canned presentations. <strong>SPARK was built to break that mold.</strong>
-                  </p>
-                  <p>
-                    Hosted across our sprawling engineering campus, visiting high schools field their sharpest student tinkerers under the guidance of <strong>one designated faculty coordinator</strong>. Over the course of a single action-packed day starting at <strong>07:00 AM on 5/11/2026</strong>, teams will program, fabricate, solder, stress-test, and deploy functional hardware machines in front of a live arena crowd.
-                  </p>
-                  <p>
-                    Whether it is engineering an obstacle-clearing autonomous chassis in the <em>Robotics Arena</em>, transforming industrial scrap into functional machinery in <em>Build from Scrap</em>, or writing intricate embedded logic for absurd comedy contraptions in <em>Useless Projects</em> — SPARK celebrates the raw thrill of making things work.
-                  </p>
+          {/* ── Story + Delegation Grid ── */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-12">
+            {/* Origin Story */}
+            <div className="lg:col-span-7 bg-[#FFFBEB] border-[3px] border-black shadow-[8px_8px_0px_#000000] flex flex-col">
+              <div className="p-6 sm:p-8 border-b-[3px] border-black flex items-center gap-3">
+                <div className="w-11 h-11 bg-[#FF5252] border-2 border-black shadow-[3px_3px_0px_#000000] flex items-center justify-center flex-shrink-0">
+                  <Flame className="w-6 h-6 text-black" />
+                </div>
+                <div>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-black bg-[#FFEB3B] px-2 py-0.5 border border-black">
+                    THE STORY
+                  </span>
+                  <h3 className="text-xl sm:text-2xl font-black text-black mt-0.5">Why SPARK Exists</h3>
                 </div>
               </div>
-
-              <div className="mt-8 pt-6 border-t-2 border-black flex flex-wrap items-center gap-3">
-                <span className="bg-[#4CAF50] text-black border-2 border-black px-3 py-1 text-xs font-black uppercase shadow-[2px_2px_0px_#000000]">
-                  ✓ 100% Tangible Working Prototypes
-                </span>
-                <span className="bg-[#2196F3] text-black border-2 border-black px-3 py-1 text-xs font-black uppercase shadow-[2px_2px_0px_#000000]">
-                  ✓ Live Telemetry Scoring
-                </span>
-                <span className="bg-[#FFEB3B] text-black border-2 border-black px-3 py-1 text-xs font-black uppercase shadow-[2px_2px_0px_#000000]">
-                  ✓ Institutional Rolling Trophy
-                </span>
+              <div className="p-6 sm:p-8 flex-1 space-y-4 text-sm sm:text-base font-medium text-slate-900 leading-relaxed">
+                <p>
+                  SPARK — <strong>Student Projects &amp; Robo Kreations</strong> — was conceived by the faculty of ACE Engineering College to give inter-school students a stage that rewards <em>actual engineering output</em>, not theoretical presentation.
+                </p>
+                <p>
+                  Visiting school delegations arrive at 07:00 AM, check in their full squad with a single QR scan, and immediately enter the arena. Over one adrenaline-charged day, student teams program, fabricate, solder, and stress-test functional machines under live judging — every run, every failure, and every breakthrough captured in real-time digital scoring.
+                </p>
+                <p>
+                  The winning institution earns the <strong>SPARK Rolling Trophy</strong> — and the mandate to raise the bar even higher at the next edition.
+                </p>
+              </div>
+              <div className="px-6 sm:px-8 pb-6 pt-2 border-t-[3px] border-black flex flex-wrap gap-2.5">
+                <span className="bg-[#4CAF50] text-black border-2 border-black px-3 py-1 text-xs font-black uppercase shadow-[2px_2px_0px_#000000]">✓ 100% Working Prototypes</span>
+                <span className="bg-[#2196F3] text-black border-2 border-black px-3 py-1 text-xs font-black uppercase shadow-[2px_2px_0px_#000000]">✓ Live Digital Scoring</span>
+                <span className="bg-[#FFEB3B] text-black border-2 border-black px-3 py-1 text-xs font-black uppercase shadow-[2px_2px_0px_#000000]">✓ Rolling Trophy</span>
               </div>
             </div>
 
-            {/* Delegation & Minor Privacy Feature Card Right */}
-            <div className="lg:col-span-5 p-6 sm:p-8 bg-[#2196F3] border-[3px] border-black shadow-[8px_8px_0px_#000000] text-black flex flex-col justify-between">
-              <div>
-                <div className="w-12 h-12 bg-white border-2 border-black shadow-[3px_3px_0px_#000000] flex items-center justify-center font-black text-black mb-6">
-                  <ShieldCheck className="w-7 h-7" />
+            {/* Delegation Protocol */}
+            <div className="lg:col-span-5 bg-[#2196F3] border-[3px] border-black shadow-[8px_8px_0px_#000000] flex flex-col">
+              <div className="p-6 sm:p-8 border-b-[3px] border-black flex items-center gap-3">
+                <div className="w-11 h-11 bg-white border-2 border-black shadow-[3px_3px_0px_#000000] flex items-center justify-center flex-shrink-0">
+                  <ShieldCheck className="w-6 h-6 text-black" />
                 </div>
-                <span className="text-xs font-black uppercase bg-[#FFEB3B] text-black px-2 py-0.5 border border-black shadow-[2px_2px_0px_#000000]">
-                  THE DELEGATION PROTOCOL
-                </span>
-                <h3 className="text-2xl sm:text-3xl font-black text-black mt-2 leading-tight">
-                  1 Faculty Lead + Privacy-First Squads
-                </h3>
-
-                <div className="mt-5 space-y-3.5 text-sm font-bold text-black leading-relaxed">
-                  <div className="p-3 bg-white border-2 border-black shadow-[3px_3px_0px_#000000]">
-                    <p className="font-black text-xs uppercase text-black">NO STUDENT PHONES OR ACCOUNTS</p>
-                    <p className="text-xs text-slate-800 font-medium mt-1">
-                      Students are minors and never need to register accounts, share phone numbers, or download apps. Their records are held securely by their faculty advisor.
-                    </p>
-                  </div>
-
-                  <div className="p-3 bg-white border-2 border-black shadow-[3px_3px_0px_#000000]">
-                    <p className="font-black text-xs uppercase text-black">ONE MASTER QR PASS PER SCHOOL</p>
-                    <p className="text-xs text-slate-800 font-medium mt-1">
-                      Faculty leads receive a single cryptographically signed Master QR Ticket. Arriving at the desk, scanning it checks in their entire delegation in under 30 seconds.
-                    </p>
-                  </div>
-
-                  <div className="p-3 bg-white border-2 border-black shadow-[3px_3px_0px_#000000]">
-                    <p className="font-black text-xs uppercase text-black">FACULTY HOSPITALITY SUITE</p>
-                    <p className="text-xs text-slate-800 font-medium mt-1">
-                      Visiting educators receive reserved faculty lounge access, travel honorarium desks, and real-time alerts on their student teams’ status.
-                    </p>
-                  </div>
+                <div>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-black bg-[#FFEB3B] px-2 py-0.5 border border-black">
+                    PARTICIPATION MODEL
+                  </span>
+                  <h3 className="text-xl sm:text-2xl font-black text-black mt-0.5">Privacy-First Squads</h3>
                 </div>
               </div>
-
-              <div className="mt-6 pt-4 border-t-2 border-black">
+              <div className="p-6 sm:p-8 flex-1 space-y-3">
+                {[
+                  { title: "No Student Accounts Required", desc: "Students are minors. They never register individually, share phone numbers, or install any app. All records are managed solely by their faculty lead." },
+                  { title: "One QR Pass — Entire Delegation", desc: "The faculty coordinator holds one cryptographically signed Master QR Ticket. A single scan at the gate checks in the entire school squad in under 30 seconds." },
+                  { title: "Faculty Hospitality Suite", desc: "Visiting faculty receive reserved lounge access, travel honorarium processing, and live push notifications on every team update." },
+                  { title: "End-to-End Secure Records", desc: "All team and performance data is stored in a zero-trust backend with row-level security — visible only to authorised coordinators." },
+                ].map((item) => (
+                  <div key={item.title} className="p-3.5 bg-white border-2 border-black shadow-[3px_3px_0px_#000000]">
+                    <p className="font-black text-xs uppercase text-black tracking-wide">{item.title}</p>
+                    <p className="text-xs text-slate-800 font-medium mt-1 leading-relaxed">{item.desc}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="px-6 sm:px-8 pb-6 pt-2 border-t-[3px] border-black">
                 <Link href="/register">
                   <Button variant="primary" className="w-full text-xs font-black uppercase tracking-wider shadow-[3px_3px_0px_#000000]">
                     Register Your School Delegation
@@ -364,38 +378,49 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* 3 Pillars of SPARK */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="p-6 bg-white border-[3px] border-black shadow-[6px_6px_0px_#000000]">
-              <div className="w-10 h-10 bg-[#FFEB3B] border-2 border-black flex items-center justify-center font-black text-black shadow-[2px_2px_0px_#000000] mb-4">
-                1
+          {/* ── Live Stats Banner ── */}
+          <div className="mb-12 grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {[
+              { label: "Registered Schools", value: schools.length || "—", color: "bg-[#FFEB3B]", Icon: Building2 },
+              { label: "Student Squads", value: teams.length || "—", color: "bg-[#FF5252]", Icon: Users },
+              { label: "Competition Arenas", value: tracks.length || 3, color: "bg-[#4CAF50]", Icon: Award },
+              { label: "Prize Purse", value: "₹75K+", color: "bg-[#2196F3]", Icon: Trophy },
+            ].map(({ label, value, color, Icon }) => (
+              <div key={label} className={`p-5 ${color} border-[3px] border-black shadow-[5px_5px_0px_#000000] text-center`}>
+                <Icon className="w-5 h-5 mx-auto mb-2 text-black" />
+                <div className="text-3xl font-black font-mono text-black leading-none">{value}</div>
+                <div className="text-[11px] font-black uppercase tracking-wider text-black mt-2 border-t-2 border-black pt-1.5">{label}</div>
               </div>
-              <h4 className="text-xl font-black text-black">Rigorous Scrutiny & Safety</h4>
-              <p className="text-sm font-medium text-slate-800 mt-2 leading-relaxed">
-                Every machine undergoes electrical scrutiny (voltage limits, kill switches, weight classes) and scrap bay PPE checks before any competition run.
-              </p>
-            </div>
+            ))}
+          </div>
 
-            <div className="p-6 bg-white border-[3px] border-black shadow-[6px_6px_0px_#000000]">
-              <div className="w-10 h-10 bg-[#4CAF50] border-2 border-black flex items-center justify-center font-black text-black shadow-[2px_2px_0px_#000000] mb-4">
-                2
-              </div>
-              <h4 className="text-xl font-black text-black">Transparent Weighted Scoring</h4>
-              <p className="text-sm font-medium text-slate-800 mt-2 leading-relaxed">
-                Official criteria weights are published in advance. Event Coordinators log rubric scores digitally with automatic tie-break algorithms and tamper-proof lockouts.
-              </p>
+          {/* ── 3 Pillars ── */}
+          <div>
+            <div className="text-center mb-8">
+              <span className="inline-block bg-black text-[#FFEB3B] px-3 py-1 text-xs font-black uppercase tracking-widest border-2 border-black">
+                THE THREE PILLARS OF SPARK
+              </span>
             </div>
-
-            <div className="p-6 bg-white border-[3px] border-black shadow-[6px_6px_0px_#000000]">
-              <div className="w-10 h-10 bg-[#FF5252] border-2 border-black flex items-center justify-center font-black text-black shadow-[2px_2px_0px_#000000] mb-4">
-                3
-              </div>
-              <h4 className="text-xl font-black text-black">Industry & College Mentors</h4>
-              <p className="text-sm font-medium text-slate-800 mt-2 leading-relaxed">
-                Jury panels consist of collegiate engineering faculty, robotics researchers, and creative fabrication experts who provide constructive feedback to participants.
-              </p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {[
+                { num: "01", color: "bg-[#FFEB3B]", title: "Rigorous Machine Scrutiny", desc: "Every build undergoes a mandatory safety inspection — voltage ceilings, kill-switch verification, structural stress tests, and PPE compliance — before any competition run begins.", Icon: ShieldCheck },
+                { num: "02", color: "bg-[#4CAF50]", title: "Weighted Transparent Scoring", desc: "Judging criteria and their exact weights are published before the event. Coordinators enter rubric marks digitally; the system applies tie-break algorithms automatically with tamper-proof audit logs.", Icon: Award },
+                { num: "03", color: "bg-[#FF5252]", title: "Expert Panel & Mentorship", desc: "Jury panels include collegiate engineering faculty, practising robotics engineers, and fabrication specialists. Every team receives a written feedback report at the end of their run.", Icon: Users },
+              ].map(({ num, color, title, desc, Icon }) => (
+                <div key={num} className="p-6 bg-white border-[3px] border-black shadow-[6px_6px_0px_#000000] hover:-translate-y-1 hover:shadow-[8px_8px_0px_#000000] transition-all">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className={`w-11 h-11 ${color} border-2 border-black flex items-center justify-center font-black text-black text-lg shadow-[2px_2px_0px_#000000]`}>
+                      {num}
+                    </div>
+                    <Icon className="w-6 h-6 text-black" />
+                  </div>
+                  <h4 className="text-xl font-black text-black mb-2">{title}</h4>
+                  <p className="text-sm font-medium text-slate-800 leading-relaxed">{desc}</p>
+                </div>
+              ))}
             </div>
           </div>
+
         </div>
       </section>
 
