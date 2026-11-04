@@ -83,13 +83,17 @@ export default function RegisterSchoolPage() {
           return;
         }
 
-        // 2. Generate unique school code
+        // 2. Generate unique school code & deterministic school UUID
         const code = `SCH-${formData.city.substring(0, 3).toUpperCase()}-${Math.floor(100 + Math.random() * 900)}`;
+        const schoolId = typeof crypto !== "undefined" && typeof crypto.randomUUID === "function" 
+          ? crypto.randomUUID() 
+          : "00000000-0000-0000-0000-" + Math.random().toString(16).substring(2, 14).padEnd(12, "0");
 
-        // 3. Insert School into Supabase
-        const { data: schoolData, error: schoolError } = await supabase
+        // 3. Insert School into Supabase (without .select() to avoid RLS returning scan failure)
+        const { error: schoolError } = await supabase
           .from("schools")
           .insert({
+            id: schoolId,
             name: formData.schoolName,
             code,
             city: formData.city,
@@ -98,15 +102,25 @@ export default function RegisterSchoolPage() {
             contact_phone: formData.contactPhone,
             status: "pending",
             arrived: false,
-          })
-          .select()
-          .single();
+          });
 
         if (schoolError) {
           setErrors({ form: schoolError.message });
           setIsSubmitting(false);
           return;
         }
+
+        const schoolData = {
+          id: schoolId,
+          name: formData.schoolName,
+          code,
+          city: formData.city,
+          address: formData.address,
+          contact_email: formData.contactEmail,
+          contact_phone: formData.contactPhone,
+          status: "pending",
+          arrived: false,
+        };
 
         // 4. Update Profile in Supabase
         if (authData.user) {
