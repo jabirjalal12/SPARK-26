@@ -321,11 +321,10 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* ── Story + Delegation Grid ── */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-12">
-            {/* About SPARK Section */}
-            <div className="lg:col-span-7 bg-[#FFFBEB] border-[3px] border-black shadow-[8px_8px_0px_#000000] flex flex-col">
-              <div className="p-6 sm:p-8 border-b-[3px] border-black flex items-center gap-3">
+          {/* ── About The SPARK (Full Width) ── */}
+          <div className="w-full bg-[#FFFBEB] border-[3px] border-black shadow-[8px_8px_0px_#000000] flex flex-col mb-12">
+            <div className="p-6 sm:p-8 border-b-[3px] border-black flex flex-wrap items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
                 <div className="w-11 h-11 bg-[#FF5252] border-2 border-black shadow-[3px_3px_0px_#000000] flex items-center justify-center flex-shrink-0">
                   <Flame className="w-6 h-6 text-black" />
                 </div>
@@ -335,58 +334,28 @@ export default function LandingPage() {
                   </h3>
                 </div>
               </div>
-              <div className="p-6 sm:p-8 flex-1 space-y-4 text-sm sm:text-base font-medium text-slate-900 leading-relaxed">
-                <p>
-                  <strong>SPARK</strong> is a comprehensive technical fest conceived to give inter-school students a vibrant platform that champions hands-on engineering, creative problem-solving, and practical innovation over theoretical presentations.
-                </p>
-                <p>
-                  Hosted across the college campus, visiting school delegations field student squads under the mentorship of their faculty leads. From robotics challenges and scrap-material fabrication to creative engineering and hardware design, teams collaborate, construct, test, and demonstrate working projects under live panel evaluation.
-                </p>
-                <p>
-                  With transparent rubrics, real-time digital scoring, and constructive feedback from collegiate educators, SPARK celebrates all-round technical excellence — with the top-performing school clinching the prestigious <strong>SPARK Rolling Trophy</strong>.
-                </p>
-              </div>
-              <div className="px-6 sm:px-8 pb-6 pt-2 border-t-[3px] border-black flex flex-wrap gap-2.5">
-                <span className="bg-[#4CAF50] text-black border-2 border-black px-3 py-1 text-xs font-black uppercase shadow-[2px_2px_0px_#000000]">✓ 100% Working Prototypes</span>
-                <span className="bg-[#2196F3] text-black border-2 border-black px-3 py-1 text-xs font-black uppercase shadow-[2px_2px_0px_#000000]">✓ Live Digital Scoring</span>
-                <span className="bg-[#FFEB3B] text-black border-2 border-black px-3 py-1 text-xs font-black uppercase shadow-[2px_2px_0px_#000000]">✓ Rolling Trophy</span>
-              </div>
+              <Link href="/register">
+                <Button variant="yellow" size="sm" className="text-xs font-black uppercase tracking-wider shadow-[3px_3px_0px_#000000]">
+                  Register School Delegation
+                  <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
+                </Button>
+              </Link>
             </div>
-
-            {/* Delegation Protocol */}
-            <div className="lg:col-span-5 bg-[#2196F3] border-[3px] border-black shadow-[8px_8px_0px_#000000] flex flex-col">
-              <div className="p-6 sm:p-8 border-b-[3px] border-black flex items-center gap-3">
-                <div className="w-11 h-11 bg-white border-2 border-black shadow-[3px_3px_0px_#000000] flex items-center justify-center flex-shrink-0">
-                  <ShieldCheck className="w-6 h-6 text-black" />
-                </div>
-                <div>
-                  <span className="text-[10px] font-black uppercase tracking-widest text-black bg-[#FFEB3B] px-2 py-0.5 border border-black">
-                    PARTICIPATION MODEL
-                  </span>
-                  <h3 className="text-xl sm:text-2xl font-black text-black mt-0.5">Privacy-First Squads</h3>
-                </div>
-              </div>
-              <div className="p-6 sm:p-8 flex-1 space-y-3">
-                {[
-                  { title: "No Student Accounts Required", desc: "Students are minors. They never register individually, share phone numbers, or install any app. All records are managed solely by their faculty lead." },
-                  { title: "One QR Pass — Entire Delegation", desc: "The faculty coordinator holds one cryptographically signed Master QR Ticket. A single scan at the gate checks in the entire school squad in under 30 seconds." },
-                  { title: "Faculty Hospitality Suite", desc: "Visiting faculty receive reserved lounge access, travel honorarium processing, and live push notifications on every team update." },
-                  { title: "End-to-End Secure Records", desc: "All team and performance data is stored in a zero-trust backend with row-level security — visible only to authorised coordinators." },
-                ].map((item) => (
-                  <div key={item.title} className="p-3.5 bg-white border-2 border-black shadow-[3px_3px_0px_#000000]">
-                    <p className="font-black text-xs uppercase text-black tracking-wide">{item.title}</p>
-                    <p className="text-xs text-slate-800 font-medium mt-1 leading-relaxed">{item.desc}</p>
-                  </div>
-                ))}
-              </div>
-              <div className="px-6 sm:px-8 pb-6 pt-2 border-t-[3px] border-black">
-                <Link href="/register">
-                  <Button variant="primary" className="w-full text-xs font-black uppercase tracking-wider shadow-[3px_3px_0px_#000000]">
-                    Register Your School Delegation
-                    <ArrowRight className="h-4 w-4 ml-1" />
-                  </Button>
-                </Link>
-              </div>
+            <div className="p-6 sm:p-8 flex-1 space-y-4 text-sm sm:text-base font-medium text-slate-900 leading-relaxed">
+              <p>
+                <strong>SPARK</strong> is a comprehensive technical fest conceived to give inter-school students a vibrant platform that champions hands-on engineering, creative problem-solving, and practical innovation over theoretical presentations.
+              </p>
+              <p>
+                Hosted across the college campus, visiting school delegations field student squads under the mentorship of their faculty leads. From robotics challenges and scrap-material fabrication to creative engineering and hardware design, teams collaborate, construct, test, and demonstrate working projects under live panel evaluation.
+              </p>
+              <p>
+                With transparent rubrics, real-time digital scoring, and constructive feedback from collegiate educators, SPARK celebrates all-round technical excellence — with the top-performing school clinching the prestigious <strong>SPARK Rolling Trophy</strong>.
+              </p>
+            </div>
+            <div className="px-6 sm:px-8 pb-6 pt-3 border-t-[3px] border-black flex flex-wrap gap-2.5">
+              <span className="bg-[#4CAF50] text-black border-2 border-black px-3 py-1 text-xs font-black uppercase shadow-[2px_2px_0px_#000000]">✓ 100% Working Prototypes</span>
+              <span className="bg-[#2196F3] text-black border-2 border-black px-3 py-1 text-xs font-black uppercase shadow-[2px_2px_0px_#000000]">✓ Live Digital Scoring</span>
+              <span className="bg-[#FFEB3B] text-black border-2 border-black px-3 py-1 text-xs font-black uppercase shadow-[2px_2px_0px_#000000]">✓ Rolling Trophy</span>
             </div>
           </div>
 
