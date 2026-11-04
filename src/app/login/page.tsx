@@ -242,7 +242,7 @@ export default function LoginPage() {
         } else if (profile?.role === "volunteer" || isVol) {
           destination = "/volunteer/duties";
         } else if (profile?.role === "event_coordinator" || isCoord) {
-          destination = "/organizer/schedule";
+          destination = "/dashboard";
         } else if (profile?.role === "registration_head" || isRegHead) {
           destination = "/organizer/schools";
         } else {

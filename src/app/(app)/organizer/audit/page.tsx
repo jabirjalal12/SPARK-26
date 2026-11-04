@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import { useFestStore } from "@/lib/store";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Badge } from "@/components/ui/badge";
@@ -13,7 +14,7 @@ import {
 } from "lucide-react";
 
 export default function OrganizerAuditPage() {
-  const { auditLogs } = useFestStore();
+  const { auditLogs, isSuperAdmin } = useFestStore();
   const [search, setSearch] = useState("");
 
   const filteredLogs = auditLogs.filter(
@@ -22,6 +23,29 @@ export default function OrganizerAuditPage() {
       log.target_type.toLowerCase().includes(search.toLowerCase()) ||
       (log.actor_id && log.actor_id.toLowerCase().includes(search.toLowerCase()))
   );
+
+  // Route Guard: Super Admin Only
+  if (!isSuperAdmin) {
+    return (
+      <div className="max-w-xl mx-auto mt-12 p-8 border-[3px] border-black bg-white shadow-[6px_6px_0px_#000000] text-center">
+        <div className="w-12 h-12 bg-[#FF5252] border-2 border-black flex items-center justify-center mx-auto mb-4 shadow-[2px_2px_0px_#000]">
+          <ShieldCheck className="w-6 h-6 text-black" />
+        </div>
+        <h2 className="text-xl font-black text-black">Super Admin Clearance Required</h2>
+        <p className="text-xs font-bold text-slate-700 mt-2">
+          The compliance security audit trail is classified and only accessible by Super Administrators.
+        </p>
+        <div className="mt-6">
+          <Link
+            href="/dashboard"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-[#FFEB3B] hover:bg-black hover:text-white border-2 border-black font-black text-xs shadow-[2px_2px_0px_#000000] transition-colors"
+          >
+            <span>Return to Operations Hub</span>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">

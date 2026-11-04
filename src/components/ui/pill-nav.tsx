@@ -96,16 +96,15 @@ export function PillNav() {
       ];
     }
 
-    // Event Coordinator Real Role
+    // Event Coordinator Real Role - strictly the operational windows they need
     if (role === "event_coordinator") {
       return [
-        { href: "/dashboard", label: "Telemetry", icon: Home },
+        { href: "/dashboard", label: "Operations Hub", icon: Home },
         { href: "/organizer/schedule", label: "Schedule", icon: Calendar },
         { href: "/organizer/scoring", label: "Scoring", icon: Sparkles },
-        { href: "/volunteer/issues", label: "Issues", icon: AlertTriangle },
+        { href: "/volunteer/issues", label: "Help Desk & Issues", icon: AlertTriangle },
         { href: "/announcements", label: "Broadcast", icon: Bell },
-        { href: "/organizer/export", label: "Export", icon: Sliders },
-        { href: "/organizer/audit", label: "Audit Log", icon: History },
+        { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
       ];
     }
 

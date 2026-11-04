@@ -14,6 +14,7 @@ import {
   Award,
   Building2,
   ShieldCheck,
+  ShieldAlert,
   Sparkles,
   ArrowRight,
   Printer,

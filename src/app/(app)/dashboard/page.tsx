@@ -29,6 +29,7 @@ import {
   Lock,
   FileText,
   Settings,
+  Bell,
 } from "lucide-react";
 
 export default function DashboardPage() {
@@ -48,6 +49,7 @@ export default function DashboardPage() {
     resultsPublished,
     togglePublishResults,
     volunteerDuties,
+    schedule,
   } = useFestStore();
 
   const role = currentProfile.role;
@@ -109,7 +111,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Quick context CTA */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             {isSuperAdmin && (
               <div className="flex items-center gap-2">
                 <Link href="/passes?create=true">
@@ -122,6 +124,44 @@ export default function DashboardPage() {
                   <Button size="sm" variant={resultsPublished ? "green" : "secondary"} className="text-xs font-black border-2 border-black shadow-[2px_2px_0px_#000000]">
                     <Trophy className="w-4 h-4 mr-1.5" />
                     <span>{resultsPublished ? "Results Published" : "Publish Results"}</span>
+                  </Button>
+                </Link>
+              </div>
+            )}
+            {role === "event_coordinator" && (
+              <div className="flex items-center gap-2">
+                <Link href="/volunteer/issues">
+                  <Button size="sm" variant={openIssues > 0 ? "danger" : "yellow"} className="text-xs font-black border-2 border-black shadow-[2px_2px_0px_#000000]">
+                    <AlertTriangle className="w-4 h-4 mr-1.5" />
+                    <span>Help Desk & Issues ({openIssues})</span>
+                  </Button>
+                </Link>
+                <Link href="/organizer/schedule">
+                  <Button size="sm" variant="secondary" className="text-xs font-black border-2 border-black shadow-[2px_2px_0px_#000000]">
+                    <Calendar className="w-4 h-4 mr-1.5" />
+                    <span>Schedule Editor</span>
+                  </Button>
+                </Link>
+                <Link href="/organizer/pass">
+                  <Button size="sm" variant="outline" className="text-xs font-black border-2 border-black shadow-[2px_2px_0px_#000000] bg-white">
+                    <QrCode className="w-4 h-4 mr-1.5" />
+                    <span>My Pass</span>
+                  </Button>
+                </Link>
+              </div>
+            )}
+            {role === "registration_head" && (
+              <div className="flex items-center gap-2">
+                <Link href="/organizer/schools">
+                  <Button size="sm" variant="yellow" className="text-xs font-black border-2 border-black shadow-[2px_2px_0px_#000000]">
+                    <ShieldCheck className="w-4 h-4 mr-1.5" />
+                    <span>School Approvals</span>
+                  </Button>
+                </Link>
+                <Link href="/organizer/checkins">
+                  <Button size="sm" variant="secondary" className="text-xs font-black border-2 border-black shadow-[2px_2px_0px_#000000]">
+                    <RotateCcw className="w-4 h-4 mr-1.5" />
+                    <span>Arrivals & Undo</span>
                   </Button>
                 </Link>
               </div>
@@ -201,65 +241,378 @@ export default function DashboardPage() {
       </div>
 
       {/* Role-Adaptive Content Section */}
-      {role === "organizer" && (
+
+      {/* 1. EVENT COORDINATOR COMMAND PANEL - STRICTLY THEIR SPECIFIC WINDOWS */}
+      {role === "event_coordinator" && (
         <div className="space-y-6">
-          {/* Sub-Role Quick Action Dashboard */}
+          {/* Operations Windows Grid */}
+          <div className="p-6 border-[3px] border-black bg-white shadow-[6px_6px_0px_#000000]">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-4 pb-3 border-b-2 border-black">
+              <div>
+                <h2 className="text-base font-black uppercase tracking-tight text-black flex items-center gap-2">
+                  <ShieldCheck className="w-5 h-5 text-black" />
+                  <span>Event Operations Control Panel</span>
+                </h2>
+                <p className="text-xs font-bold text-slate-700 mt-0.5">
+                  Streamlined command center for arena heats, judge scoring, venue timetables, and emergency field dispatches.
+                </p>
+              </div>
+              <span className="text-xs font-black uppercase bg-[#FFEB3B] text-black border-2 border-black px-2.5 py-1 shadow-[2px_2px_0px_#000000]">
+                ARENA OPERATIONS HQ
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
+              {/* Window 1: Event Schedule & Timelines */}
+              <Link href="/organizer/schedule" className="block group">
+                <div className="p-4 border-[3px] border-black bg-[#FFFBEB] group-hover:bg-[#FFEB3B] shadow-[3px_3px_0px_#000000] group-hover:-translate-x-0.5 group-hover:-translate-y-0.5 transition-all">
+                  <div className="flex items-center justify-between mb-2">
+                    <Calendar className="w-6 h-6 text-black" />
+                    <span className="text-[10px] font-mono font-black uppercase px-1.5 py-0.5 bg-black text-white">
+                      {schedule.length} Events
+                    </span>
+                  </div>
+                  <p className="font-black text-sm text-black">Event Schedule & Timelines</p>
+                  <p className="text-[11px] font-bold text-slate-700 mt-1">
+                    Manage track slots, heat timetables, stage assignments, and venue auditoriums.
+                  </p>
+                  <div className="mt-3 font-black text-black text-[11px] flex items-center gap-1 group-hover:underline">
+                    <span>Open Schedule Editor</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </div>
+                </div>
+              </Link>
+
+              {/* Window 2: Track Scoring Oversight */}
+              <Link href="/organizer/scoring" className="block group">
+                <div className="p-4 border-[3px] border-black bg-[#FFFBEB] group-hover:bg-[#4CAF50]/20 shadow-[3px_3px_0px_#000000] group-hover:-translate-x-0.5 group-hover:-translate-y-0.5 transition-all">
+                  <div className="flex items-center justify-between mb-2">
+                    <Sparkles className="w-6 h-6 text-black" />
+                    <span className="text-[10px] font-mono font-black uppercase px-1.5 py-0.5 bg-black text-white">
+                      {scores.length} Marks Entered
+                    </span>
+                  </div>
+                  <p className="font-black text-sm text-black">Track Scoring Oversight</p>
+                  <p className="text-[11px] font-bold text-slate-700 mt-1">
+                    Monitor live judge marks, enter evaluations across all 3 tracks, and review rubric criteria.
+                  </p>
+                  <div className="mt-3 font-black text-black text-[11px] flex items-center gap-1 group-hover:underline">
+                    <span>Open Scoring Terminal</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </div>
+                </div>
+              </Link>
+
+              {/* Window 3: Help Desk Dispatches & Field Issues */}
+              <Link href="/volunteer/issues" className="block group">
+                <div className={`p-4 border-[3px] border-black shadow-[3px_3px_0px_#000000] group-hover:-translate-x-0.5 group-hover:-translate-y-0.5 transition-all ${
+                  openIssues > 0 ? "bg-[#FF5252]/15 group-hover:bg-[#FF5252]/25" : "bg-[#FFFBEB] group-hover:bg-[#FFEB3B]"
+                }`}>
+                  <div className="flex items-center justify-between mb-2">
+                    <AlertTriangle className={`w-6 h-6 ${openIssues > 0 ? "text-[#D32F2F]" : "text-black"}`} />
+                    <span className={`text-[10px] font-mono font-black uppercase px-1.5 py-0.5 border border-black ${
+                      openIssues > 0 ? "bg-[#FF5252] text-black" : "bg-black text-white"
+                    }`}>
+                      {openIssues} Action Needed
+                    </span>
+                  </div>
+                  <p className="font-black text-sm text-black">Help Desk & Field Dispatches</p>
+                  <p className="text-[11px] font-bold text-slate-700 mt-1">
+                    Direct column for landing page attendee inquiries and ground volunteer incident reports.
+                  </p>
+                  <div className="mt-3 font-black text-black text-[11px] flex items-center gap-1 group-hover:underline">
+                    <span>Manage Dispatches</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </div>
+                </div>
+              </Link>
+
+              {/* Window 4: Arena Announcements & Stage Broadcast */}
+              <Link href="/announcements" className="block group">
+                <div className="p-4 border-[3px] border-black bg-[#FFFBEB] group-hover:bg-[#2196F3]/20 shadow-[3px_3px_0px_#000000] group-hover:-translate-x-0.5 group-hover:-translate-y-0.5 transition-all">
+                  <div className="flex items-center justify-between mb-2">
+                    <Bell className="w-6 h-6 text-black" />
+                    <span className="text-[10px] font-mono font-black uppercase px-1.5 py-0.5 bg-black text-white">
+                      Live Broadcast
+                    </span>
+                  </div>
+                  <p className="font-black text-sm text-black">Arena Broadcasts & Stage Notices</p>
+                  <p className="text-[11px] font-bold text-slate-700 mt-1">
+                    Push flash bulletins, podium heat summons, and schedule alerts directly to venue attendees.
+                  </p>
+                  <div className="mt-3 font-black text-black text-[11px] flex items-center gap-1 group-hover:underline">
+                    <span>Post Stage Broadcast</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </div>
+                </div>
+              </Link>
+
+              {/* Window 5: Live Leaderboard & Standings */}
+              <Link href="/leaderboard" className="block group">
+                <div className="p-4 border-[3px] border-black bg-[#FFFBEB] group-hover:bg-[#FFEB3B] shadow-[3px_3px_0px_#000000] group-hover:-translate-x-0.5 group-hover:-translate-y-0.5 transition-all">
+                  <div className="flex items-center justify-between mb-2">
+                    <Trophy className="w-6 h-6 text-black" />
+                    <span className="text-[10px] font-mono font-black uppercase px-1.5 py-0.5 bg-black text-white">
+                      {teams.length} Squads
+                    </span>
+                  </div>
+                  <p className="font-black text-sm text-black">Competitive Leaderboard</p>
+                  <p className="text-[11px] font-bold text-slate-700 mt-1">
+                    Live team standings, institutional rankings, and score tallies across all tracks.
+                  </p>
+                  <div className="mt-3 font-black text-black text-[11px] flex items-center gap-1 group-hover:underline">
+                    <span>View Live Rankings</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </div>
+                </div>
+              </Link>
+
+              {/* Window 6: Coordinator Official ID Badge */}
+              <Link href="/organizer/pass" className="block group">
+                <div className="p-4 border-[3px] border-black bg-[#FFFBEB] group-hover:bg-black group-hover:text-white shadow-[3px_3px_0px_#000000] group-hover:-translate-x-0.5 group-hover:-translate-y-0.5 transition-all">
+                  <div className="flex items-center justify-between mb-2">
+                    <QrCode className="w-6 h-6 text-black group-hover:text-white" />
+                    <span className="text-[10px] font-mono font-black uppercase px-1.5 py-0.5 bg-[#FF5252] text-black">
+                      Official ID
+                    </span>
+                  </div>
+                  <p className="font-black text-sm text-black group-hover:text-white">Coordinator ID Pass</p>
+                  <p className="text-[11px] font-bold text-slate-700 group-hover:text-slate-300 mt-1">
+                    View, download, and print your executive accreditation badge with full arena access.
+                  </p>
+                  <div className="mt-3 font-black text-black group-hover:text-[#FFEB3B] text-[11px] flex items-center gap-1 group-hover:underline">
+                    <span>View Accreditation Badge</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </div>
+                </div>
+              </Link>
+            </div>
+          </div>
+
+          {/* Coordinator Live Ops Feeds */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Feed 1: Help Desk & Field Dispatches Alert Box */}
+            <div className="p-5 border-[3px] border-black bg-white shadow-[6px_6px_0px_#000000]">
+              <div className="flex items-center justify-between pb-3 border-b-2 border-black mb-4">
+                <h3 className="font-black text-black text-sm flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 text-black" />
+                  <span>Ground Dispatches & Inquiries</span>
+                </h3>
+                <Link href="/volunteer/issues" className="text-xs font-bold text-black underline hover:bg-[#FFEB3B] px-1">
+                  View All ({issueReports.length})
+                </Link>
+              </div>
+
+              {issueReports.filter((i) => i.status !== "resolved").length === 0 ? (
+                <div className="p-6 border-2 border-dashed border-black bg-[#FFFBEB] text-center">
+                  <CheckCircle2 className="w-8 h-8 text-[#4CAF50] mx-auto mb-2" />
+                  <p className="text-xs font-black text-black">All Dispatches Clear</p>
+                  <p className="text-[11px] font-bold text-slate-600 mt-0.5">No open help desk questions or field incident reports at this time.</p>
+                </div>
+              ) : (
+                <div className="space-y-2.5">
+                  {issueReports
+                    .filter((i) => i.status !== "resolved")
+                    .slice(0, 4)
+                    .map((issue) => {
+                      const isHelpDesk = issue.title.startsWith("[Help Desk]");
+                      return (
+                        <div key={issue.id} className="p-3 border-2 border-black bg-[#FFFBEB] shadow-[2px_2px_0px_#000000] flex items-start justify-between gap-3 text-xs">
+                          <div className="space-y-1 flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className={`px-1.5 py-0.2 text-[10px] font-black uppercase border border-black ${
+                                isHelpDesk ? "bg-[#2196F3] text-white" : "bg-[#FF5252] text-black"
+                              }`}>
+                                {isHelpDesk ? "Help Desk" : "Field Alert"}
+                              </span>
+                              <span className="font-black text-black truncate">{issue.title}</span>
+                            </div>
+                            <p className="text-[11px] font-bold text-slate-700 line-clamp-1">{issue.description}</p>
+                          </div>
+                          <Link href="/volunteer/issues">
+                            <Button size="sm" variant="yellow" className="text-[11px] py-0.5 px-2 font-black border border-black">
+                              Resolve
+                            </Button>
+                          </Link>
+                        </div>
+                      );
+                    })}
+                </div>
+              )}
+            </div>
+
+            {/* Feed 2: Track Scoring Leaders Summary */}
+            <div className="p-5 border-[3px] border-black bg-white shadow-[6px_6px_0px_#000000]">
+              <div className="flex items-center justify-between pb-3 border-b-2 border-black mb-4">
+                <h3 className="font-black text-black text-sm flex items-center gap-2">
+                  <Trophy className="w-4 h-4 text-black" />
+                  <span>Track Evaluation & Leaders</span>
+                </h3>
+                <Link href="/organizer/scoring" className="text-xs font-bold text-black underline hover:bg-[#FFEB3B] px-1">
+                  Open Scoring Terminal
+                </Link>
+              </div>
+
+              <div className="space-y-3">
+                {tracks.map((track) => {
+                  const trackSquads = teams.filter((t) => t.track_id === track.id);
+                  const topTeam = [...trackSquads].sort((a, b) => (b.score_total || 0) - (a.score_total || 0))[0];
+
+                  return (
+                    <div key={track.id} className="p-3 border-2 border-black bg-[#FFFBEB] shadow-[2px_2px_0px_#000000] flex items-center justify-between text-xs">
+                      <div>
+                        <span className="font-black text-black block">{track.name}</span>
+                        <span className="text-slate-800 text-[11px] font-bold">
+                          Leading: <strong className="text-black">{topTeam?.name || "No marks yet"}</strong>
+                        </span>
+                      </div>
+                      <div className="text-right">
+                        <span className="font-mono font-black text-black bg-[#FFEB3B] border border-black px-2 py-0.5 inline-block">
+                          {topTeam?.score_total ? topTeam.score_total.toFixed(2) : "0.00"} pts
+                        </span>
+                        <p className="text-[10px] font-bold text-slate-600 mt-0.5">
+                          {trackSquads.length} squads competing
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 2. REGISTRATION HEAD COMMAND PANEL */}
+      {role === "registration_head" && (
+        <div className="space-y-6">
           <div className="p-6 border-[3px] border-black bg-white shadow-[6px_6px_0px_#000000]">
             <h2 className="text-sm font-black uppercase tracking-wider text-black mb-4 flex items-center gap-2">
               <ShieldCheck className="w-4 h-4" />
-              <span>{getSubRoleTitle()} Command Panel</span>
+              <span>Registration Operations Desk</span>
             </h2>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-              {(isSuperAdmin || isRegistrationHead) && (
-                <Link href="/organizer/schools" className="block">
-                  <div className="p-4 border-2 border-black bg-[#FFFBEB] hover:bg-[#FFEB3B] shadow-[2px_2px_0px_#000000] transition-all">
-                    <ShieldCheck className="w-5 h-5 text-black mb-2" />
-                    <p className="font-black text-black">School Approvals</p>
-                    <p className="text-[11px] font-bold text-slate-700 mt-0.5">Approve & Issue Tickets</p>
-                  </div>
-                </Link>
-              )}
+              <Link href="/organizer/schools" className="block">
+                <div className="p-4 border-2 border-black bg-[#FFFBEB] hover:bg-[#FFEB3B] shadow-[2px_2px_0px_#000000] transition-all">
+                  <ShieldCheck className="w-5 h-5 text-black mb-2" />
+                  <p className="font-black text-black">School Approvals</p>
+                  <p className="text-[11px] font-bold text-slate-700 mt-0.5">Approve & Issue Tickets</p>
+                </div>
+              </Link>
 
-              {(isSuperAdmin || isRegistrationHead) && (
-                <Link href="/organizer/checkins" className="block">
-                  <div className="p-4 border-2 border-black bg-[#FFFBEB] hover:bg-[#FFEB3B] shadow-[2px_2px_0px_#000000] transition-all">
-                    <RotateCcw className="w-5 h-5 text-black mb-2" />
-                    <p className="font-black text-black">Desk Arrivals & Undo</p>
-                    <p className="text-[11px] font-bold text-slate-700 mt-0.5">Undo mistaken check-ins</p>
-                  </div>
-                </Link>
-              )}
+              <Link href="/organizer/checkins" className="block">
+                <div className="p-4 border-2 border-black bg-[#FFFBEB] hover:bg-[#FFEB3B] shadow-[2px_2px_0px_#000000] transition-all">
+                  <RotateCcw className="w-5 h-5 text-black mb-2" />
+                  <p className="font-black text-black">Desk Arrivals & Undo</p>
+                  <p className="text-[11px] font-bold text-slate-700 mt-0.5">Undo mistaken check-ins</p>
+                </div>
+              </Link>
 
-              {(isSuperAdmin || isEventCoordinator) && (
-                <Link href="/organizer/scoring" className="block">
-                  <div className="p-4 border-2 border-black bg-[#FFFBEB] hover:bg-[#FFEB3B] shadow-[2px_2px_0px_#000000] transition-all">
-                    <Sparkles className="w-5 h-5 text-black mb-2" />
-                    <p className="font-black text-black">Score Entry</p>
-                    <p className="text-[11px] font-bold text-slate-700 mt-0.5">Score all 3 track arenas</p>
-                  </div>
-                </Link>
-              )}
+              <Link href="/faculty/students" className="block">
+                <div className="p-4 border-2 border-black bg-[#FFFBEB] hover:bg-[#FFEB3B] shadow-[2px_2px_0px_#000000] transition-all">
+                  <Users className="w-5 h-5 text-black mb-2" />
+                  <p className="font-black text-black">Rosters Overview</p>
+                  <p className="text-[11px] font-bold text-slate-700 mt-0.5">Student verification lists</p>
+                </div>
+              </Link>
 
-              {(isSuperAdmin || isEventCoordinator) && (
-                <Link href="/organizer/schedule" className="block">
-                  <div className="p-4 border-2 border-black bg-[#FFFBEB] hover:bg-[#FFEB3B] shadow-[2px_2px_0px_#000000] transition-all">
-                    <Calendar className="w-5 h-5 text-black mb-2" />
-                    <p className="font-black text-black">Schedule Editor</p>
-                    <p className="text-[11px] font-bold text-slate-700 mt-0.5">Edit timelines & venues</p>
-                  </div>
-                </Link>
-              )}
+              <Link href="/organizer/export" className="block">
+                <div className="p-4 border-2 border-black bg-[#FFFBEB] hover:bg-[#FFEB3B] shadow-[2px_2px_0px_#000000] transition-all">
+                  <Sliders className="w-5 h-5 text-black mb-2" />
+                  <p className="font-black text-black">Export Roster</p>
+                  <p className="text-[11px] font-bold text-slate-700 mt-0.5">Download full attendee CSV</p>
+                </div>
+              </Link>
+            </div>
+          </div>
 
-              {isSuperAdmin && (
-                <Link href="/organizer/results" className="block">
-                  <div className="p-4 border-2 border-black bg-[#FFFBEB] hover:bg-[#FFEB3B] shadow-[2px_2px_0px_#000000] transition-all">
-                    <Trophy className="w-5 h-5 text-black mb-2" />
-                    <p className="font-black text-black">Lock & Publish</p>
-                    <p className="text-[11px] font-bold text-slate-700 mt-0.5">SA Result Publishing</p>
+          {/* Recent School Arrival Logs */}
+          <div className="p-5 border-[3px] border-black bg-white shadow-[6px_6px_0px_#000000]">
+            <div className="flex items-center justify-between pb-3 border-b-2 border-black mb-4">
+              <h3 className="font-black text-black text-sm flex items-center gap-2">
+                <School className="w-4 h-4 text-black" />
+                <span>Institutional Arrival Stream</span>
+              </h3>
+              <Link href="/organizer/checkins" className="text-xs font-bold text-black underline hover:bg-[#FFEB3B] px-1">
+                All Arrivals
+              </Link>
+            </div>
+
+            <div className="space-y-2.5">
+              {schools.map((s) => (
+                <div key={s.id} className="p-3 border-2 border-black bg-[#FFFBEB] shadow-[2px_2px_0px_#000000] flex items-center justify-between text-xs">
+                  <div>
+                    <p className="font-black text-black">{s.name}</p>
+                    <p className="text-[11px] font-bold text-slate-700">Code: {s.code} • {s.city}</p>
                   </div>
-                </Link>
-              )}
+                  <Badge variant={s.arrived ? "success" : "warning"}>
+                    {s.arrived ? "Checked In" : "Expected"}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 3. SUPER ADMIN / CORE ORGANIZER HUB */}
+      {(isSuperAdmin || role === "super_admin" || role === "admin" || (role === "organizer" && activeOrganizerSubRole === "super_admin")) && (
+        <div className="space-y-6">
+          <div className="p-6 border-[3px] border-black bg-white shadow-[6px_6px_0px_#000000]">
+            <h2 className="text-sm font-black uppercase tracking-wider text-black mb-4 flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4" />
+              <span>Super Administrator Command Panel</span>
+            </h2>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+              <Link href="/organizer/schools" className="block">
+                <div className="p-4 border-2 border-black bg-[#FFFBEB] hover:bg-[#FFEB3B] shadow-[2px_2px_0px_#000000] transition-all">
+                  <ShieldCheck className="w-5 h-5 text-black mb-2" />
+                  <p className="font-black text-black">School Approvals</p>
+                  <p className="text-[11px] font-bold text-slate-700 mt-0.5">Approve & Issue Tickets</p>
+                </div>
+              </Link>
+
+              <Link href="/organizer/checkins" className="block">
+                <div className="p-4 border-2 border-black bg-[#FFFBEB] hover:bg-[#FFEB3B] shadow-[2px_2px_0px_#000000] transition-all">
+                  <RotateCcw className="w-5 h-5 text-black mb-2" />
+                  <p className="font-black text-black">Desk Arrivals & Undo</p>
+                  <p className="text-[11px] font-bold text-slate-700 mt-0.5">Undo mistaken check-ins</p>
+                </div>
+              </Link>
+
+              <Link href="/organizer/scoring" className="block">
+                <div className="p-4 border-2 border-black bg-[#FFFBEB] hover:bg-[#FFEB3B] shadow-[2px_2px_0px_#000000] transition-all">
+                  <Sparkles className="w-5 h-5 text-black mb-2" />
+                  <p className="font-black text-black">Score Entry</p>
+                  <p className="text-[11px] font-bold text-slate-700 mt-0.5">Score all 3 track arenas</p>
+                </div>
+              </Link>
+
+              <Link href="/organizer/schedule" className="block">
+                <div className="p-4 border-2 border-black bg-[#FFFBEB] hover:bg-[#FFEB3B] shadow-[2px_2px_0px_#000000] transition-all">
+                  <Calendar className="w-5 h-5 text-black mb-2" />
+                  <p className="font-black text-black">Schedule Editor</p>
+                  <p className="text-[11px] font-bold text-slate-700 mt-0.5">Edit timelines & venues</p>
+                </div>
+              </Link>
+
+              <Link href="/passes" className="block">
+                <div className="p-4 border-2 border-black bg-[#FFFBEB] hover:bg-[#FFEB3B] shadow-[2px_2px_0px_#000000] transition-all">
+                  <QrCode className="w-5 h-5 text-black mb-2" />
+                  <p className="font-black text-black">Passes Terminal</p>
+                  <p className="text-[11px] font-bold text-slate-700 mt-0.5">Issue & Print ID Passes</p>
+                </div>
+              </Link>
+
+              <Link href="/organizer/results" className="block">
+                <div className="p-4 border-2 border-black bg-[#FFFBEB] hover:bg-[#FFEB3B] shadow-[2px_2px_0px_#000000] transition-all">
+                  <Trophy className="w-5 h-5 text-black mb-2" />
+                  <p className="font-black text-black">Lock & Publish</p>
+                  <p className="text-[11px] font-bold text-slate-700 mt-0.5">SA Result Publishing</p>
+                </div>
+              </Link>
 
               <Link href="/organizer/export" className="block">
                 <div className="p-4 border-2 border-black bg-[#FFFBEB] hover:bg-[#FFEB3B] shadow-[2px_2px_0px_#000000] transition-all">
@@ -269,15 +622,13 @@ export default function DashboardPage() {
                 </div>
               </Link>
 
-              {isSuperAdmin && (
-                <Link href="/organizer/settings" className="block">
-                  <div className="p-4 border-2 border-black bg-[#FFFBEB] hover:bg-[#FF5252]/20 shadow-[2px_2px_0px_#000000] transition-all">
-                    <Settings className="w-5 h-5 text-black mb-2" />
-                    <p className="font-black text-black">Settings & Reset</p>
-                    <p className="text-[11px] font-bold text-slate-700 mt-0.5">Factory reset & system controls</p>
-                  </div>
-                </Link>
-              )}
+              <Link href="/organizer/settings" className="block">
+                <div className="p-4 border-2 border-black bg-[#FFFBEB] hover:bg-[#FF5252]/20 shadow-[2px_2px_0px_#000000] transition-all">
+                  <Settings className="w-5 h-5 text-black mb-2" />
+                  <p className="font-black text-black">Settings & Reset</p>
+                  <p className="text-[11px] font-bold text-slate-700 mt-0.5">Factory reset & system controls</p>
+                </div>
+              </Link>
             </div>
           </div>
 
