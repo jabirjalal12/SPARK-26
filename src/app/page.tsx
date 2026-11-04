@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useFestStore } from "@/lib/store";
 import { Button } from "@/components/ui/button";
@@ -48,8 +48,6 @@ export default function LandingPage() {
     minutes: 0,
     seconds: 0,
   });
-
-  const [activeScheduleFilter, setActiveScheduleFilter] = useState<string>("all");
 
   // Help Desk Message Column state (Dispatches directly to Event Coordinator)
   const [helpForm, setHelpForm] = useState({
@@ -138,11 +136,9 @@ export default function LandingPage() {
     "build-from-scrap": "bg-[#166534]",
   };
 
-  const filteredSchedule = schedule.filter((item) => {
-    if (activeScheduleFilter === "all") return true;
-    if (activeScheduleFilter === "ceremony") return item.type === "ceremony" || item.type === "break";
-    return item.track_id === activeScheduleFilter;
-  });
+  const sortedSchedule = useMemo(() => {
+    return [...schedule].sort((a, b) => new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime());
+  }, [schedule]);
 
   return (
     <div className="min-h-screen bg-[#FFFBEB] text-black relative flex flex-col font-sans selection:bg-[#FFEB3B] selection:text-black">
@@ -457,49 +453,9 @@ export default function LandingPage() {
             </Link>
           </div>
 
-          {/* Interactive Track / Arena Filters */}
-          <div className="flex flex-wrap items-center gap-2.5 p-3 bg-white border-[3px] border-black shadow-[4px_4px_0px_#000000] mb-8">
-            <span className="text-xs font-black uppercase tracking-wider text-black mr-2 hidden sm:inline">
-              Filter Itinerary:
-            </span>
-            <button
-              onClick={() => setActiveScheduleFilter("all")}
-              className={`px-3.5 py-1.5 text-xs font-black uppercase tracking-wider border-2 border-black transition-all cursor-pointer ${
-                activeScheduleFilter === "all"
-                  ? "bg-[#FFEB3B] text-black shadow-[3px_3px_0px_#000000] translate-x-[-1px] translate-y-[-1px]"
-                  : "bg-white text-black hover:bg-[#FFFBEB]"
-              }`}
-            >
-              All Events ({schedule.length})
-            </button>
-            <button
-              onClick={() => setActiveScheduleFilter("ceremony")}
-              className={`px-3.5 py-1.5 text-xs font-black uppercase tracking-wider border-2 border-black transition-all cursor-pointer ${
-                activeScheduleFilter === "ceremony"
-                  ? "bg-[#FFEB3B] text-black shadow-[3px_3px_0px_#000000] translate-x-[-1px] translate-y-[-1px]"
-                  : "bg-white text-black hover:bg-[#FFFBEB]"
-              }`}
-            >
-              Ceremonies & Food
-            </button>
-            {tracks.map((track) => (
-              <button
-                key={track.id}
-                onClick={() => setActiveScheduleFilter(track.id)}
-                className={`px-3.5 py-1.5 text-xs font-black uppercase tracking-wider border-2 border-black transition-all cursor-pointer ${
-                  activeScheduleFilter === track.id
-                    ? "bg-[#FFEB3B] text-black shadow-[3px_3px_0px_#000000] translate-x-[-1px] translate-y-[-1px]"
-                    : "bg-white text-black hover:bg-[#FFFBEB]"
-                }`}
-              >
-                {track.name}
-              </button>
-            ))}
-          </div>
-
           {/* Schedule List */}
           <div className="space-y-4">
-            {filteredSchedule.length === 0 ? (
+            {sortedSchedule.length === 0 ? (
               <div className="p-8 sm:p-12 border-[3px] border-dashed border-black bg-white shadow-[6px_6px_0px_#000000] text-center space-y-3">
                 <div className="w-12 h-12 bg-[#FFEB3B] border-2 border-black shadow-[2px_2px_0px_#000000] flex items-center justify-center mx-auto">
                   <Clock className="w-6 h-6 text-black" />
@@ -517,7 +473,7 @@ export default function LandingPage() {
                 </div>
               </div>
             ) : (
-              filteredSchedule.map((item, index) => {
+              sortedSchedule.map((item, index) => {
                 const venue = (venues || []).find((v) => v.id === item.venue_id);
                 const venueName = venue ? `${venue.name} (${venue.location})` : (item.venue_id || "Campus Venue");
                 const startTime = new Date(item.starts_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
