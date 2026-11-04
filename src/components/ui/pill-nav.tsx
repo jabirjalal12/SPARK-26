@@ -102,7 +102,6 @@ export function PillNav() {
       return [
         { href: "/dashboard", label: "Operations Hub", icon: Home },
         { href: "/organizer/schedule", label: "Schedule", icon: Calendar },
-        { href: "/organizer/scoring", label: "Scoring", icon: Sparkles },
         { href: "/volunteer/issues", label: "Help Desk & Issues", icon: AlertTriangle },
         { href: "/announcements", label: "Broadcast", icon: Bell },
         { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
@@ -126,7 +125,6 @@ export function PillNav() {
       { href: "/dashboard", label: "Telemetry", icon: Home },
       { href: "/organizer/schools", label: "Approvals", icon: ShieldCheck },
       { href: "/organizer/checkins", label: "Desk Arrivals", icon: RotateCcw },
-      { href: "/organizer/scoring", label: "Scoring", icon: Sparkles },
       { href: "/passes", label: "Role Logins", icon: Key },
       { href: "/organizer/results", label: "Publish", icon: Trophy },
       { href: "/announcements", label: "Notices", icon: Bell },

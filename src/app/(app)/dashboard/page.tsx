@@ -258,7 +258,7 @@ export default function DashboardPage() {
               </span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
               {/* Window 1: Event Schedule & Timelines */}
               <Link href="/organizer/schedule" className="block group">
                 <div className="p-4 border-[3px] border-black bg-[#FFFBEB] group-hover:bg-[#FFEB3B] shadow-[3px_3px_0px_#000000] group-hover:-translate-x-0.5 group-hover:-translate-y-0.5 transition-all">
@@ -279,27 +279,7 @@ export default function DashboardPage() {
                 </div>
               </Link>
 
-              {/* Window 2: Track Scoring Oversight */}
-              <Link href="/organizer/scoring" className="block group">
-                <div className="p-4 border-[3px] border-black bg-[#FFFBEB] group-hover:bg-[#4CAF50]/20 shadow-[3px_3px_0px_#000000] group-hover:-translate-x-0.5 group-hover:-translate-y-0.5 transition-all">
-                  <div className="flex items-center justify-between mb-2">
-                    <Sparkles className="w-6 h-6 text-black" />
-                    <span className="text-[10px] font-mono font-black uppercase px-1.5 py-0.5 bg-black text-white">
-                      {scores.length} Marks Entered
-                    </span>
-                  </div>
-                  <p className="font-black text-sm text-black">Track Scoring Oversight</p>
-                  <p className="text-[11px] font-bold text-slate-700 mt-1">
-                    Monitor live judge marks, enter evaluations across all competition tracks, and review rubric criteria.
-                  </p>
-                  <div className="mt-3 font-black text-black text-[11px] flex items-center gap-1 group-hover:underline">
-                    <span>Open Scoring Terminal</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </div>
-                </div>
-              </Link>
-
-              {/* Window 3: Help Desk Dispatches & Field Issues */}
+              {/* Window 2: Help Desk Dispatches & Field Issues */}
               <Link href="/volunteer/issues" className="block group">
                 <div className={`p-4 border-[3px] border-black shadow-[3px_3px_0px_#000000] group-hover:-translate-x-0.5 group-hover:-translate-y-0.5 transition-all ${
                   openIssues > 0 ? "bg-[#FF5252]/15 group-hover:bg-[#FF5252]/25" : "bg-[#FFFBEB] group-hover:bg-[#FFEB3B]"
@@ -323,7 +303,7 @@ export default function DashboardPage() {
                 </div>
               </Link>
 
-              {/* Window 4: Arena Announcements & Stage Broadcast */}
+              {/* Window 3: Arena Announcements & Stage Broadcast */}
               <Link href="/announcements" className="block group">
                 <div className="p-4 border-[3px] border-black bg-[#FFFBEB] group-hover:bg-[#2196F3]/20 shadow-[3px_3px_0px_#000000] group-hover:-translate-x-0.5 group-hover:-translate-y-0.5 transition-all">
                   <div className="flex items-center justify-between mb-2">
@@ -343,7 +323,7 @@ export default function DashboardPage() {
                 </div>
               </Link>
 
-              {/* Window 5: Live Leaderboard & Standings */}
+              {/* Window 4: Live Leaderboard & Standings */}
               <Link href="/leaderboard" className="block group">
                 <div className="p-4 border-[3px] border-black bg-[#FFFBEB] group-hover:bg-[#FFEB3B] shadow-[3px_3px_0px_#000000] group-hover:-translate-x-0.5 group-hover:-translate-y-0.5 transition-all">
                   <div className="flex items-center justify-between mb-2">
@@ -362,8 +342,6 @@ export default function DashboardPage() {
                   </div>
                 </div>
               </Link>
-
-
             </div>
           </div>
 
@@ -424,10 +402,10 @@ export default function DashboardPage() {
               <div className="flex items-center justify-between pb-3 border-b-2 border-black mb-4">
                 <h3 className="font-black text-black text-sm flex items-center gap-2">
                   <Trophy className="w-4 h-4 text-black" />
-                  <span>Track Evaluation & Leaders</span>
+                  <span>Track Standings & Leaders</span>
                 </h3>
-                <Link href="/organizer/scoring" className="text-xs font-bold text-black underline hover:bg-[#FFEB3B] px-1">
-                  Open Scoring Terminal
+                <Link href="/leaderboard" className="text-xs font-bold text-black underline hover:bg-[#FFEB3B] px-1">
+                  View Leaderboard
                 </Link>
               </div>
 
@@ -560,11 +538,11 @@ export default function DashboardPage() {
                 </div>
               </Link>
 
-              <Link href="/organizer/scoring" className="block">
+              <Link href="/leaderboard" className="block">
                 <div className="p-4 border-2 border-black bg-[#FFFBEB] hover:bg-[#FFEB3B] shadow-[2px_2px_0px_#000000] transition-all">
-                  <Sparkles className="w-5 h-5 text-black mb-2" />
-                  <p className="font-black text-black">Score Entry</p>
-                  <p className="text-[11px] font-bold text-slate-700 mt-0.5">Score all track arenas</p>
+                  <Trophy className="w-5 h-5 text-black mb-2" />
+                  <p className="font-black text-black">Live Leaderboard</p>
+                  <p className="text-[11px] font-bold text-slate-700 mt-0.5">View real-time standings</p>
                 </div>
               </Link>
 
