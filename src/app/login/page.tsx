@@ -100,12 +100,13 @@ export default function LoginPage() {
               trimmedEmail === "admin@spark.edu" ||
               trimmedEmail === "judge@spark.in" ||
               trimmedEmail === "volunteer@spark.in" ||
-              trimmedEmail === "faculty@spark.in") &&
+              trimmedEmail === "faculty@spark.in" ||
+              trimmedEmail === "tv@spark.in") &&
             password === "123456";
 
           if (isKnownDemo) {
-            const role = trimmedEmail.includes("judge") ? "judge" : trimmedEmail.includes("vol") ? "volunteer" : trimmedEmail.includes("fac") ? "faculty" : "organizer";
-            const name = trimmedEmail.includes("judge") ? "Dr. Evelyn Reed (Chief Jury)" : trimmedEmail.includes("vol") ? "Campus Operations Volunteer" : trimmedEmail.includes("fac") ? "Visiting Faculty Coordinator" : "Super Administrator";
+            const role = trimmedEmail.includes("tv") ? "tv_display" : trimmedEmail.includes("judge") ? "judge" : trimmedEmail.includes("vol") ? "volunteer" : trimmedEmail.includes("fac") ? "faculty" : "organizer";
+            const name = trimmedEmail.includes("tv") ? "Venue TV Display Screen" : trimmedEmail.includes("judge") ? "Dr. Evelyn Reed (Chief Jury)" : trimmedEmail.includes("vol") ? "Campus Operations Volunteer" : trimmedEmail.includes("fac") ? "Visiting Faculty Coordinator" : "Super Administrator";
 
             const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
               email: trimmedEmail,
@@ -131,11 +132,12 @@ export default function LoginPage() {
           const isAdm = trimmedEmail.includes("admin") || trimmedEmail.includes("organizer");
           const isJdg = trimmedEmail.includes("judge") || trimmedEmail.includes("jury");
           const isVol = trimmedEmail.includes("vol");
+          const isTv = trimmedEmail.includes("tv") || trimmedEmail.includes("display");
 
           if (!profile) {
             // Upsert profile in Supabase so RLS and foreign keys always have a profile row
-            const fallbackRole = isJdg ? "judge" : isVol ? "volunteer" : isAdm ? "organizer" : "faculty";
-            const fallbackName = isAdm ? "Super Administrator" : isJdg ? "Dr. Evelyn Reed (Chief Jury)" : isVol ? "Campus Operations Volunteer" : "Visiting Faculty Coordinator";
+            const fallbackRole = isTv ? "tv_display" : isJdg ? "judge" : isVol ? "volunteer" : isAdm ? "organizer" : "faculty";
+            const fallbackName = isTv ? "Venue TV Display Screen" : isAdm ? "Super Administrator" : isJdg ? "Dr. Evelyn Reed (Chief Jury)" : isVol ? "Campus Operations Volunteer" : "Visiting Faculty Coordinator";
             try {
               const { data: upsertedProf } = await supabase.from("profiles").upsert({
                 id: data.user.id,
@@ -159,7 +161,7 @@ export default function LoginPage() {
             }
           } else {
             // Robust local profile fallback
-            const fallbackRole = isJdg ? "judge" : isVol ? "volunteer" : isAdm ? "organizer" : "faculty";
+            const fallbackRole = isTv ? "tv_display" : isJdg ? "judge" : isVol ? "volunteer" : isAdm ? "organizer" : "faculty";
             profile = {
               id: data.user.id,
               role: fallbackRole,
@@ -180,7 +182,9 @@ export default function LoginPage() {
         }
       } else {
         // Fallback when Supabase keys in .env.local are still placeholder
-        if (trimmedEmail.includes("judge") || trimmedEmail.includes("jury")) {
+        if (trimmedEmail.includes("tv") || trimmedEmail.includes("display")) {
+          switchRole("tv_display");
+        } else if (trimmedEmail.includes("judge") || trimmedEmail.includes("jury")) {
           switchRole("judge");
         } else if (trimmedEmail.includes("fac")) {
           switchRole("faculty");
@@ -199,6 +203,8 @@ export default function LoginPage() {
         const redirectParam = params.get("redirect");
         if (redirectParam && redirectParam.startsWith("/")) {
           destination = redirectParam;
+        } else if (profile?.role === "tv_display" || trimmedEmail.includes("tv") || trimmedEmail.includes("display")) {
+          destination = "/tv";
         } else if (profile?.role === "judge" || trimmedEmail.includes("judge") || trimmedEmail.includes("jury")) {
           destination = "/judge";
         } else if (profile?.role === "faculty" || trimmedEmail.includes("fac")) {

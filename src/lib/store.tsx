@@ -63,6 +63,7 @@ interface FestStoreContextType {
   isFaculty: boolean;
   isVolunteer: boolean;
   isJudge: boolean;
+  isTvDisplay: boolean;
   isSupabaseLive: boolean;
 
   // Data collections
@@ -268,6 +269,16 @@ export function FestStoreProvider({ children }: { children: React.ReactNode }) {
         sub_roles: undefined,
       };
     }
+    if (currentRole === "tv_display") {
+      return {
+        ...defaultProfile,
+        id: "tv-display-main",
+        full_name: "Venue TV Display Screen",
+        email: "tv@spark.in",
+        role: "tv_display",
+        sub_roles: undefined,
+      };
+    }
     return {
       ...defaultProfile,
       role: currentRole,
@@ -280,6 +291,7 @@ export function FestStoreProvider({ children }: { children: React.ReactNode }) {
   const isFaculty = currentRole === "faculty";
   const isVolunteer = currentRole === "volunteer";
   const isJudge = currentRole === "judge";
+  const isTvDisplay = currentRole === "tv_display";
 
   const isSuperAdmin = isOrganizer && (activeOrganizerSubRole === "super_admin" || currentProfile.sub_roles?.includes("super_admin") || false);
   const isEventCoordinator = isOrganizer && (activeOrganizerSubRole === "event_coordinator" || currentProfile.sub_roles?.includes("event_coordinator") || isSuperAdmin);
@@ -295,6 +307,17 @@ export function FestStoreProvider({ children }: { children: React.ReactNode }) {
         full_name: "Dr. Evelyn Reed (Lead Jury)",
         email: "judge@spark.edu",
         phone: "+91 98765 00099",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
+    } else if (role === "tv_display") {
+      setCustomProfile({
+        id: "tv-display-main",
+        role: "tv_display",
+        school_id: null,
+        full_name: "Venue TV Display Screen",
+        email: "tv@spark.in",
+        phone: null,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       });
@@ -1136,6 +1159,7 @@ export function FestStoreProvider({ children }: { children: React.ReactNode }) {
     isFaculty,
     isVolunteer,
     isJudge,
+    isTvDisplay,
     isSupabaseLive,
     schools,
     schoolTickets,

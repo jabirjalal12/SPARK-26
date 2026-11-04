@@ -1,6 +1,7 @@
 ﻿"use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useFestStore } from "@/lib/store";
 import { GlassCard } from "@/components/ui/glass-card";
@@ -31,6 +32,7 @@ import {
 } from "lucide-react";
 
 export default function DashboardPage() {
+  const router = useRouter();
   const {
     currentProfile,
     activeOrganizerSubRole,
@@ -49,6 +51,14 @@ export default function DashboardPage() {
   } = useFestStore();
 
   const role = currentProfile.role;
+
+  useEffect(() => {
+    if (role === "tv_display") {
+      router.replace("/tv");
+    } else if (role === "judge") {
+      router.replace("/judge");
+    }
+  }, [role, router]);
 
   // Aggregate stats
   const totalSchools = schools.length;

@@ -1,4 +1,4 @@
-﻿export type UserRole = "organizer" | "faculty" | "volunteer" | "judge";
+﻿export type UserRole = "organizer" | "faculty" | "volunteer" | "judge" | "tv_display";
 export type OrganizerSubRole = "super_admin" | "event_coordinator" | "registration_head";
 
 export interface OrganizerRoleRecord {

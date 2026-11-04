@@ -119,6 +119,7 @@ SELECT public.provision_user('admin@spark.edu', '123456', 'Super Administrator',
 SELECT public.provision_user('judge@spark.in', '123456', 'Dr. Evelyn Reed (Chief Jury)', 'judge');
 SELECT public.provision_user('volunteer@spark.in', '123456', 'Campus Operations Volunteer', 'volunteer');
 SELECT public.provision_user('faculty@spark.in', '123456', 'Visiting Faculty Coordinator', 'faculty');
+SELECT public.provision_user('tv@spark.in', '123456', 'Venue TV Display Screen', 'tv_display');
 
 -- Reload schema
 NOTIFY pgrst, 'reload schema';

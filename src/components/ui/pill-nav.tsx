@@ -29,6 +29,8 @@ import {
   CheckCircle2,
   Lock,
   Settings,
+  Monitor,
+  Radio,
 } from "lucide-react";
 
 export function PillNav() {
@@ -48,6 +50,14 @@ export function PillNav() {
 
   // Active navigation tabs per role & organizer sub-role
   const getNavLinks = () => {
+    if (role === "tv_display") {
+      return [
+        { href: "/tv", label: "TV Kiosk Display", icon: Monitor },
+        { href: "/leaderboard", label: "Live Leaderboard", icon: Trophy },
+        { href: "/announcements", label: "Announcements Ticker", icon: Radio },
+      ];
+    }
+
     if (role === "faculty") {
       return [
         { href: "/dashboard", label: "Overview", icon: Home },
@@ -124,6 +134,7 @@ export function PillNav() {
   const links = getNavLinks();
 
   const getRoleBadgeLabel = () => {
+    if (role === "tv_display") return "📺 Venue TV Display";
     if (role === "faculty") return "Visiting Faculty Lead";
     if (role === "volunteer") return "Registration Desk Volunteer";
     if (role === "judge") return "Official Fest Judge";
@@ -133,6 +144,7 @@ export function PillNav() {
   };
 
   const getMyPassHref = () => {
+    if (role === "tv_display") return "/tv";
     if (role === "faculty") return "/faculty/ticket";
     if (role === "volunteer") return "/volunteer/pass";
     if (role === "judge") return "/judge/pass";
@@ -285,6 +297,19 @@ export function PillNav() {
                       )}
                     >
                       Volunteer
+                    </button>
+                    <button
+                      onClick={() => {
+                        switchRole("tv_display");
+                        setRoleMenuOpen(false);
+                        window.location.href = "/tv";
+                      }}
+                      className={cn(
+                        "text-left px-2 py-1 text-[11px] font-black border transition-colors cursor-pointer col-span-2",
+                        role === "tv_display" ? "bg-[#00E5FF] text-black border-black" : "bg-white hover:bg-[#FFFBEB] border-slate-300"
+                      )}
+                    >
+                      📺 TV Display Screen
                     </button>
                   </div>
                 </div>
