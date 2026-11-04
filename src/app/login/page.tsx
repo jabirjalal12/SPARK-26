@@ -88,10 +88,37 @@ export default function LoginPage() {
       let profile: any = null;
 
       if (supabaseConfigured) {
-        const { data, error } = await supabase.auth.signInWithPassword({
+        let { data, error } = await supabase.auth.signInWithPassword({
           email: trimmedEmail,
           password,
         });
+
+        // Self-healing fallback for known demo accounts if not yet provisioned
+        if (error && (error.message.toLowerCase().includes("invalid") || error.message.toLowerCase().includes("not confirmed"))) {
+          const isKnownDemo =
+            (trimmedEmail === "admin@spark.in" ||
+              trimmedEmail === "admin@spark.edu" ||
+              trimmedEmail === "judge@spark.in" ||
+              trimmedEmail === "volunteer@spark.in" ||
+              trimmedEmail === "faculty@spark.in") &&
+            password === "123456";
+
+          if (isKnownDemo) {
+            const role = trimmedEmail.includes("judge") ? "judge" : trimmedEmail.includes("vol") ? "volunteer" : trimmedEmail.includes("fac") ? "faculty" : "organizer";
+            const name = trimmedEmail.includes("judge") ? "Dr. Evelyn Reed (Chief Jury)" : trimmedEmail.includes("vol") ? "Campus Operations Volunteer" : trimmedEmail.includes("fac") ? "Visiting Faculty Coordinator" : "Super Administrator";
+
+            const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+              email: trimmedEmail,
+              password,
+              options: { data: { full_name: name, role } }
+            });
+
+            if (!signUpError && (signUpData.session || signUpData.user)) {
+              data = { user: signUpData.user, session: signUpData.session } as any;
+              error = null;
+            }
+          }
+        }
 
         if (error) {
           setErrorMessage(error.message);
@@ -99,11 +126,28 @@ export default function LoginPage() {
           return;
         }
 
-        if (data.user) {
+        if (data?.user) {
           profile = await fetchUserProfile(data.user.id);
           const isAdm = trimmedEmail.includes("admin") || trimmedEmail.includes("organizer");
           const isJdg = trimmedEmail.includes("judge") || trimmedEmail.includes("jury");
           const isVol = trimmedEmail.includes("vol");
+
+          if (!profile) {
+            // Upsert profile in Supabase so RLS and foreign keys always have a profile row
+            const fallbackRole = isJdg ? "judge" : isVol ? "volunteer" : isAdm ? "organizer" : "faculty";
+            const fallbackName = isAdm ? "Super Administrator" : isJdg ? "Dr. Evelyn Reed (Chief Jury)" : isVol ? "Campus Operations Volunteer" : "Visiting Faculty Coordinator";
+            try {
+              const { data: upsertedProf } = await supabase.from("profiles").upsert({
+                id: data.user.id,
+                email: trimmedEmail,
+                full_name: fallbackName,
+                role: fallbackRole,
+              }).select().single();
+              if (upsertedProf) profile = upsertedProf;
+            } catch (pErr) {
+              console.warn("Profile upsert notice:", pErr);
+            }
+          }
 
           if (profile) {
             setCurrentProfile(profile);
@@ -114,7 +158,7 @@ export default function LoginPage() {
               switchOrganizerSubRole("super_admin");
             }
           } else {
-            // Robust profile fallback
+            // Robust local profile fallback
             const fallbackRole = isJdg ? "judge" : isVol ? "volunteer" : isAdm ? "organizer" : "faculty";
             profile = {
               id: data.user.id,
