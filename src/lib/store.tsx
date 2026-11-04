@@ -55,6 +55,7 @@ interface FestStoreContextType {
   switchRole: (role: UserRole) => void;
   switchOrganizerSubRole: (subRole: OrganizerSubRole) => void;
   setCurrentProfile: (profile: Profile) => void;
+  setFacultySchoolId: (schoolId: string) => void;
   signOut: () => Promise<void>;
   isSuperAdmin: boolean;
   isEventCoordinator: boolean;
@@ -137,7 +138,7 @@ export function FestStoreProvider({ children }: { children: React.ReactNode }) {
   const [students, setStudents] = useState<Student[]>(initialStudents);
   const [teams, setTeams] = useState<Team[]>(initialTeams);
   const [tracks, setTracks] = useState<Track[]>(initialTracks);
-  const [criteria] = useState<ScoringCriterion[]>(initialCriteria);
+  const [criteria, setCriteria] = useState<ScoringCriterion[]>(initialCriteria);
   const [venues, setVenues] = useState<Venue[]>(initialVenues);
   const [scores, setScores] = useState<Score[]>([]);
   const [schedule, setSchedule] = useState<ScheduleItem[]>(initialSchedule);
@@ -174,20 +175,44 @@ export function FestStoreProvider({ children }: { children: React.ReactNode }) {
           // 2. Fetch live database tables
           const liveData = await fetchFestDataFromSupabase();
           if (liveData) {
-            if (liveData.tracks.length > 0) setTracks(liveData.tracks);
-            if (liveData.venues && liveData.venues.length > 0) setVenues(liveData.venues);
-            if (liveData.schools.length > 0) setSchools(liveData.schools);
-            if (liveData.schoolTickets.length > 0) setSchoolTickets(liveData.schoolTickets);
-            if (liveData.teams.length > 0) setTeams(liveData.teams);
-            if (liveData.students.length > 0) setStudents(liveData.students);
-            if (liveData.schedule.length > 0) setSchedule(liveData.schedule);
-            if (liveData.announcements.length > 0) setAnnouncements(liveData.announcements);
-            if (liveData.checkins.length > 0) setCheckins(liveData.checkins);
-            if (liveData.volunteerDuties.length > 0) setVolunteerDuties(liveData.volunteerDuties);
-            if (liveData.issueReports.length > 0) setIssueReports(liveData.issueReports);
-            if (liveData.scores.length > 0) setScores(liveData.scores);
-            if (liveData.auditLogs.length > 0) setAuditLogs(liveData.auditLogs);
+            // Live database is the authoritative source of truth.
+            // If the user reset/cleared the database, empty arrays must be set directly
+            // so that hardcoded demo data is NEVER shown in any role.
+            setTracks(liveData.tracks.length > 0 ? liveData.tracks : initialTracks);
+            setCriteria(liveData.criteria.length > 0 ? liveData.criteria : initialCriteria);
+            setVenues(liveData.venues);
+            setSchools(liveData.schools);
+            setSchoolTickets(liveData.schoolTickets);
+            setTeams(liveData.teams);
+            setStudents(liveData.students);
+            setSchedule(liveData.schedule);
+            setAnnouncements(liveData.announcements);
+            setCheckins(liveData.checkins);
+            setVolunteerDuties(liveData.volunteerDuties);
+            setIssueReports(liveData.issueReports);
+            setScores(liveData.scores);
+            setAuditLogs(liveData.auditLogs);
             setIsSupabaseLive(true);
+
+            if (typeof window !== "undefined") {
+              try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify({
+                  schools: liveData.schools,
+                  schoolTickets: liveData.schoolTickets,
+                  teams: liveData.teams,
+                  students: liveData.students,
+                  schedule: liveData.schedule,
+                  announcements: liveData.announcements,
+                  checkins: liveData.checkins,
+                  volunteerDuties: liveData.volunteerDuties,
+                  issueReports: liveData.issueReports,
+                  scores: liveData.scores,
+                  venues: liveData.venues,
+                  auditLogs: liveData.auditLogs,
+                  isCleanReset: false,
+                }));
+              } catch {}
+            }
           }
 
           // 3. Listen to auth changes
@@ -206,7 +231,7 @@ export function FestStoreProvider({ children }: { children: React.ReactNode }) {
             }
           });
 
-          // 4. Subscribe to Realtime Postgres Changes
+          // 4. Subscribe to Realtime Postgres Changes across all operational tables
           unsubscribeRealtime = subscribeToFestRealtime((payload) => {
             if (payload.table === "venues") {
               if (payload.event === "INSERT") {
@@ -227,18 +252,60 @@ export function FestStoreProvider({ children }: { children: React.ReactNode }) {
                 setAnnouncements((prev) => [payload.record, ...prev.filter((a) => a.id !== payload.record.id)]);
               } else if (payload.event === "DELETE") {
                 setAnnouncements((prev) => prev.filter((a) => a.id !== payload.record.id));
+              } else if (payload.event === "UPDATE") {
+                setAnnouncements((prev) => prev.map((a) => (a.id === payload.record.id ? { ...a, ...payload.record } : a)));
               }
             } else if (payload.table === "checkins") {
               if (payload.event === "INSERT") {
                 setCheckins((prev) => [payload.record, ...prev.filter((c) => c.id !== payload.record.id)]);
+              } else if (payload.event === "UPDATE") {
+                setCheckins((prev) => prev.map((c) => (c.id === payload.record.id ? { ...c, ...payload.record } : c)));
+              } else if (payload.event === "DELETE") {
+                setCheckins((prev) => prev.filter((c) => c.id !== payload.record.id));
               }
             } else if (payload.table === "scores") {
               if (payload.event === "INSERT" || payload.event === "UPDATE") {
                 setScores((prev) => [payload.record, ...prev.filter((s) => s.id !== payload.record.id)]);
+              } else if (payload.event === "DELETE") {
+                setScores((prev) => prev.filter((s) => s.id !== payload.record.id));
               }
             } else if (payload.table === "schools") {
-              if (payload.event === "UPDATE") {
+              if (payload.event === "INSERT") {
+                setSchools((prev) => [...prev.filter((s) => s.id !== payload.record.id), payload.record]);
+              } else if (payload.event === "UPDATE") {
                 setSchools((prev) => prev.map((s) => (s.id === payload.record.id ? { ...s, ...payload.record } : s)));
+              } else if (payload.event === "DELETE") {
+                setSchools((prev) => prev.filter((s) => s.id !== payload.record.id));
+              }
+            } else if (payload.table === "teams") {
+              if (payload.event === "INSERT" || payload.event === "UPDATE") {
+                setTeams((prev) => [...prev.filter((t) => t.id !== payload.record.id), payload.record]);
+              } else if (payload.event === "DELETE") {
+                setTeams((prev) => prev.filter((t) => t.id !== payload.record.id));
+              }
+            } else if (payload.table === "students") {
+              if (payload.event === "INSERT" || payload.event === "UPDATE") {
+                setStudents((prev) => [...prev.filter((st) => st.id !== payload.record.id), payload.record]);
+              } else if (payload.event === "DELETE") {
+                setStudents((prev) => prev.filter((st) => st.id !== payload.record.id));
+              }
+            } else if (payload.table === "school_tickets") {
+              if (payload.event === "INSERT" || payload.event === "UPDATE") {
+                setSchoolTickets((prev) => [...prev.filter((tk) => tk.id !== payload.record.id), payload.record]);
+              } else if (payload.event === "DELETE") {
+                setSchoolTickets((prev) => prev.filter((tk) => tk.id !== payload.record.id));
+              }
+            } else if (payload.table === "volunteer_duties") {
+              if (payload.event === "INSERT" || payload.event === "UPDATE") {
+                setVolunteerDuties((prev) => [...prev.filter((vd) => vd.id !== payload.record.id), payload.record]);
+              } else if (payload.event === "DELETE") {
+                setVolunteerDuties((prev) => prev.filter((vd) => vd.id !== payload.record.id));
+              }
+            } else if (payload.table === "issue_reports") {
+              if (payload.event === "INSERT" || payload.event === "UPDATE") {
+                setIssueReports((prev) => [payload.record, ...prev.filter((ir) => ir.id !== payload.record.id)]);
+              } else if (payload.event === "DELETE") {
+                setIssueReports((prev) => prev.filter((ir) => ir.id !== payload.record.id));
               }
             }
           });
@@ -258,7 +325,15 @@ export function FestStoreProvider({ children }: { children: React.ReactNode }) {
 
   // Determine current active profile (Authenticated via Supabase or fallback)
   const currentProfile: Profile = useMemo(() => {
-    if (customProfile) return customProfile;
+    if (customProfile) {
+      if (customProfile.role === "faculty" && !customProfile.school_id && schools.length > 0) {
+        const matched = schools.find((s) => s.contact_email?.toLowerCase() === customProfile.email?.toLowerCase());
+        if (matched) {
+          return { ...customProfile, school_id: matched.id };
+        }
+      }
+      return customProfile;
+    }
     if (currentRole === "judge") {
       return {
         ...defaultProfile,
@@ -337,6 +412,14 @@ export function FestStoreProvider({ children }: { children: React.ReactNode }) {
 
   const switchRole = (role: UserRole) => {
     setCurrentRole(role);
+    if (customProfile) {
+      setCustomProfile({
+        ...customProfile,
+        role,
+      });
+      return;
+    }
+
     if (role === "judge") {
       setCustomProfile({
         id: "judge-jury-01",
@@ -360,6 +443,26 @@ export function FestStoreProvider({ children }: { children: React.ReactNode }) {
         updated_at: new Date().toISOString(),
       });
     }
+  };
+
+  const setFacultySchoolId = (schoolId: string) => {
+    setCustomProfile((prev) => {
+      const updated = prev
+        ? { ...prev, school_id: schoolId }
+        : {
+            ...defaultProfile,
+            id: generateSafeUUID(),
+            role: "faculty" as UserRole,
+            school_id: schoolId,
+          };
+
+      if (isSupabaseConfigured() && updated.id) {
+        try {
+          createClient().from("profiles").update({ school_id: schoolId }).eq("id", updated.id).then();
+        } catch {}
+      }
+      return updated;
+    });
   };
 
   const switchOrganizerSubRole = (subRole: OrganizerSubRole) => {
@@ -1168,19 +1271,38 @@ export function FestStoreProvider({ children }: { children: React.ReactNode }) {
   };
 
   const resetAllData = () => {
-    setSchools(initialSchools);
-    setSchoolTickets(initialSchoolTickets);
-    setStudents(initialStudents);
-    setTeams(initialTeams);
-    setTracks(initialTracks);
+    setSchools([]);
+    setSchoolTickets([]);
+    setStudents([]);
+    setTeams([]);
     setScores([]);
-    setVenues(initialVenues);
-    setSchedule(initialSchedule);
-    setAnnouncements(initialAnnouncements);
+    setVenues([]);
+    setSchedule([]);
+    setAnnouncements([]);
     setCheckins([]);
     setIssueReports([]);
+    setVolunteerDuties([]);
     setResultsPublished(false);
-    localStorage.removeItem(STORAGE_KEY);
+
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({
+          schools: [],
+          schoolTickets: [],
+          students: [],
+          teams: [],
+          scores: [],
+          checkins: [],
+          volunteerDuties: [],
+          issueReports: [],
+          schedule: [],
+          venues: [],
+          announcements: [],
+          auditLogs: [],
+          isCleanReset: true,
+        }));
+      } catch {}
+    }
   };
 
   const value = {
@@ -1189,6 +1311,7 @@ export function FestStoreProvider({ children }: { children: React.ReactNode }) {
     switchRole,
     switchOrganizerSubRole,
     setCurrentProfile: (p: Profile) => setCustomProfile(p),
+    setFacultySchoolId,
     signOut,
     isSuperAdmin,
     isEventCoordinator,

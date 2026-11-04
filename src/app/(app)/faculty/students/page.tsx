@@ -36,9 +36,13 @@ export default function FacultyStudentsPage() {
     tracks,
     teams,
     saveEventSquad,
+    setFacultySchoolId,
   } = useFestStore();
 
-  const facultySchool = schools.find((s) => s.id === currentProfile.school_id) || schools[0];
+  const facultySchool =
+    schools.find((s) => s.id === currentProfile.school_id) ||
+    schools.find((s) => s.contact_email?.toLowerCase() === currentProfile.email?.toLowerCase()) ||
+    schools[0];
   const schoolStudents = facultySchool
     ? students.filter((s) => s.school_id === facultySchool.id)
     : [];
@@ -180,6 +184,38 @@ export default function FacultyStudentsPage() {
           </Button>
         </Link>
       </div>
+
+      {/* Active Delegation Switcher */}
+      {schools.length > 0 && (
+        <div className="p-4 bg-white border-[3px] border-black shadow-[5px_5px_0px_#000000] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 bg-[#FFEB3B] border-2 border-black shadow-[2px_2px_0px_#000000]">
+              <Building2 className="w-5 h-5 text-black" />
+            </div>
+            <div>
+              <span className="text-[10px] font-black uppercase text-slate-600 block">Assigned Visiting Delegation</span>
+              <span className="text-base font-black text-black">{facultySchool?.name || "No School Assigned"}</span>
+              <span className="text-xs text-slate-700 block font-bold">{facultySchool?.city} • Code: {facultySchool?.code}</span>
+            </div>
+          </div>
+          {schools.length > 1 && (
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <span className="text-xs font-black text-black uppercase">Switch Delegation:</span>
+              <select
+                value={facultySchool?.id}
+                onChange={(e) => setFacultySchoolId(e.target.value)}
+                className="w-full sm:w-auto px-3 py-1.5 text-xs font-black border-2 border-black bg-[#FFFBEB] focus:outline-none focus:ring-2 focus:ring-black cursor-pointer shadow-[2px_2px_0px_#000000]"
+              >
+                {schools.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name} ({s.code} - {s.city})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Institutional Telemetry Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">

@@ -3,24 +3,17 @@
 import React from "react";
 import Link from "next/link";
 import { useFestStore } from "@/lib/store";
-import { Badge } from "@/components/ui/badge";
 import {
   Clock,
-  MapPin,
   ClipboardList,
-  CheckCircle2,
-  Calendar,
-  AlertTriangle,
   ArrowRight,
-  ShieldCheck,
-  User,
 } from "lucide-react";
 
 export default function VolunteerDutiesPage() {
   const { currentProfile, volunteerDuties } = useFestStore();
 
   const myDuties = volunteerDuties.filter(
-    (d) => d.volunteer_id === currentProfile.id || true
+    (d) => !d.volunteer_id || d.volunteer_id === currentProfile.id
   );
 
   return (
@@ -55,44 +48,56 @@ export default function VolunteerDutiesPage() {
 
       {/* Duty Cards */}
       <div className="space-y-4">
-        {myDuties.map((duty) => (
-          <div
-            key={duty.id}
-            className="p-5 border-[3px] border-black bg-white shadow-[5px_5px_0px_#000000] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
-          >
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-3 pb-2 border-b-2 border-black">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span
-                  className={`px-2.5 py-0.5 text-xs font-black uppercase border border-black ${
-                    duty.status === "completed"
-                      ? "bg-[#4CAF50] text-white"
-                      : "bg-[#FFEB3B] text-black"
-                  }`}
-                >
-                  {duty.status.toUpperCase()}
-                </span>
-                <span className="text-xs font-mono font-black text-black bg-[#FFFBEB] px-2.5 py-0.5 border border-black flex items-center gap-1.5 shadow-[1px_1px_0px_#000]">
-                  <Clock className="h-3.5 w-3.5 text-black" />
-                  {duty.starts_at
-                    ? new Date(duty.starts_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-                    : "08:00 AM"}{" "}
-                  –{" "}
-                  {duty.ends_at
-                    ? new Date(duty.ends_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-                    : "12:00 PM"}
-                </span>
-              </div>
-            </div>
-
-            <h3 className="text-lg font-black text-black tracking-tight flex items-center gap-2">
-              <ClipboardList className="w-5 h-5 text-black" />
-              <span>{duty.duty}</span>
-            </h3>
-            <p className="text-xs font-bold text-slate-800 mt-2 leading-relaxed bg-[#FFFBEB] p-3 border-2 border-black shadow-[2px_2px_0px_#000]">
-              {duty.description}
+        {myDuties.length === 0 ? (
+          <div className="p-10 text-center bg-white border-[3px] border-black shadow-[6px_6px_0px_#000000]">
+            <ClipboardList className="w-12 h-12 text-slate-400 mx-auto mb-3" />
+            <h3 className="text-base font-black text-black">No Marshaling Duties Assigned</h3>
+            <p className="text-xs font-bold text-slate-600 mt-1 max-w-md mx-auto">
+              Official campus shift assignments and station checkpoints dispatched by the Event Operations Coordinator will display here in real-time.
             </p>
           </div>
-        ))}
+        ) : (
+          myDuties.map((duty) => (
+            <div
+              key={duty.id}
+              className="p-5 border-[3px] border-black bg-white shadow-[5px_5px_0px_#000000] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
+            >
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-3 pb-2 border-b-2 border-black">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span
+                    className={`px-2.5 py-0.5 text-xs font-black uppercase border border-black ${
+                      duty.status === "completed"
+                        ? "bg-[#4CAF50] text-white"
+                        : "bg-[#FFEB3B] text-black"
+                    }`}
+                  >
+                    {duty.status.toUpperCase()}
+                  </span>
+                  <span className="text-xs font-mono font-black text-black bg-[#FFFBEB] px-2.5 py-0.5 border border-black flex items-center gap-1.5 shadow-[1px_1px_0px_#000]">
+                    <Clock className="h-3.5 w-3.5 text-black" />
+                    {duty.starts_at
+                      ? new Date(duty.starts_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+                      : "08:00 AM"}{" "}
+                    –{" "}
+                    {duty.ends_at
+                      ? new Date(duty.ends_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+                      : "12:00 PM"}
+                  </span>
+                </div>
+              </div>
+
+              <h3 className="text-lg font-black text-black tracking-tight flex items-center gap-2">
+                <ClipboardList className="w-5 h-5 text-black" />
+                <span>{duty.duty}</span>
+              </h3>
+              {duty.description && (
+                <p className="text-xs font-bold text-slate-800 mt-2 leading-relaxed bg-[#FFFBEB] p-3 border-2 border-black shadow-[2px_2px_0px_#000]">
+                  {duty.description}
+                </p>
+              )}
+            </div>
+          ))
+        )}
       </div>
     </div>
   );

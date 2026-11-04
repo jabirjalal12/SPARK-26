@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useFestStore } from "@/lib/store";
 import { GlassCard } from "@/components/ui/glass-card";
 import { QRDisplay } from "@/components/qr/qr-display";
@@ -23,12 +23,27 @@ import {
 import jsPDF from "jspdf";
 
 export default function FacultyTicketPage() {
-  const { currentProfile, schools, schoolTickets, students, tracks } = useFestStore();
+  const { currentProfile, schools, schoolTickets, students, tracks, setFacultySchoolId, reissueSchoolTicket } = useFestStore();
   const [activeTab, setActiveTab] = useState<"delegation" | "faculty-badge" | "student-badges">("delegation");
 
-  const facultySchool = schools.find((s) => s.id === currentProfile.school_id) || schools[0];
+  const facultySchool =
+    schools.find((s) => s.id === currentProfile.school_id) ||
+    schools.find((s) => s.contact_email?.toLowerCase() === currentProfile.email?.toLowerCase()) ||
+    schools[0];
+
   const ticket = schoolTickets.find((t) => t.school_id === facultySchool?.id && !t.revoked_at);
-  const ticketToken = ticket ? ticket.token_hash : `TKT-${facultySchool?.code || "SCH"}-SAMPLE`;
+  const ticketToken = ticket
+    ? ticket.token_hash
+    : facultySchool
+    ? `TKT-${facultySchool.code}-OFFICIAL`
+    : "TKT-PENDING";
+
+  // Auto-issue authentic ticket if not yet created for approved school
+  useEffect(() => {
+    if (facultySchool && !ticket && typeof reissueSchoolTicket === "function") {
+      reissueSchoolTicket(facultySchool.id);
+    }
+  }, [facultySchool?.id, ticket]);
 
   const schoolStudents = facultySchool
     ? students.filter((s) => s.school_id === facultySchool.id)
@@ -141,6 +156,38 @@ export default function FacultyTicketPage() {
           </Button>
         </div>
       </div>
+
+      {/* Active Delegation Switcher */}
+      {schools.length > 0 && (
+        <div className="p-4 bg-white border-[3px] border-black shadow-[5px_5px_0px_#000000] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-black">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 bg-[#FFEB3B] border-2 border-black shadow-[2px_2px_0px_#000000]">
+              <Building2 className="w-5 h-5 text-black" />
+            </div>
+            <div>
+              <span className="text-[10px] font-black uppercase text-slate-600 block">Accredited Visiting Delegation</span>
+              <span className="text-base font-black text-black">{facultySchool?.name || "No School Selected"}</span>
+              <span className="text-xs text-slate-700 block font-bold">{facultySchool?.city} • Code: {facultySchool?.code}</span>
+            </div>
+          </div>
+          {schools.length > 1 && (
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <span className="text-xs font-black text-black uppercase">Switch Delegation:</span>
+              <select
+                value={facultySchool?.id}
+                onChange={(e) => setFacultySchoolId(e.target.value)}
+                className="w-full sm:w-auto px-3 py-1.5 text-xs font-black border-2 border-black bg-[#FFFBEB] focus:outline-none focus:ring-2 focus:ring-black cursor-pointer shadow-[2px_2px_0px_#000000]"
+              >
+                {schools.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name} ({s.code} - {s.city})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="flex flex-wrap items-center gap-2 p-2 bg-[#FFFBEB] border-[3px] border-black shadow-[4px_4px_0px_#000000]">

@@ -167,6 +167,26 @@ export function subscribeToFestRealtime(callback: (payload: { table: string; eve
       { event: "*", schema: "public", table: "students" },
       (payload: any) => callback({ table: "students", event: payload.eventType, record: payload.new || payload.old })
     )
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "teams" },
+      (payload: any) => callback({ table: "teams", event: payload.eventType, record: payload.new || payload.old })
+    )
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "school_tickets" },
+      (payload: any) => callback({ table: "school_tickets", event: payload.eventType, record: payload.new || payload.old })
+    )
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "volunteer_duties" },
+      (payload: any) => callback({ table: "volunteer_duties", event: payload.eventType, record: payload.new || payload.old })
+    )
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "issue_reports" },
+      (payload: any) => callback({ table: "issue_reports", event: payload.eventType, record: payload.new || payload.old })
+    )
     .subscribe();
 
   return () => {
