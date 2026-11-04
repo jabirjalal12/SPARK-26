@@ -14,7 +14,7 @@ import {
 // 8 Official Competition Tracks for SPARK 2026
 export const initialTracks: Track[] = [
   {
-    id: "track-01-robotics",
+    id: "11111111-1111-1111-1111-111111111111",
     name: "Robotics",
     slug: "robotics",
     color: "#1E40AF", // Deep Blue
@@ -24,7 +24,7 @@ export const initialTracks: Track[] = [
     created_at: "2026-11-01T08:00:00Z",
   },
   {
-    id: "track-02-quiz",
+    id: "22222222-2222-2222-2222-222222222222",
     name: "Quiz",
     slug: "quiz",
     color: "#7C3AED", // Purple
@@ -34,7 +34,7 @@ export const initialTracks: Track[] = [
     created_at: "2026-11-01T08:00:00Z",
   },
   {
-    id: "track-03-ideathon",
+    id: "33333333-3333-3333-3333-333333333333",
     name: "Ideathon",
     slug: "ideathon",
     color: "#059669", // Emerald Green
@@ -44,7 +44,7 @@ export const initialTracks: Track[] = [
     created_at: "2026-11-01T08:00:00Z",
   },
   {
-    id: "track-04-science-project",
+    id: "44444444-4444-4444-4444-444444444444",
     name: "Science Project Competition",
     slug: "science-project",
     color: "#0284C7", // Sky Blue
@@ -54,7 +54,7 @@ export const initialTracks: Track[] = [
     created_at: "2026-11-01T08:00:00Z",
   },
   {
-    id: "track-05-useless-project",
+    id: "55555555-5555-5555-5555-555555555555",
     name: "Useless Project Competition",
     slug: "useless-projects",
     color: "#DC2626", // Red
@@ -64,7 +64,7 @@ export const initialTracks: Track[] = [
     created_at: "2026-11-01T08:00:00Z",
   },
   {
-    id: "track-06-article-writing",
+    id: "66666666-6666-6666-6666-666666666666",
     name: "Article Writing",
     slug: "article-writing",
     color: "#D97706", // Amber
@@ -74,7 +74,7 @@ export const initialTracks: Track[] = [
     created_at: "2026-11-01T08:00:00Z",
   },
   {
-    id: "track-07-poster-presentation",
+    id: "77777777-7777-7777-7777-777777777777",
     name: "Poster Presentation",
     slug: "poster-presentation",
     color: "#DB2777", // Pink
@@ -84,7 +84,7 @@ export const initialTracks: Track[] = [
     created_at: "2026-11-01T08:00:00Z",
   },
   {
-    id: "track-08-scrap-product",
+    id: "88888888-8888-8888-8888-888888888888",
     name: "New Product Development from Scrap",
     slug: "build-from-scrap",
     color: "#166534", // Forest Green
@@ -134,7 +134,7 @@ export const initialSchedule: ScheduleItem[] = [
     id: "sch-03",
     title: "Robotics — Preliminary Rounds",
     description: "Autonomous & wired rover heats navigating obstacle courses and terrain challenges.",
-    track_id: "track-01-robotics",
+    track_id: "11111111-1111-1111-1111-111111111111",
     venue_id: "ven-03", // College Dome
     starts_at: "2026-11-05T10:30:00Z",
     ends_at: "2026-11-05T12:00:00Z",
@@ -144,7 +144,7 @@ export const initialSchedule: ScheduleItem[] = [
     id: "sch-04",
     title: "Quiz — Preliminary Rounds",
     description: "Written elimination round covering science, engineering, and tech trivia.",
-    track_id: "track-02-quiz",
+    track_id: "22222222-2222-2222-2222-222222222222",
     venue_id: "ven-02", // College Auditorium
     starts_at: "2026-11-05T10:30:00Z",
     ends_at: "2026-11-05T11:30:00Z",
@@ -154,7 +154,7 @@ export const initialSchedule: ScheduleItem[] = [
     id: "sch-05",
     title: "Ideathon",
     description: "Idea pitches on engineering solutions for pressing technological and societal challenges.",
-    track_id: "track-03-ideathon",
+    track_id: "33333333-3333-3333-3333-333333333333",
     venue_id: "ven-04", // Smart Classroom (2nd Floor)
     starts_at: "2026-11-05T10:30:00Z",
     ends_at: "2026-11-05T13:00:00Z",
@@ -164,7 +164,7 @@ export const initialSchedule: ScheduleItem[] = [
     id: "sch-06",
     title: "Science Project Competition",
     description: "Live exhibition and jury assessment of working scientific models and experiments.",
-    track_id: "track-04-science-project",
+    track_id: "44444444-4444-4444-4444-444444444444",
     venue_id: "ven-05", // EG001 and EG002
     starts_at: "2026-11-05T10:30:00Z",
     ends_at: "2026-11-05T13:00:00Z",
@@ -174,7 +174,7 @@ export const initialSchedule: ScheduleItem[] = [
     id: "sch-07",
     title: "Useless Project Competition",
     description: "Over-engineered absurd machines solving hilarious, trivial problems autonomously.",
-    track_id: "track-05-useless-project",
+    track_id: "55555555-5555-5555-5555-555555555555",
     venue_id: "ven-06", // Computer Lab 1
     starts_at: "2026-11-05T10:30:00Z",
     ends_at: "2026-11-05T13:00:00Z",
@@ -184,7 +184,7 @@ export const initialSchedule: ScheduleItem[] = [
     id: "sch-08",
     title: "Article Writing",
     description: "On-the-spot technical essay writing on modern engineering frontiers.",
-    track_id: "track-06-article-writing",
+    track_id: "66666666-6666-6666-6666-666666666666",
     venue_id: "ven-07", // ES001 and ES002
     starts_at: "2026-11-05T10:30:00Z",
     ends_at: "2026-11-05T13:00:00Z",
@@ -194,7 +194,7 @@ export const initialSchedule: ScheduleItem[] = [
     id: "sch-09",
     title: "Poster Presentation",
     description: "Infographic exhibition and poster booth defense before visiting juries.",
-    track_id: "track-07-poster-presentation",
+    track_id: "77777777-7777-7777-7777-777777777777",
     venue_id: "ven-08", // Computer Lab 3
     starts_at: "2026-11-05T10:30:00Z",
     ends_at: "2026-11-05T13:00:00Z",
@@ -204,7 +204,7 @@ export const initialSchedule: ScheduleItem[] = [
     id: "sch-10",
     title: "New Product Development from Scrap",
     description: "Fabricating working electro-mechanical prototypes from junkyard materials.",
-    track_id: "track-08-scrap-product",
+    track_id: "88888888-8888-8888-8888-888888888888",
     venue_id: "ven-09", // Mechanical Workshop
     starts_at: "2026-11-05T10:30:00Z",
     ends_at: "2026-11-05T13:00:00Z",
@@ -214,7 +214,7 @@ export const initialSchedule: ScheduleItem[] = [
     id: "sch-11",
     title: "Quiz — Final Rounds",
     description: "Stage buzzer showdown featuring top qualifier school squads.",
-    track_id: "track-02-quiz",
+    track_id: "22222222-2222-2222-2222-222222222222",
     venue_id: "ven-02", // College Auditorium
     starts_at: "2026-11-05T13:00:00Z",
     ends_at: "2026-11-05T14:00:00Z",
@@ -224,7 +224,7 @@ export const initialSchedule: ScheduleItem[] = [
     id: "sch-12",
     title: "Robotics — Final Rounds",
     description: "Championship obstacle course faceoff between top preliminary rovers.",
-    track_id: "track-01-robotics",
+    track_id: "11111111-1111-1111-1111-111111111111",
     venue_id: "ven-03", // College Dome
     starts_at: "2026-11-05T13:30:00Z",
     ends_at: "2026-11-05T14:00:00Z",
@@ -245,36 +245,36 @@ export const initialSchedule: ScheduleItem[] = [
 // Scoring Criteria for All 8 Official Competitions
 export const initialCriteria: ScoringCriterion[] = [
   // Robotics
-  { id: "c-rb-1", track_id: "track-01-robotics", name: "Autonomous Execution & Navigation", weight: 0.40, max_score: 10 },
-  { id: "c-rb-2", track_id: "track-01-robotics", name: "Mechanical Chassis & Wiring", weight: 0.30, max_score: 10 },
-  { id: "c-rb-3", track_id: "track-01-robotics", name: "Obstacle Course Speed", weight: 0.30, max_score: 10 },
+  { id: "c-rb-1", track_id: "11111111-1111-1111-1111-111111111111", name: "Autonomous Execution & Navigation", weight: 0.40, max_score: 10 },
+  { id: "c-rb-2", track_id: "11111111-1111-1111-1111-111111111111", name: "Mechanical Chassis & Wiring", weight: 0.30, max_score: 10 },
+  { id: "c-rb-3", track_id: "11111111-1111-1111-1111-111111111111", name: "Obstacle Course Speed", weight: 0.30, max_score: 10 },
   // Quiz
-  { id: "c-qz-1", track_id: "track-02-quiz", name: "Preliminary Score", weight: 0.40, max_score: 10 },
-  { id: "c-qz-2", track_id: "track-02-quiz", name: "Buzzer Stage Speed & Accuracy", weight: 0.60, max_score: 10 },
+  { id: "c-qz-1", track_id: "22222222-2222-2222-2222-222222222222", name: "Preliminary Score", weight: 0.40, max_score: 10 },
+  { id: "c-qz-2", track_id: "22222222-2222-2222-2222-222222222222", name: "Buzzer Stage Speed & Accuracy", weight: 0.60, max_score: 10 },
   // Ideathon
-  { id: "c-id-1", track_id: "track-03-ideathon", name: "Innovation & Problem Originality", weight: 0.40, max_score: 10 },
-  { id: "c-id-2", track_id: "track-03-ideathon", name: "Feasibility & Technical Roadmap", weight: 0.30, max_score: 10 },
-  { id: "c-id-3", track_id: "track-03-ideathon", name: "Stage Pitch & Defense", weight: 0.30, max_score: 10 },
+  { id: "c-id-1", track_id: "33333333-3333-3333-3333-333333333333", name: "Innovation & Problem Originality", weight: 0.40, max_score: 10 },
+  { id: "c-id-2", track_id: "33333333-3333-3333-3333-333333333333", name: "Feasibility & Technical Roadmap", weight: 0.30, max_score: 10 },
+  { id: "c-id-3", track_id: "33333333-3333-3333-3333-333333333333", name: "Stage Pitch & Defense", weight: 0.30, max_score: 10 },
   // Science Project
-  { id: "c-sp-1", track_id: "track-04-science-project", name: "Scientific Depth & Hypothesis", weight: 0.35, max_score: 10 },
-  { id: "c-sp-2", track_id: "track-04-science-project", name: "Working Demonstration", weight: 0.35, max_score: 10 },
-  { id: "c-sp-3", track_id: "track-04-science-project", name: "Poster & Documentation", weight: 0.30, max_score: 10 },
+  { id: "c-sp-1", track_id: "44444444-4444-4444-4444-444444444444", name: "Scientific Depth & Hypothesis", weight: 0.35, max_score: 10 },
+  { id: "c-sp-2", track_id: "44444444-4444-4444-4444-444444444444", name: "Working Demonstration", weight: 0.35, max_score: 10 },
+  { id: "c-sp-3", track_id: "44444444-4444-4444-4444-444444444444", name: "Poster & Documentation", weight: 0.30, max_score: 10 },
   // Useless Project
-  { id: "c-up-1", track_id: "track-05-useless-project", name: "Concept Absurdity & Humor", weight: 0.40, max_score: 10 },
-  { id: "c-up-2", track_id: "track-05-useless-project", name: "Technical Over-engineering", weight: 0.40, max_score: 10 },
-  { id: "c-up-3", track_id: "track-05-useless-project", name: "Deadpan Stage Presentation", weight: 0.20, max_score: 10 },
+  { id: "c-up-1", track_id: "55555555-5555-5555-5555-555555555555", name: "Concept Absurdity & Humor", weight: 0.40, max_score: 10 },
+  { id: "c-up-2", track_id: "55555555-5555-5555-5555-555555555555", name: "Technical Over-engineering", weight: 0.40, max_score: 10 },
+  { id: "c-up-3", track_id: "55555555-5555-5555-5555-555555555555", name: "Deadpan Stage Presentation", weight: 0.20, max_score: 10 },
   // Article Writing
-  { id: "c-aw-1", track_id: "track-06-article-writing", name: "Technical Depth & Content", weight: 0.40, max_score: 10 },
-  { id: "c-aw-2", track_id: "track-06-article-writing", name: "Structure & Clarity", weight: 0.30, max_score: 10 },
-  { id: "c-aw-3", track_id: "track-06-article-writing", name: "Originality of Perspective", weight: 0.30, max_score: 10 },
+  { id: "c-aw-1", track_id: "66666666-6666-6666-6666-666666666666", name: "Technical Depth & Content", weight: 0.40, max_score: 10 },
+  { id: "c-aw-2", track_id: "66666666-6666-6666-6666-666666666666", name: "Structure & Clarity", weight: 0.30, max_score: 10 },
+  { id: "c-aw-3", track_id: "66666666-6666-6666-6666-666666666666", name: "Originality of Perspective", weight: 0.30, max_score: 10 },
   // Poster Presentation
-  { id: "c-pp-1", track_id: "track-07-poster-presentation", name: "Visual Infographic Quality", weight: 0.40, max_score: 10 },
-  { id: "c-pp-2", track_id: "track-07-poster-presentation", name: "Technical Rigor", weight: 0.30, max_score: 10 },
-  { id: "c-pp-3", track_id: "track-07-poster-presentation", name: "Q&A Booth Defense", weight: 0.30, max_score: 10 },
+  { id: "c-pp-1", track_id: "77777777-7777-7777-7777-777777777777", name: "Visual Infographic Quality", weight: 0.40, max_score: 10 },
+  { id: "c-pp-2", track_id: "77777777-7777-7777-7777-777777777777", name: "Technical Rigor", weight: 0.30, max_score: 10 },
+  { id: "c-pp-3", track_id: "77777777-7777-7777-7777-777777777777", name: "Q&A Booth Defense", weight: 0.30, max_score: 10 },
   // Scrap Product
-  { id: "c-sc-1", track_id: "track-08-scrap-product", name: "Scrap Resourcefulness & Re-use", weight: 0.35, max_score: 10 },
-  { id: "c-sc-2", track_id: "track-08-scrap-product", name: "Functional Machine Output", weight: 0.35, max_score: 10 },
-  { id: "c-sc-3", track_id: "track-08-scrap-product", name: "Structural Craft & Rigidity", weight: 0.30, max_score: 10 },
+  { id: "c-sc-1", track_id: "88888888-8888-8888-8888-888888888888", name: "Scrap Resourcefulness & Re-use", weight: 0.35, max_score: 10 },
+  { id: "c-sc-2", track_id: "88888888-8888-8888-8888-888888888888", name: "Functional Machine Output", weight: 0.35, max_score: 10 },
+  { id: "c-sc-3", track_id: "88888888-8888-8888-8888-888888888888", name: "Structural Craft & Rigidity", weight: 0.30, max_score: 10 },
 ];
 
 export const initialSchools: School[] = [];
