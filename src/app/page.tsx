@@ -323,7 +323,7 @@ export default function LandingPage() {
 
           {/* ── Story + Delegation Grid ── */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-12">
-            {/* Origin Story */}
+            {/* About SPARK Section */}
             <div className="lg:col-span-7 bg-[#FFFBEB] border-[3px] border-black shadow-[8px_8px_0px_#000000] flex flex-col">
               <div className="p-6 sm:p-8 border-b-[3px] border-black flex items-center gap-3">
                 <div className="w-11 h-11 bg-[#FF5252] border-2 border-black shadow-[3px_3px_0px_#000000] flex items-center justify-center flex-shrink-0">
@@ -331,20 +331,20 @@ export default function LandingPage() {
                 </div>
                 <div>
                   <span className="text-[10px] font-black uppercase tracking-widest text-black bg-[#FFEB3B] px-2 py-0.5 border border-black">
-                    THE STORY
+                    ABOUT THE SPARK
                   </span>
-                  <h3 className="text-xl sm:text-2xl font-black text-black mt-0.5">Why SPARK Exists</h3>
+                  <h3 className="text-xl sm:text-2xl font-black text-black mt-0.5">An All-Round Tech Fest</h3>
                 </div>
               </div>
               <div className="p-6 sm:p-8 flex-1 space-y-4 text-sm sm:text-base font-medium text-slate-900 leading-relaxed">
                 <p>
-                  <strong>SPARK</strong> was conceived by the faculty of ACE Engineering College to give inter-school students a stage that rewards <em>actual engineering output</em>, not theoretical presentation.
+                  <strong>SPARK</strong> is a comprehensive, all-round technical fest conceived to give inter-school students a vibrant platform that champions hands-on engineering, creative problem-solving, and practical innovation over theoretical presentations.
                 </p>
                 <p>
-                  Visiting school delegations arrive at 07:00 AM, check in their full squad with a single QR scan, and immediately enter the arena. Over one adrenaline-charged day, student teams program, fabricate, solder, and stress-test functional machines under live judging — every run, every failure, and every breakthrough captured in real-time digital scoring.
+                  Hosted across the college campus, visiting school delegations field student squads under the mentorship of their faculty leads. From robotics challenges and scrap-material fabrication to creative engineering and hardware design, teams collaborate, construct, test, and demonstrate working projects under live panel evaluation.
                 </p>
                 <p>
-                  The winning institution earns the <strong>SPARK Rolling Trophy</strong> — and the ultimate championship title.
+                  With transparent rubrics, real-time digital scoring, and constructive feedback from collegiate educators, SPARK celebrates all-round technical excellence — with the top-performing school clinching the prestigious <strong>SPARK Rolling Trophy</strong>.
                 </p>
               </div>
               <div className="px-6 sm:px-8 pb-6 pt-2 border-t-[3px] border-black flex flex-wrap gap-2.5">
