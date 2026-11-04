@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { useFestStore } from "@/lib/store";
+import { School, Team, Track } from "@/lib/types/database";
 import {
   Trophy,
   Radio,
@@ -12,23 +13,28 @@ import {
   Pause,
   AlertTriangle,
   Sparkles,
-  Layers,
-  ChevronRight,
-  Flame,
+  Bot,
+  Wrench,
+  Award,
+  ShieldCheck,
+  Building2,
+  Zap,
 } from "lucide-react";
 
 export default function StandaloneTvPage() {
   const { tracks, teams, schools, announcements, resultsPublished } = useFestStore();
 
-  const [activeWindow, setActiveWindow] = useState<"leaderboard" | "announcements" | "split">("split");
-  const [activeTrackIndex, setActiveTrackIndex] = useState(0);
+  // Sequence stages: 0..(tracks.length - 1) = individual tracks, tracks.length = overall school leaderboard
+  const [currentStage, setCurrentStage] = useState(0);
   const [autoRotate, setAutoRotate] = useState(true);
-  const [rotateCountdown, setRotateCountdown] = useState(15);
+  const [countdown, setCountdown] = useState(12);
   const [currentTime, setCurrentTime] = useState("");
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [animationKey, setAnimationKey] = useState(0);
+  const [animKey, setAnimKey] = useState(0);
 
-  const activeTrack = tracks[activeTrackIndex] || tracks[0];
+  const totalStages = Math.max(1, tracks.length + 1);
+  const isOverallStage = currentStage === tracks.length;
+  const currentTrack = !isOverallStage ? tracks[currentStage] || tracks[0] : null;
 
   // Real-time Clock
   useEffect(() => {
@@ -55,18 +61,21 @@ export default function StandaloneTvPage() {
     return () => document.removeEventListener("fullscreenchange", onFsChange);
   }, []);
 
-  // Keyboard shortcut for presentation
+  // Keyboard Shortcuts (F = Fullscreen, Space = Play/Pause, ArrowRight = Next stage)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "f" || e.key === "F") {
         toggleFullscreen();
       } else if (e.code === "Space") {
+        e.preventDefault();
         setAutoRotate((prev) => !prev);
+      } else if (e.key === "ArrowRight") {
+        nextStage();
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
+  }, [totalStages]);
 
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
@@ -76,73 +85,121 @@ export default function StandaloneTvPage() {
     }
   };
 
-  // Auto-Cycle Timer with window animation trigger
+  const nextStage = () => {
+    setCurrentStage((prev) => (prev + 1) % totalStages);
+    setAnimKey((k) => k + 1);
+    setCountdown(12);
+  };
+
+  // Automatic Rotation: Event 1 -> Event 2 -> Event 3 -> Overall Leaderboard -> Loop Repeat
   useEffect(() => {
     if (!autoRotate) return;
 
-    const timer = setInterval(() => {
-      setRotateCountdown((prev) => {
+    const interval = setInterval(() => {
+      setCountdown((prev) => {
         if (prev <= 1) {
-          // Rotate to next track or toggle between windows
-          if (tracks.length > 0) {
-            setActiveTrackIndex((tIndex) => {
-              const nextIndex = (tIndex + 1) % tracks.length;
-              if (nextIndex === 0) {
-                // Switch window type smoothly
-                setActiveWindow((curr) => {
-                  if (curr === "split") return "leaderboard";
-                  if (curr === "leaderboard") return "announcements";
-                  return "split";
-                });
-              }
-              return nextIndex;
-            });
-          }
-          setAnimationKey((k) => k + 1);
-          return 15;
+          setCurrentStage((curr) => (curr + 1) % totalStages);
+          setAnimKey((k) => k + 1);
+          return 12;
         }
         return prev - 1;
       });
     }, 1000);
 
-    return () => clearInterval(timer);
-  }, [autoRotate, tracks.length]);
+    return () => clearInterval(interval);
+  }, [autoRotate, totalStages]);
 
-  // Ranked teams for active track
+  // Ranked Teams for the active individual event
   const trackTeams = useMemo(() => {
-    if (!activeTrack) return [];
+    if (!currentTrack) return [];
     return teams
-      .filter((t) => t.track_id === activeTrack.id)
+      .filter((t) => t.track_id === currentTrack.id)
       .sort((a, b) => (b.score_total || 0) - (a.score_total || 0));
-  }, [teams, activeTrack]);
+  }, [teams, currentTrack]);
 
-  const top3 = trackTeams.slice(0, 3);
+  // Aggregated Overall Institutional Leaderboard (All Schools)
+  const overallSchoolStandings = useMemo(() => {
+    const map = new Map<string, { school: School; totalPoints: number; teamCount: number; golds: number }>();
+
+    schools.forEach((s) => {
+      map.set(s.id, { school: s, totalPoints: 0, teamCount: 0, golds: 0 });
+    });
+
+    teams.forEach((t) => {
+      if (!t.school_id) return;
+      let entry = map.get(t.school_id);
+      if (!entry) {
+        const fallbackSchool: School = {
+          id: t.school_id,
+          name: "Independent Delegation",
+          code: "IND",
+          address: null,
+          city: "Campus",
+          contact_email: "",
+          contact_phone: "",
+          status: "approved",
+          approved_by: null,
+          approved_at: null,
+          arrived: true,
+          created_at: "",
+          updated_at: "",
+        };
+        entry = { school: fallbackSchool, totalPoints: 0, teamCount: 0, golds: 0 };
+        map.set(t.school_id, entry);
+      }
+      entry.totalPoints += t.score_total || 0;
+      entry.teamCount += 1;
+    });
+
+    // Count gold medals per school
+    tracks.forEach((track) => {
+      const topInTrack = teams
+        .filter((t) => t.track_id === track.id && (t.score_total || 0) > 0)
+        .sort((a, b) => (b.score_total || 0) - (a.score_total || 0))[0];
+      if (topInTrack?.school_id && map.has(topInTrack.school_id)) {
+        map.get(topInTrack.school_id)!.golds += 1;
+      }
+    });
+
+    return Array.from(map.values()).sort((a, b) => b.totalPoints - a.totalPoints);
+  }, [schools, teams, tracks]);
+
+  // Announcements
   const urgentAnnouncements = announcements.filter((a) => a.urgent);
+
+  // Helper icons for tracks
+  const getTrackIcon = (trackName: string) => {
+    const lower = trackName.toLowerCase();
+    if (lower.includes("robo")) return <Bot className="w-6 h-6 text-black" />;
+    if (lower.includes("scrap")) return <Wrench className="w-6 h-6 text-black" />;
+    return <Sparkles className="w-6 h-6 text-black" />;
+  };
 
   return (
     <div className="w-screen h-screen overflow-hidden flex flex-col bg-[#FFFBEB] text-black font-sans select-none">
-      {/* Top Animation Progress Bar */}
-      <div className="w-full h-1.5 bg-black/10 overflow-hidden">
+      {/* Top Countdown Animation Line */}
+      <div className="w-full h-1.5 bg-black/10 overflow-hidden flex-shrink-0">
         <div
           className="h-full bg-[#FF5252] transition-all duration-1000 ease-linear"
-          style={{ width: `${((15 - rotateCountdown) / 15) * 100}%` }}
+          style={{ width: `${((12 - countdown) / 12) * 100}%` }}
         />
       </div>
 
-      {/* Edge-to-Edge Venue Header */}
-      <header className="px-6 py-3.5 bg-white border-b-[3px] border-black flex items-center justify-between gap-4 flex-shrink-0 shadow-[0_3px_0px_#000000]">
+      {/* Main Kiosk Header Bar */}
+      <header className="px-6 py-3 bg-white border-b-[3px] border-black flex items-center justify-between gap-4 flex-shrink-0 shadow-[0_3px_0px_#000000]">
+        {/* Brand & Live Pill */}
         <div className="flex items-center gap-3">
-          <div className="w-11 h-11 bg-[#FFEB3B] border-[3px] border-black shadow-[3px_3px_0px_#000000] flex items-center justify-center font-black">
+          <div className="w-11 h-11 bg-[#FFEB3B] border-[3px] border-black shadow-[3px_3px_0px_#000000] flex items-center justify-center font-black flex-shrink-0">
             <Radio className="w-6 h-6 text-black animate-pulse" />
           </div>
           <div>
             <div className="flex items-center gap-2">
               <span className="px-2 py-0.5 bg-black text-[#FFEB3B] text-[10px] font-black uppercase tracking-wider">
-                LIVE VENUE DISPLAY
+                LIVE VENUE ARENA DISPLAY
               </span>
               <span className="flex items-center gap-1.5 text-[11px] font-black text-black">
                 <span className="h-2 w-2 rounded-full bg-[#4CAF50] inline-block animate-ping" />
-                Realtime Stream
+                Telemetry Streaming
               </span>
             </div>
             <h1 className="text-xl sm:text-2xl font-black text-black tracking-tight leading-none mt-1">
@@ -151,78 +208,57 @@ export default function StandaloneTvPage() {
           </div>
         </div>
 
-        {/* Center: Track Indicator pills */}
-        <div className="hidden md:flex items-center gap-1.5 p-1 bg-[#FFFBEB] border-2 border-black shadow-[2px_2px_0px_#000000]">
+        {/* Center: Stage Sequence Navigator (Animated Events + Overall Trophy) */}
+        <div className="hidden lg:flex items-center gap-1 p-1 bg-[#FFFBEB] border-2 border-black shadow-[2px_2px_0px_#000000]">
           {tracks.map((t, idx) => (
             <button
               key={t.id}
               onClick={() => {
-                setActiveTrackIndex(idx);
-                setAnimationKey((k) => k + 1);
-                setRotateCountdown(15);
+                setCurrentStage(idx);
+                setAnimKey((k) => k + 1);
+                setCountdown(12);
               }}
-              className={`px-3 py-1 text-xs font-black border transition-all cursor-pointer ${
-                idx === activeTrackIndex
+              className={`px-3 py-1 text-xs font-black border transition-all cursor-pointer flex items-center gap-1.5 ${
+                currentStage === idx
                   ? "bg-black text-[#FFEB3B] border-black shadow-[2px_2px_0px_#2196F3]"
                   : "bg-white text-black border-transparent hover:border-black"
               }`}
             >
-              {t.name}
+              <span>Event {idx + 1}: {t.name}</span>
+              {currentStage === idx && <span className="text-[10px] bg-[#FFEB3B] text-black px-1 rounded-sm">{countdown}s</span>}
             </button>
           ))}
+          <button
+            onClick={() => {
+              setCurrentStage(tracks.length);
+              setAnimKey((k) => k + 1);
+              setCountdown(12);
+            }}
+            className={`px-3 py-1 text-xs font-black border transition-all cursor-pointer flex items-center gap-1.5 ${
+              isOverallStage
+                ? "bg-[#9C27B0] text-white border-black shadow-[2px_2px_0px_#FFEB3B]"
+                : "bg-white text-black border-transparent hover:border-black"
+            }`}
+          >
+            <Trophy className="w-3.5 h-3.5 text-[#FFEB3B]" />
+            <span>🏆 Overall Championship</span>
+            {isOverallStage && <span className="text-[10px] bg-[#FFEB3B] text-black px-1 rounded-sm">{countdown}s</span>}
+          </button>
         </div>
 
-        {/* Right: Controls & Real-Time Clock */}
-        <div className="flex items-center gap-3">
-          {/* Mode Tabs */}
-          <div className="hidden sm:flex border-2 border-black bg-[#FFFBEB] p-0.5 shadow-[2px_2px_0px_#000000]">
-            <button
-              onClick={() => {
-                setActiveWindow("split");
-                setAnimationKey((k) => k + 1);
-              }}
-              className={`px-3 py-1 text-xs font-black transition-colors ${
-                activeWindow === "split" ? "bg-black text-[#FFEB3B]" : "text-black hover:bg-white"
-              }`}
-            >
-              Split View
-            </button>
-            <button
-              onClick={() => {
-                setActiveWindow("leaderboard");
-                setAnimationKey((k) => k + 1);
-              }}
-              className={`px-3 py-1 text-xs font-black transition-colors ${
-                activeWindow === "leaderboard" ? "bg-black text-[#FFEB3B]" : "text-black hover:bg-white"
-              }`}
-            >
-              Leaderboard
-            </button>
-            <button
-              onClick={() => {
-                setActiveWindow("announcements");
-                setAnimationKey((k) => k + 1);
-              }}
-              className={`px-3 py-1 text-xs font-black transition-colors ${
-                activeWindow === "announcements" ? "bg-black text-[#FFEB3B]" : "text-black hover:bg-white"
-              }`}
-            >
-              Announcements
-            </button>
-          </div>
-
-          {/* Auto Rotate Toggle */}
+        {/* Right Controls: Auto Cycle Toggle, Clock & Fullscreen */}
+        <div className="flex items-center gap-2.5">
           <button
             onClick={() => setAutoRotate(!autoRotate)}
             className={`px-3 py-1.5 border-2 border-black font-black text-xs flex items-center gap-1.5 shadow-[2px_2px_0px_#000000] cursor-pointer ${
               autoRotate ? "bg-[#4CAF50] text-black" : "bg-[#FFEB3B] text-black"
             }`}
-            title="Press SPACE to toggle auto-cycling"
+            title="Press SPACE to toggle auto-rotation"
           >
             {autoRotate ? (
               <>
                 <Pause className="w-3.5 h-3.5" />
-                <span>Auto ({rotateCountdown}s)</span>
+                <span>Cycling ({countdown}s)</span>
               </>
             ) : (
               <>
@@ -232,13 +268,11 @@ export default function StandaloneTvPage() {
             )}
           </button>
 
-          {/* Live Digital Clock */}
-          <div className="px-3 py-1.5 bg-black text-[#FFEB3B] font-mono text-sm font-black border-2 border-black shadow-[2px_2px_0px_#000000] flex items-center gap-1.5">
+          <div className="px-3 py-1.5 bg-black text-[#FFEB3B] font-mono text-xs sm:text-sm font-black border-2 border-black shadow-[2px_2px_0px_#000000] flex items-center gap-1.5">
             <Clock className="w-4 h-4 text-[#FFEB3B]" />
             <span>{currentTime || "00:00:00"}</span>
           </div>
 
-          {/* Fullscreen Toggle */}
           <button
             onClick={toggleFullscreen}
             className="p-1.5 bg-[#FFEB3B] hover:bg-black hover:text-[#FFEB3B] text-black border-2 border-black shadow-[2px_2px_0px_#000000] cursor-pointer transition-colors"
@@ -249,99 +283,234 @@ export default function StandaloneTvPage() {
         </div>
       </header>
 
-      {/* Main Animated Windows Container */}
-      <main className="flex-1 p-6 overflow-hidden flex flex-col justify-between">
-        {/* WINDOW 1: SPLIT SCREEN (Leaderboard on left, Announcements on right) */}
-        {activeWindow === "split" && (
+      {/* Main Split Screen Area: Edge-to-Edge Animated Windows */}
+      <main className="flex-1 p-5 overflow-hidden">
+        <div className="grid grid-cols-12 gap-5 h-[calc(100vh-130px)]">
+          {/* ========================================================================= */}
+          {/* LEFT WINDOW: ANIMATED LEADERBOARD (CYCLES THROUGH EACH EVENT & OVERALL) */}
+          {/* ========================================================================= */}
           <div
-            key={`split-${animationKey}-${activeTrackIndex}`}
-            className="grid grid-cols-12 gap-6 h-[calc(100vh-140px)] animate-window"
+            key={`left-${animKey}-${currentStage}`}
+            className="col-span-7 flex flex-col justify-between p-5 bg-white border-[3px] border-black shadow-[6px_6px_0px_#000000] overflow-hidden animate-event-left"
           >
-            {/* Left Column: Podium & Leaderboard Table (7 Cols) */}
-            <div className="col-span-7 flex flex-col justify-between p-6 bg-white border-[3px] border-black shadow-[6px_6px_0px_#000000] overflow-hidden">
-              <div>
-                <div className="flex items-center justify-between pb-3 mb-4 border-b-2 border-black">
-                  <div className="flex items-center gap-2">
-                    <Trophy className="w-6 h-6 text-black" />
-                    <h2 className="text-xl font-black text-black">
-                      Standings: {activeTrack?.name || "Robotics Arena"}
+            <div>
+              {/* Window Header */}
+              <div className="flex items-center justify-between pb-3 mb-4 border-b-2 border-black">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-1.5 bg-[#FFEB3B] border-2 border-black shadow-[2px_2px_0px_#000000]">
+                    {isOverallStage ? (
+                      <Trophy className="w-6 h-6 text-black animate-trophy" />
+                    ) : (
+                      getTrackIcon(currentTrack?.name || "")
+                    )}
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-black uppercase tracking-wider px-1.5 py-0.2 bg-black text-[#FFEB3B]">
+                        {isOverallStage ? "FINAL TROPHY STANDINGS" : `EVENT ${currentStage + 1} OF ${tracks.length}`}
+                      </span>
+                      <span className="text-xs font-bold text-slate-700">
+                        {isOverallStage ? "All Tracks Aggregated" : "Track Standings"}
+                      </span>
+                    </div>
+                    <h2 className="text-xl sm:text-2xl font-black text-black leading-tight">
+                      {isOverallStage
+                        ? "🏆 SPARK Rolling Trophy — Overall School Championship"
+                        : currentTrack?.name}
                     </h2>
                   </div>
-                  <span className="px-2.5 py-0.5 bg-[#FFEB3B] border border-black text-xs font-black uppercase">
-                    {resultsPublished ? "Official Verified" : "Live Scoring Telemetry"}
+                </div>
+
+                <div className="text-right">
+                  <span className="px-2.5 py-1 bg-[#4CAF50] text-black border border-black text-xs font-black uppercase">
+                    {resultsPublished ? "Official Verified" : "Live Scoring Active"}
                   </span>
                 </div>
+              </div>
 
-                {/* Animated Olympic Podium */}
-                <div className="grid grid-cols-3 gap-3 mb-5 items-end">
-                  {/* #2 Silver */}
-                  <div className="animate-podium-2 p-3 bg-[#E0E0E0] border-[3px] border-black text-center shadow-[3px_3px_0px_#000000] h-36 flex flex-col justify-between">
-                    <div className="w-7 h-7 bg-white border-2 border-black font-black text-xs flex items-center justify-center mx-auto">
-                      🥈
+              {/* =================================================================== */}
+              {/* STAGE CASE A: INDIVIDUAL TRACK EVENT PODIUM & TABLE                */}
+              {/* =================================================================== */}
+              {!isOverallStage && (
+                <>
+                  {/* Olympic Podium for Track */}
+                  <div className="grid grid-cols-3 gap-3 mb-4 items-end">
+                    {/* #2 Silver */}
+                    <div className="animate-podium-2 p-3 bg-[#E0E0E0] border-[3px] border-black text-center shadow-[3px_3px_0px_#000000] h-36 flex flex-col justify-between">
+                      <div className="w-7 h-7 bg-white border-2 border-black font-black text-xs flex items-center justify-center mx-auto">
+                        🥈
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-black uppercase text-slate-800">Runner Up (#2)</span>
+                        <h3 className="text-sm font-black text-black truncate">{trackTeams[1]?.name || "Evaluating"}</h3>
+                        <p className="text-[10px] font-bold text-slate-800 truncate">
+                          {schools.find((s) => s.id === trackTeams[1]?.school_id)?.name || "—"}
+                        </p>
+                      </div>
+                      <div className="p-1 bg-white border border-black font-black text-sm text-black">
+                        {trackTeams[1]?.score_total || 0} pts
+                      </div>
                     </div>
-                    <div>
-                      <span className="text-[10px] font-black uppercase text-slate-700">Rank #2</span>
-                      <h3 className="text-sm font-black text-black truncate">{top3[1]?.name || "Evaluating"}</h3>
-                      <p className="text-[10px] font-bold text-slate-800 truncate">
-                        {schools.find((s) => s.id === top3[1]?.school_id)?.name || "—"}
-                      </p>
+
+                    {/* #1 Gold Champion */}
+                    <div className="animate-podium-1 p-4 bg-[#FFEB3B] border-[3px] border-black text-center shadow-[5px_5px_0px_#000000] h-48 flex flex-col justify-between animate-gold-glow">
+                      <div className="w-9 h-9 bg-black text-[#FFEB3B] border-2 border-black font-black text-base flex items-center justify-center mx-auto shadow-[2px_2px_0px_#000000]">
+                        🥇
+                      </div>
+                      <div>
+                        <span className="text-xs font-black uppercase tracking-wider text-black">EVENT CHAMPION (#1)</span>
+                        <h3 className="text-base font-black text-black truncate">{trackTeams[0]?.name || "Evaluating"}</h3>
+                        <p className="text-xs font-bold text-slate-900 truncate">
+                          {schools.find((s) => s.id === trackTeams[0]?.school_id)?.name || "—"}
+                        </p>
+                      </div>
+                      <div className="p-1.5 bg-white border-2 border-black font-black text-lg text-black">
+                        {trackTeams[0]?.score_total || 0} pts
+                      </div>
                     </div>
-                    <div className="p-1 bg-white border border-black font-black text-sm text-black">
-                      {top3[1]?.score_total || 0} pts
+
+                    {/* #3 Bronze */}
+                    <div className="animate-podium-3 p-3 bg-[#FFCCBC] border-[3px] border-black text-center shadow-[3px_3px_0px_#000000] h-32 flex flex-col justify-between">
+                      <div className="w-7 h-7 bg-white border-2 border-black font-black text-xs flex items-center justify-center mx-auto">
+                        🥉
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-black uppercase text-slate-800">2nd Runner Up (#3)</span>
+                        <h3 className="text-sm font-black text-black truncate">{trackTeams[2]?.name || "Evaluating"}</h3>
+                        <p className="text-[10px] font-bold text-slate-800 truncate">
+                          {schools.find((s) => s.id === trackTeams[2]?.school_id)?.name || "—"}
+                        </p>
+                      </div>
+                      <div className="p-1 bg-white border border-black font-black text-sm text-black">
+                        {trackTeams[2]?.score_total || 0} pts
+                      </div>
                     </div>
                   </div>
 
-                  {/* #1 Champion Gold */}
-                  <div className="animate-podium-1 p-4 bg-[#FFEB3B] border-[3px] border-black text-center shadow-[5px_5px_0px_#000000] h-48 flex flex-col justify-between animate-gold-glow">
-                    <div className="w-9 h-9 bg-black text-[#FFEB3B] border-2 border-black font-black text-base flex items-center justify-center mx-auto shadow-[2px_2px_0px_#000000]">
-                      🥇
+                  {/* Track Table */}
+                  <div className="border-[3px] border-black overflow-hidden shadow-[3px_3px_0px_#000000]">
+                    <table className="w-full text-left text-xs">
+                      <thead className="bg-black text-[#FFEB3B] font-black uppercase text-[10px]">
+                        <tr>
+                          <th className="p-2 w-14 text-center">Rank</th>
+                          <th className="p-2">Team Squad</th>
+                          <th className="p-2">Institution</th>
+                          <th className="p-2 text-right">Points</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y-2 divide-black">
+                        {trackTeams.slice(0, 5).map((team, idx) => {
+                          const school = schools.find((s) => s.id === team.school_id);
+                          return (
+                            <tr
+                              key={team.id}
+                              className={`font-bold transition-colors ${
+                                idx === 0
+                                  ? "bg-[#FFF9C4]"
+                                  : idx === 1
+                                  ? "bg-[#F5F5F5]"
+                                  : idx === 2
+                                  ? "bg-[#FBE9E7]"
+                                  : "bg-white"
+                              }`}
+                            >
+                              <td className="p-2 text-center font-black">
+                                {idx === 0 ? "🥇 #1" : idx === 1 ? "🥈 #2" : idx === 2 ? "🥉 #3" : `#${idx + 1}`}
+                              </td>
+                              <td className="p-2 font-black text-black">{team.name}</td>
+                              <td className="p-2 font-bold text-slate-800 truncate">{school?.name || "Independent"}</td>
+                              <td className="p-2 text-right font-black text-sm text-black">
+                                {team.score_total || 0} pts
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
+              )}
+
+              {/* =================================================================== */}
+              {/* STAGE CASE B: OVERALL SCHOOL CHAMPIONSHIP PODIUM & TABLE           */}
+              {/* =================================================================== */}
+              {isOverallStage && (
+                <>
+                  {/* Overall Schools Podium */}
+                  <div className="grid grid-cols-3 gap-3 mb-4 items-end">
+                    {/* #2 School Silver */}
+                    <div className="animate-podium-2 p-3 bg-[#E0E0E0] border-[3px] border-black text-center shadow-[3px_3px_0px_#000000] h-36 flex flex-col justify-between">
+                      <div className="w-7 h-7 bg-white border-2 border-black font-black text-xs flex items-center justify-center mx-auto">
+                        🥈
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-black uppercase text-slate-800">2nd Overall</span>
+                        <h3 className="text-sm font-black text-black truncate">
+                          {overallSchoolStandings[1]?.school.name || "School 2"}
+                        </h3>
+                        <p className="text-[10px] font-bold text-slate-700">
+                          {overallSchoolStandings[1]?.school.city || "Campus"} • {overallSchoolStandings[1]?.teamCount || 0} Squads
+                        </p>
+                      </div>
+                      <div className="p-1 bg-white border border-black font-black text-sm text-black">
+                        {overallSchoolStandings[1]?.totalPoints || 0} total pts
+                      </div>
                     </div>
-                    <div>
-                      <span className="text-xs font-black uppercase tracking-wider text-black">CURRENT LEADER</span>
-                      <h3 className="text-base font-black text-black truncate">{top3[0]?.name || "Evaluating"}</h3>
-                      <p className="text-xs font-bold text-slate-900 truncate">
-                        {schools.find((s) => s.id === top3[0]?.school_id)?.name || "—"}
-                      </p>
+
+                    {/* #1 School Gold Champion */}
+                    <div className="animate-podium-1 p-4 bg-[#FFEB3B] border-[3px] border-black text-center shadow-[5px_5px_0px_#000000] h-48 flex flex-col justify-between animate-gold-glow">
+                      <div className="w-9 h-9 bg-black text-[#FFEB3B] border-2 border-black font-black text-base flex items-center justify-center mx-auto shadow-[2px_2px_0px_#000000]">
+                        🏆
+                      </div>
+                      <div>
+                        <span className="text-xs font-black uppercase tracking-wider text-black">ROLLING TROPHY WINNER</span>
+                        <h3 className="text-base font-black text-black truncate">
+                          {overallSchoolStandings[0]?.school.name || "Leading Institution"}
+                        </h3>
+                        <p className="text-xs font-bold text-slate-900">
+                          {overallSchoolStandings[0]?.school.city || "Campus"} • {overallSchoolStandings[0]?.golds || 0} Golds
+                        </p>
+                      </div>
+                      <div className="p-1.5 bg-white border-2 border-black font-black text-lg text-black">
+                        {overallSchoolStandings[0]?.totalPoints || 0} total pts
+                      </div>
                     </div>
-                    <div className="p-1.5 bg-white border-2 border-black font-black text-lg text-black">
-                      {top3[0]?.score_total || 0} pts
+
+                    {/* #3 School Bronze */}
+                    <div className="animate-podium-3 p-3 bg-[#FFCCBC] border-[3px] border-black text-center shadow-[3px_3px_0px_#000000] h-32 flex flex-col justify-between">
+                      <div className="w-7 h-7 bg-white border-2 border-black font-black text-xs flex items-center justify-center mx-auto">
+                        🥉
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-black uppercase text-slate-800">3rd Overall</span>
+                        <h3 className="text-sm font-black text-black truncate">
+                          {overallSchoolStandings[2]?.school.name || "School 3"}
+                        </h3>
+                        <p className="text-[10px] font-bold text-slate-700">
+                          {overallSchoolStandings[2]?.school.city || "Campus"} • {overallSchoolStandings[2]?.teamCount || 0} Squads
+                        </p>
+                      </div>
+                      <div className="p-1 bg-white border border-black font-black text-sm text-black">
+                        {overallSchoolStandings[2]?.totalPoints || 0} total pts
+                      </div>
                     </div>
                   </div>
 
-                  {/* #3 Bronze */}
-                  <div className="animate-podium-3 p-3 bg-[#FFCCBC] border-[3px] border-black text-center shadow-[3px_3px_0px_#000000] h-32 flex flex-col justify-between">
-                    <div className="w-7 h-7 bg-white border-2 border-black font-black text-xs flex items-center justify-center mx-auto">
-                      🥉
-                    </div>
-                    <div>
-                      <span className="text-[10px] font-black uppercase text-slate-700">Rank #3</span>
-                      <h3 className="text-sm font-black text-black truncate">{top3[2]?.name || "Evaluating"}</h3>
-                      <p className="text-[10px] font-bold text-slate-800 truncate">
-                        {schools.find((s) => s.id === top3[2]?.school_id)?.name || "—"}
-                      </p>
-                    </div>
-                    <div className="p-1 bg-white border border-black font-black text-sm text-black">
-                      {top3[2]?.score_total || 0} pts
-                    </div>
-                  </div>
-                </div>
-
-                {/* Ranked List Table */}
-                <div className="border-[3px] border-black overflow-hidden shadow-[3px_3px_0px_#000000]">
-                  <table className="w-full text-left text-xs">
-                    <thead className="bg-black text-[#FFEB3B] font-black uppercase text-[10px]">
-                      <tr>
-                        <th className="p-2 w-14 text-center">Pos</th>
-                        <th className="p-2">Squad / Delegation</th>
-                        <th className="p-2 text-right">Points</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y-2 divide-black">
-                      {trackTeams.slice(0, 5).map((team, idx) => {
-                        const school = schools.find((s) => s.id === team.school_id);
-                        return (
+                  {/* Overall Schools Rankings Table */}
+                  <div className="border-[3px] border-black overflow-hidden shadow-[3px_3px_0px_#000000]">
+                    <table className="w-full text-left text-xs">
+                      <thead className="bg-black text-[#FFEB3B] font-black uppercase text-[10px]">
+                        <tr>
+                          <th className="p-2 w-14 text-center">Rank</th>
+                          <th className="p-2">School Institution</th>
+                          <th className="p-2 text-center">Squads Fielded</th>
+                          <th className="p-2 text-right">Aggregate Points</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y-2 divide-black">
+                        {overallSchoolStandings.slice(0, 5).map((entry, idx) => (
                           <tr
-                            key={team.id}
+                            key={entry.school.id}
                             className={`font-bold transition-colors ${
                               idx === 0
                                 ? "bg-[#FFF9C4]"
@@ -356,256 +525,104 @@ export default function StandaloneTvPage() {
                               {idx === 0 ? "🥇 #1" : idx === 1 ? "🥈 #2" : idx === 2 ? "🥉 #3" : `#${idx + 1}`}
                             </td>
                             <td className="p-2">
-                              <span className="font-black text-black text-xs block">{team.name}</span>
-                              <span className="text-[10px] text-slate-700 block truncate">{school?.name || "Independent"}</span>
+                              <span className="font-black text-black block text-xs">{entry.school.name}</span>
+                              <span className="text-[10px] text-slate-700 block">{entry.school.city} • Code: {entry.school.code}</span>
                             </td>
+                            <td className="p-2 text-center font-black">{entry.teamCount} Teams</td>
                             <td className="p-2 text-right font-black text-sm text-black">
-                              {team.score_total || 0} pts
+                              {entry.totalPoints} pts
                             </td>
                           </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Column: Live Bulletins & Urgent Alerts (5 Cols) */}
-            <div className="col-span-5 flex flex-col p-6 bg-white border-[3px] border-black shadow-[6px_6px_0px_#000000] overflow-hidden">
-              <div className="flex items-center justify-between pb-3 mb-4 border-b-2 border-black flex-shrink-0">
-                <div className="flex items-center gap-2">
-                  <Radio className="w-6 h-6 text-black animate-pulse" />
-                  <h2 className="text-xl font-black text-black">Broadcast Announcements</h2>
-                </div>
-                <span className="px-2.5 py-0.5 bg-[#FF5252] text-black border border-black text-xs font-black uppercase">
-                  {announcements.length} Live
-                </span>
-              </div>
-
-              {/* Urgent Callout Banner */}
-              {urgentAnnouncements.length > 0 && (
-                <div className="mb-4 p-4 bg-[#FF5252] border-[3px] border-black text-black shadow-[4px_4px_0px_#000000] flex-shrink-0">
-                  <div className="flex items-center gap-2 font-black text-xs uppercase mb-1">
-                    <AlertTriangle className="w-5 h-5 text-black" />
-                    <span>URGENT MARSHAL BROADCAST</span>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
-                  <h3 className="font-black text-base">{urgentAnnouncements[0].title}</h3>
-                  <p className="text-xs font-bold mt-1 text-black leading-relaxed">{urgentAnnouncements[0].body}</p>
-                </div>
+                </>
               )}
-
-              {/* Feed of Announcements */}
-              <div className="space-y-3 overflow-y-auto flex-1 pr-1">
-                {announcements.map((item, idx) => (
-                  <div
-                    key={item.id}
-                    className="p-3.5 bg-[#FFFBEB] border-2 border-black shadow-[2px_2px_0px_#000000] transition-transform hover:scale-[1.01]"
-                    style={{ animationDelay: `${idx * 100}ms` }}
-                  >
-                    <div className="flex items-center justify-between text-[10px] font-black uppercase text-slate-800 mb-1">
-                      <span className="px-1.5 py-0.5 bg-[#FFEB3B] border border-black">
-                        {item.audience.toUpperCase()}
-                      </span>
-                      <span>
-                        {new Date(item.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                      </span>
-                    </div>
-                    <h4 className="font-black text-sm text-black">{item.title}</h4>
-                    <p className="text-xs font-bold text-slate-800 mt-1 leading-snug">{item.body}</p>
-                  </div>
-                ))}
-              </div>
             </div>
           </div>
-        )}
 
-        {/* WINDOW 2: FULL LEADERBOARD WINDOW */}
-        {activeWindow === "leaderboard" && (
+          {/* ========================================================================= */}
+          {/* RIGHT WINDOW: ANIMATED BROADCAST ANNOUNCEMENTS & BULLETIN BOARD           */}
+          {/* ========================================================================= */}
           <div
-            key={`lead-${animationKey}-${activeTrackIndex}`}
-            className="p-8 bg-white border-[3px] border-black shadow-[8px_8px_0px_#000000] h-[calc(100vh-140px)] flex flex-col justify-between animate-window"
+            key={`right-${animKey}-${currentStage}`}
+            className="col-span-5 flex flex-col p-5 bg-white border-[3px] border-black shadow-[6px_6px_0px_#000000] overflow-hidden animate-slide-right"
           >
-            <div>
-              <div className="flex items-center justify-between pb-4 mb-6 border-b-2 border-black">
+            {/* Header */}
+            <div className="flex items-center justify-between pb-3 mb-4 border-b-2 border-black flex-shrink-0">
+              <div className="flex items-center gap-2">
+                <Radio className="w-6 h-6 text-black animate-pulse" />
                 <div>
-                  <span className="px-3 py-1 bg-[#FFEB3B] text-black border border-black text-xs font-black uppercase">
-                    Central Arena Telemetry
-                  </span>
-                  <h2 className="text-3xl font-black text-black tracking-tight mt-1">
-                    Full Leaderboard — {activeTrack?.name}
-                  </h2>
-                </div>
-                <div className="text-right">
-                  <span className="text-xs font-black uppercase text-slate-700">Participating Squads:</span>
-                  <span className="ml-2 font-black text-2xl text-black">{trackTeams.length}</span>
+                  <h2 className="text-xl font-black text-black leading-tight">Broadcast Announcements</h2>
+                  <p className="text-[10px] font-bold text-slate-700">Official Campus & Stage Notices</p>
                 </div>
               </div>
+              <span className="px-2 py-0.5 bg-[#FF5252] text-black border border-black text-[10px] font-black uppercase">
+                {announcements.length} Live Notices
+              </span>
+            </div>
 
-              {/* Expanded Olympic Podium */}
-              <div className="grid grid-cols-3 gap-6 mb-6 items-end">
-                {/* 2nd Place */}
-                <div className="animate-podium-2 p-5 bg-[#E0E0E0] border-[3px] border-black text-center shadow-[4px_4px_0px_#000000] h-48 flex flex-col justify-between">
-                  <div className="w-10 h-10 bg-white border-2 border-black font-black text-base flex items-center justify-center mx-auto">
-                    🥈
-                  </div>
-                  <div>
-                    <span className="text-xs font-black uppercase text-slate-800">Runner Up (#2)</span>
-                    <h3 className="text-lg font-black text-black truncate">{top3[1]?.name || "Evaluating"}</h3>
-                    <p className="text-xs font-bold text-slate-700 truncate">
-                      {schools.find((s) => s.id === top3[1]?.school_id)?.name || "—"}
-                    </p>
-                  </div>
-                  <div className="p-2 bg-white border-2 border-black font-black text-lg text-black">
-                    {top3[1]?.score_total || 0} pts
-                  </div>
+            {/* Featured Urgent Callout Banner */}
+            {urgentAnnouncements.length > 0 && (
+              <div className="mb-3 p-3.5 bg-[#FF5252] border-[3px] border-black text-black shadow-[4px_4px_0px_#000000] flex-shrink-0">
+                <div className="flex items-center gap-1.5 font-black text-xs uppercase mb-1">
+                  <AlertTriangle className="w-4 h-4 text-black" />
+                  <span>URGENT MARSHAL NOTICE</span>
                 </div>
-
-                {/* 1st Place */}
-                <div className="animate-podium-1 p-6 bg-[#FFEB3B] border-[4px] border-black text-center shadow-[6px_6px_0px_#000000] h-60 flex flex-col justify-between animate-gold-glow">
-                  <div className="w-14 h-14 bg-black text-[#FFEB3B] border-[3px] border-black font-black text-2xl flex items-center justify-center mx-auto shadow-[3px_3px_0px_#000000]">
-                    🥇
-                  </div>
-                  <div>
-                    <span className="text-sm font-black uppercase tracking-wider text-black">CHAMPION LEAD (#1)</span>
-                    <h3 className="text-2xl font-black text-black truncate">{top3[0]?.name || "Evaluating"}</h3>
-                    <p className="text-sm font-black text-slate-900 truncate">
-                      {schools.find((s) => s.id === top3[0]?.school_id)?.name || "—"}
-                    </p>
-                  </div>
-                  <div className="p-2 bg-white border-2 border-black font-black text-2xl text-black">
-                    {top3[0]?.score_total || 0} pts
-                  </div>
-                </div>
-
-                {/* 3rd Place */}
-                <div className="animate-podium-3 p-5 bg-[#FFCCBC] border-[3px] border-black text-center shadow-[4px_4px_0px_#000000] h-44 flex flex-col justify-between">
-                  <div className="w-10 h-10 bg-white border-2 border-black font-black text-base flex items-center justify-center mx-auto">
-                    🥉
-                  </div>
-                  <div>
-                    <span className="text-xs font-black uppercase text-slate-800">2nd Runner Up (#3)</span>
-                    <h3 className="text-lg font-black text-black truncate">{top3[2]?.name || "Evaluating"}</h3>
-                    <p className="text-xs font-bold text-slate-700 truncate">
-                      {schools.find((s) => s.id === top3[2]?.school_id)?.name || "—"}
-                    </p>
-                  </div>
-                  <div className="p-2 bg-white border-2 border-black font-black text-lg text-black">
-                    {top3[2]?.score_total || 0} pts
-                  </div>
-                </div>
+                <h3 className="font-black text-sm">{urgentAnnouncements[0].title}</h3>
+                <p className="text-xs font-bold mt-1 text-black leading-snug">{urgentAnnouncements[0].body}</p>
               </div>
+            )}
 
-              {/* Ranks Table */}
-              <div className="border-[3px] border-black overflow-hidden shadow-[4px_4px_0px_#000000]">
-                <table className="w-full text-left text-sm">
-                  <thead className="bg-black text-[#FFEB3B] font-black uppercase text-xs">
-                    <tr>
-                      <th className="p-3 w-16 text-center">Rank</th>
-                      <th className="p-3">Team Name</th>
-                      <th className="p-3">Institution / School</th>
-                      <th className="p-3 text-right">Points</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y-2 divide-black">
-                    {trackTeams.slice(0, 6).map((team, idx) => {
-                      const school = schools.find((s) => s.id === team.school_id);
-                      return (
-                        <tr
-                          key={team.id}
-                          className={`font-bold ${
-                            idx === 0 ? "bg-[#FFF9C4]" : idx === 1 ? "bg-[#F5F5F5]" : idx === 2 ? "bg-[#FBE9E7]" : "bg-white"
-                          }`}
-                        >
-                          <td className="p-3 text-center font-black text-base">
-                            {idx === 0 ? "🥇 1" : idx === 1 ? "🥈 2" : idx === 2 ? "🥉 3" : `#${idx + 1}`}
-                          </td>
-                          <td className="p-3 font-black text-black text-base">{team.name}</td>
-                          <td className="p-3 font-bold text-slate-800">{school?.name || "Independent"}</td>
-                          <td className="p-3 text-right font-black text-xl text-black">
-                            {team.score_total || 0} pts
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+            {/* Scrolling Feed of Announcements */}
+            <div className="space-y-3 overflow-y-auto flex-1 pr-1">
+              {announcements.map((item, idx) => (
+                <div
+                  key={item.id}
+                  className={`p-3.5 border-2 border-black shadow-[2px_2px_0px_#000000] transition-all ${
+                    idx === currentStage % Math.max(1, announcements.length)
+                      ? "bg-[#FFF9C4] border-black ring-2 ring-black"
+                      : "bg-[#FFFBEB]"
+                  }`}
+                >
+                  <div className="flex items-center justify-between text-[10px] font-black uppercase text-slate-800 mb-1">
+                    <span className="px-1.5 py-0.5 bg-black text-[#FFEB3B]">
+                      {item.audience.toUpperCase()}
+                    </span>
+                    <span>
+                      {new Date(item.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                    </span>
+                  </div>
+                  <h4 className="font-black text-sm text-black">{item.title}</h4>
+                  <p className="text-xs font-bold text-slate-800 mt-1 leading-snug">{item.body}</p>
+                </div>
+              ))}
             </div>
           </div>
-        )}
-
-        {/* WINDOW 3: FULL ANNOUNCEMENTS WINDOW */}
-        {activeWindow === "announcements" && (
-          <div
-            key={`ann-${animationKey}`}
-            className="p-8 bg-white border-[3px] border-black shadow-[8px_8px_0px_#000000] h-[calc(100vh-140px)] flex flex-col justify-between animate-window"
-          >
-            <div>
-              <div className="flex items-center justify-between pb-4 mb-6 border-b-2 border-black">
-                <div className="flex items-center gap-3">
-                  <Radio className="w-8 h-8 text-black animate-pulse" />
-                  <div>
-                    <h2 className="text-3xl font-black text-black tracking-tight">
-                      Official Bulletins & Notices
-                    </h2>
-                    <p className="text-xs font-bold text-slate-800 mt-1">
-                      Broadcasting schedule changes, stage announcements, and guidelines
-                    </p>
-                  </div>
-                </div>
-                <span className="px-3 py-1 bg-[#4CAF50] text-black border-2 border-black text-xs font-black uppercase">
-                  {announcements.length} Live Notices
-                </span>
-              </div>
-
-              {/* Grid of Announcements */}
-              <div className="grid grid-cols-2 gap-5 max-h-[500px] overflow-y-auto">
-                {announcements.map((item) => (
-                  <div
-                    key={item.id}
-                    className={`p-5 border-[3px] border-black shadow-[4px_4px_0px_#000000] ${
-                      item.urgent ? "bg-[#FF5252] text-black" : "bg-[#FFFBEB] text-black"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="px-2 py-0.5 bg-black text-[#FFEB3B] text-xs font-black uppercase">
-                        Audience: {item.audience}
-                      </span>
-                      <span className="text-xs font-black">
-                        {new Date(item.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                      </span>
-                    </div>
-                    <h3 className="text-xl font-black">{item.title}</h3>
-                    <p className="text-sm font-bold mt-2 leading-relaxed">{item.body}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
+        </div>
       </main>
 
       {/* Persistent Animated Marquee Ticker at Bottom */}
       <footer className="h-10 bg-black text-[#FFEB3B] border-t-[3px] border-black flex items-center px-4 flex-shrink-0 z-50 shadow-[0_-3px_0px_#000000]">
         <div className="flex items-center gap-2 flex-shrink-0 mr-4">
           <span className="px-2 py-0.5 bg-[#FF5252] text-black text-[10px] font-black uppercase tracking-wider">
-            BREAKING NEWS
+            BREAKING MARQUEE
           </span>
           <span className="text-sm">📢</span>
         </div>
 
         <div className="overflow-hidden whitespace-nowrap flex-1">
-          <div className="inline-block animate-marquee">
+          <div className="inline-block animate-marquee font-black text-xs">
             {announcements.length > 0
               ? announcements.map((a) => `[${a.title.toUpperCase()}: ${a.body}]`).join("     ★★★     ")
               : "WELCOME TO SPARK 2026 INTER-SCHOOL COLLEGE TECH FEST! ALL ARENAS LIVE AND ACTIVE."}
           </div>
         </div>
 
-        <div className="flex items-center gap-2 flex-shrink-0 ml-4 text-[10px] text-white">
+        <div className="flex items-center gap-2 flex-shrink-0 ml-4 text-[10px] text-white font-mono">
           <span className="h-2 w-2 rounded-full bg-[#4CAF50] inline-block animate-pulse" />
-          <span className="font-mono">PROJECTOR KIOSK ONLINE</span>
+          <span>STAGE STREAM ONLINE</span>
         </div>
       </footer>
     </div>

@@ -237,3 +237,43 @@ h6 {
 .animate-radar {
   animation: pulseRadar 2s infinite ease-in-out;
 }
+
+
+@keyframes slideRightIn {
+  0% {
+    opacity: 0;
+    transform: translateX(25px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+.animate-slide-right {
+  animation: slideRightIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes eventSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateX(-25px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+.animate-event-left {
+  animation: eventSlideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes trophyFloat {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-4px) rotate(1deg); }
+}
+
+.animate-trophy {
+  animation: trophyFloat 3s ease-in-out infinite;
+}
