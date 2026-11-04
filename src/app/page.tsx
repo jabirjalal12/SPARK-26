@@ -360,7 +360,7 @@ export default function LandingPage() {
           </div>
 
           {/* ── Live Stats Banner ── */}
-          <div className="mb-12 grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {[
               { label: "Registered Schools", value: schools.length || "—", color: "bg-[#FFEB3B]", Icon: Building2 },
               { label: "Student Squads", value: teams.length || "—", color: "bg-[#FF5252]", Icon: Users },
@@ -375,32 +375,7 @@ export default function LandingPage() {
             ))}
           </div>
 
-          {/* ── 3 Pillars ── */}
-          <div>
-            <div className="text-center mb-8">
-              <span className="inline-block bg-black text-[#FFEB3B] px-3 py-1 text-xs font-black uppercase tracking-widest border-2 border-black">
-                THE THREE PILLARS OF SPARK
-              </span>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {[
-                { num: "01", color: "bg-[#FFEB3B]", title: "Rigorous Machine Scrutiny", desc: "Every build undergoes a mandatory safety inspection — voltage ceilings, kill-switch verification, structural stress tests, and PPE compliance — before any competition run begins.", Icon: ShieldCheck },
-                { num: "02", color: "bg-[#4CAF50]", title: "Weighted Transparent Scoring", desc: "Judging criteria and their exact weights are published before the event. Coordinators enter rubric marks digitally; the system applies tie-break algorithms automatically with tamper-proof audit logs.", Icon: Award },
-                { num: "03", color: "bg-[#FF5252]", title: "Expert Panel & Mentorship", desc: "Jury panels include collegiate engineering faculty, practising robotics engineers, and fabrication specialists. Every team receives a written feedback report at the end of their run.", Icon: Users },
-              ].map(({ num, color, title, desc, Icon }) => (
-                <div key={num} className="p-6 bg-white border-[3px] border-black shadow-[6px_6px_0px_#000000] hover:-translate-y-1 hover:shadow-[8px_8px_0px_#000000] transition-all">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className={`w-11 h-11 ${color} border-2 border-black flex items-center justify-center font-black text-black text-lg shadow-[2px_2px_0px_#000000]`}>
-                      {num}
-                    </div>
-                    <Icon className="w-6 h-6 text-black" />
-                  </div>
-                  <h4 className="text-xl font-black text-black mb-2">{title}</h4>
-                  <p className="text-sm font-medium text-slate-800 leading-relaxed">{desc}</p>
-                </div>
-              ))}
-            </div>
-          </div>
+
 
         </div>
       </section>
