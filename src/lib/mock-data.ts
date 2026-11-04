@@ -11,75 +11,297 @@ import {
   Profile,
 } from "./types/database";
 
-// 3 Hardcore Arenas (Fixed tracks for SPARK Tech Fest)
+// 8 Official Competition Tracks for SPARK 2026
 export const initialTracks: Track[] = [
   {
-    id: "11111111-1111-1111-1111-111111111111",
-    name: "Robotics Arena",
+    id: "track-01-robotics",
+    name: "Robotics",
     slug: "robotics",
     color: "#1E40AF", // Deep Blue
-    description: "Design, construct, and field autonomous or wired rovers to navigate brutal obstacles, ramp ascents, and high-precision payload challenges.",
-    rules: "1. Robot chassis must fit within 300mm x 300mm x 300mm bounding box at scrutiny.\n2. Battery voltage capped at 12V DC nominal.\n3. No IC engines or combustive propellants permitted.\n4. Maximum 2 student operators per arena heat.",
+    description: "Design, construct, and field autonomous or wired rovers to navigate brutal obstacle courses and speed circuits.",
+    rules: "1. Robot chassis must fit within 300mm x 300mm x 300mm bounding box at scrutiny.\n2. Battery voltage capped at 12V DC nominal.\n3. Maximum 2 student operators per arena heat.",
     scores_locked: false,
     created_at: "2026-11-01T08:00:00Z",
   },
   {
-    id: "22222222-2222-2222-2222-222222222222",
-    name: "Build from Scrap",
-    slug: "build-from-scrap",
-    color: "#166534", // Deep Green
-    description: "Transform unadulterated junkyard scrap, discarded motors, and e-waste into working, functional electro-mechanical machines on the clock.",
-    rules: "1. 100% of base materials must be sourced from the allotment junkyard dump.\n2. Fasteners, adhesives, and wiring provided at central tool station.\n3. 4-hour strict build window. No pre-assembled subsystems permitted.\n4. Working prototype demonstration required during judging.",
+    id: "track-02-quiz",
+    name: "Quiz",
+    slug: "quiz",
+    color: "#7C3AED", // Purple
+    description: "Multi-round inter-school technical quiz testing fundamentals of science, engineering, computing, and tech history.",
+    rules: "1. Preliminary written elimination followed by live stage buzzer finals.\n2. Negative marks for wrong answers in buzzer round.",
     scores_locked: false,
     created_at: "2026-11-01T08:00:00Z",
   },
   {
-    id: "33333333-3333-3333-3333-333333333333",
-    name: "Useless Projects",
+    id: "track-03-ideathon",
+    name: "Ideathon",
+    slug: "ideathon",
+    color: "#059669", // Emerald Green
+    description: "Pitch groundbreaking technological solutions and innovations solving critical real-world industry or social challenges.",
+    rules: "1. 5-minute slide pitch followed by 3-minute jury Q&A.\n2. Evaluation based on novelty, technical feasibility, and societal impact.",
+    scores_locked: false,
+    created_at: "2026-11-01T08:00:00Z",
+  },
+  {
+    id: "track-04-science-project",
+    name: "Science Project Competition",
+    slug: "science-project",
+    color: "#0284C7", // Sky Blue
+    description: "Exhibit functional working models, experimental setups, and applied scientific research projects.",
+    rules: "1. Working model demonstration mandatory before jury.\n2. Chart display explaining hypothesis and experimental results.",
+    scores_locked: false,
+    created_at: "2026-11-01T08:00:00Z",
+  },
+  {
+    id: "track-05-useless-project",
+    name: "Useless Project Competition",
     slug: "useless-projects",
-    color: "#991B1B", // Crimson
-    description: "Channel peak over-engineering absurdity to engineer hyper-complex, impeccably fabricated machines that solve utterly trivial problems.",
-    rules: "1. Machine must genuinely function and perform its stated useless task with zero human intervention.\n2. Must integrate at least one active electronic, micro-controller, or mechanical actuator.\n3. 3-minute deadpan stage pitch required before judges.\n4. Safety scrutiny applies: no mains AC voltage or hazardous chemicals.",
+    color: "#DC2626", // Red
+    description: "Channel peak over-engineering absurdity to construct impeccably fabricated working machines that solve utterly trivial problems.",
+    rules: "1. Machine must genuinely function and perform its stated useless task autonomously.\n2. Deadpan stage pitch required before judges.",
+    scores_locked: false,
+    created_at: "2026-11-01T08:00:00Z",
+  },
+  {
+    id: "track-06-article-writing",
+    name: "Article Writing",
+    slug: "article-writing",
+    color: "#D97706", // Amber
+    description: "Original on-the-spot technical essays and foresight articles addressing emerging frontiers in engineering and AI.",
+    rules: "1. On-the-spot prompt revealed at 10:30 AM.\n2. Maximum 1500 words. Plagiarism disqualifies immediately.",
+    scores_locked: false,
+    created_at: "2026-11-01T08:00:00Z",
+  },
+  {
+    id: "track-07-poster-presentation",
+    name: "Poster Presentation",
+    slug: "poster-presentation",
+    color: "#DB2777", // Pink
+    description: "Visual infographics and technical poster exhibitions communicating engineering research and scientific principles.",
+    rules: "1. Standard A1 poster format.\n2. Presenters must be stationed at their poster booth during judge inspection.",
+    scores_locked: false,
+    created_at: "2026-11-01T08:00:00Z",
+  },
+  {
+    id: "track-08-scrap-product",
+    name: "New Product Development from Scrap",
+    slug: "build-from-scrap",
+    color: "#166534", // Forest Green
+    description: "Transform discarded industrial scrap, e-waste, and discarded mechanical hardware into working, functional machines.",
+    rules: "1. Base scrap materials sourced from the allotment junkyard.\n2. Working prototype demonstration required during judging.",
     scores_locked: false,
     created_at: "2026-11-01T08:00:00Z",
   },
 ];
 
+// Official Venues from SPARK 2026 Schedule
+export const initialVenues: Venue[] = [
+  { id: "ven-01", name: "Near Reception", location: "Main Administrative Building (Ground Floor)", capacity: 200 },
+  { id: "ven-02", name: "College Auditorium", location: "Auditorium Complex", capacity: 800 },
+  { id: "ven-03", name: "College Dome", location: "Central Campus Dome", capacity: 500 },
+  { id: "ven-04", name: "Smart Classroom (2nd Floor)", location: "Academic Block - 2nd Floor", capacity: 80 },
+  { id: "ven-05", name: "EG001 and EG002", location: "Engineering Block G - Ground Floor", capacity: 120 },
+  { id: "ven-06", name: "Computer Lab 1", location: "IT Block - 1st Floor", capacity: 70 },
+  { id: "ven-07", name: "ES001 and ES002", location: "Engineering Block S - Ground Floor", capacity: 120 },
+  { id: "ven-08", name: "Computer Lab 3", location: "IT Block - 3rd Floor", capacity: 70 },
+  { id: "ven-09", name: "Mechanical Workshop", location: "Mechanical Engineering Block", capacity: 150 },
+];
+
+// Official Schedule Items for 05/11/2026
+export const initialSchedule: ScheduleItem[] = [
+  {
+    id: "sch-01",
+    title: "Registration & Kit Distribution",
+    description: "Visiting school faculty leads and student squads report for credential verification and badge pickup.",
+    track_id: null,
+    venue_id: "ven-01", // Near Reception
+    starts_at: "2026-11-05T09:00:00Z",
+    ends_at: "2026-11-05T09:30:00Z",
+    type: "ceremony",
+  },
+  {
+    id: "sch-02",
+    title: "Inaugural Ceremony",
+    description: "Welcome address, lamp lighting ceremony, and keynote address by Chief Guest.",
+    track_id: null,
+    venue_id: "ven-02", // College Auditorium
+    starts_at: "2026-11-05T10:00:00Z",
+    ends_at: "2026-11-05T10:30:00Z",
+    type: "ceremony",
+  },
+  {
+    id: "sch-03",
+    title: "Robotics — Preliminary Rounds",
+    description: "Autonomous & wired rover heats navigating obstacle courses and terrain challenges.",
+    track_id: "track-01-robotics",
+    venue_id: "ven-03", // College Dome
+    starts_at: "2026-11-05T10:30:00Z",
+    ends_at: "2026-11-05T12:00:00Z",
+    type: "competition",
+  },
+  {
+    id: "sch-04",
+    title: "Quiz — Preliminary Rounds",
+    description: "Written elimination round covering science, engineering, and tech trivia.",
+    track_id: "track-02-quiz",
+    venue_id: "ven-02", // College Auditorium
+    starts_at: "2026-11-05T10:30:00Z",
+    ends_at: "2026-11-05T11:30:00Z",
+    type: "competition",
+  },
+  {
+    id: "sch-05",
+    title: "Ideathon",
+    description: "Idea pitches on engineering solutions for pressing technological and societal challenges.",
+    track_id: "track-03-ideathon",
+    venue_id: "ven-04", // Smart Classroom (2nd Floor)
+    starts_at: "2026-11-05T10:30:00Z",
+    ends_at: "2026-11-05T13:00:00Z",
+    type: "competition",
+  },
+  {
+    id: "sch-06",
+    title: "Science Project Competition",
+    description: "Live exhibition and jury assessment of working scientific models and experiments.",
+    track_id: "track-04-science-project",
+    venue_id: "ven-05", // EG001 and EG002
+    starts_at: "2026-11-05T10:30:00Z",
+    ends_at: "2026-11-05T13:00:00Z",
+    type: "competition",
+  },
+  {
+    id: "sch-07",
+    title: "Useless Project Competition",
+    description: "Over-engineered absurd machines solving hilarious, trivial problems autonomously.",
+    track_id: "track-05-useless-project",
+    venue_id: "ven-06", // Computer Lab 1
+    starts_at: "2026-11-05T10:30:00Z",
+    ends_at: "2026-11-05T13:00:00Z",
+    type: "competition",
+  },
+  {
+    id: "sch-08",
+    title: "Article Writing",
+    description: "On-the-spot technical essay writing on modern engineering frontiers.",
+    track_id: "track-06-article-writing",
+    venue_id: "ven-07", // ES001 and ES002
+    starts_at: "2026-11-05T10:30:00Z",
+    ends_at: "2026-11-05T13:00:00Z",
+    type: "competition",
+  },
+  {
+    id: "sch-09",
+    title: "Poster Presentation",
+    description: "Infographic exhibition and poster booth defense before visiting juries.",
+    track_id: "track-07-poster-presentation",
+    venue_id: "ven-08", // Computer Lab 3
+    starts_at: "2026-11-05T10:30:00Z",
+    ends_at: "2026-11-05T13:00:00Z",
+    type: "competition",
+  },
+  {
+    id: "sch-10",
+    title: "New Product Development from Scrap",
+    description: "Fabricating working electro-mechanical prototypes from junkyard materials.",
+    track_id: "track-08-scrap-product",
+    venue_id: "ven-09", // Mechanical Workshop
+    starts_at: "2026-11-05T10:30:00Z",
+    ends_at: "2026-11-05T13:00:00Z",
+    type: "competition",
+  },
+  {
+    id: "sch-11",
+    title: "Quiz — Final Rounds",
+    description: "Stage buzzer showdown featuring top qualifier school squads.",
+    track_id: "track-02-quiz",
+    venue_id: "ven-02", // College Auditorium
+    starts_at: "2026-11-05T13:00:00Z",
+    ends_at: "2026-11-05T14:00:00Z",
+    type: "competition",
+  },
+  {
+    id: "sch-12",
+    title: "Robotics — Final Rounds",
+    description: "Championship obstacle course faceoff between top preliminary rovers.",
+    track_id: "track-01-robotics",
+    venue_id: "ven-03", // College Dome
+    starts_at: "2026-11-05T13:30:00Z",
+    ends_at: "2026-11-05T14:00:00Z",
+    type: "competition",
+  },
+  {
+    id: "sch-13",
+    title: "Valedictory Function and Prize Distribution",
+    description: "Declaration of results, medal ceremony, and presentation of the SPARK Rolling Trophy.",
+    track_id: null,
+    venue_id: "ven-02", // College Auditorium
+    starts_at: "2026-11-05T14:30:00Z",
+    ends_at: "2026-11-05T15:30:00Z",
+    type: "ceremony",
+  },
+];
+
+// Scoring Criteria for All 8 Official Competitions
 export const initialCriteria: ScoringCriterion[] = [
   // Robotics
-  { id: "aa1", track_id: "11111111-1111-1111-1111-111111111111", name: "Autonomous Execution & Navigation", weight: 0.40, max_score: 10 },
-  { id: "aa2", track_id: "11111111-1111-1111-1111-111111111111", name: "Mechanical Chassis & Wiring Integrity", weight: 0.30, max_score: 10 },
-  { id: "aa3", track_id: "11111111-1111-1111-1111-111111111111", name: "Course Speed & Obstacle Handling", weight: 0.30, max_score: 10 },
-  // Build from Scrap
-  { id: "bb1", track_id: "22222222-2222-2222-2222-222222222222", name: "Scrap Resourcefulness & Re-use Ratio", weight: 0.35, max_score: 10 },
-  { id: "bb2", track_id: "22222222-2222-2222-2222-222222222222", name: "Functional Output & Working Prototype", weight: 0.35, max_score: 10 },
-  { id: "bb3", track_id: "22222222-2222-2222-2222-222222222222", name: "Structural Rigidity & Craft Finish", weight: 0.30, max_score: 10 },
-  // Useless Projects
-  { id: "cc1", track_id: "33333333-3333-3333-3333-333333333333", name: "Concept Absurdity & Novelty", weight: 0.40, max_score: 10 },
-  { id: "cc2", track_id: "33333333-3333-3333-3333-333333333333", name: "Technical Over-engineering & Circuitry", weight: 0.40, max_score: 10 },
-  { id: "cc3", track_id: "33333333-3333-3333-3333-333333333333", name: "Deadpan Stage Presentation", weight: 0.20, max_score: 10 },
+  { id: "c-rb-1", track_id: "track-01-robotics", name: "Autonomous Execution & Navigation", weight: 0.40, max_score: 10 },
+  { id: "c-rb-2", track_id: "track-01-robotics", name: "Mechanical Chassis & Wiring", weight: 0.30, max_score: 10 },
+  { id: "c-rb-3", track_id: "track-01-robotics", name: "Obstacle Course Speed", weight: 0.30, max_score: 10 },
+  // Quiz
+  { id: "c-qz-1", track_id: "track-02-quiz", name: "Preliminary Score", weight: 0.40, max_score: 10 },
+  { id: "c-qz-2", track_id: "track-02-quiz", name: "Buzzer Stage Speed & Accuracy", weight: 0.60, max_score: 10 },
+  // Ideathon
+  { id: "c-id-1", track_id: "track-03-ideathon", name: "Innovation & Problem Originality", weight: 0.40, max_score: 10 },
+  { id: "c-id-2", track_id: "track-03-ideathon", name: "Feasibility & Technical Roadmap", weight: 0.30, max_score: 10 },
+  { id: "c-id-3", track_id: "track-03-ideathon", name: "Stage Pitch & Defense", weight: 0.30, max_score: 10 },
+  // Science Project
+  { id: "c-sp-1", track_id: "track-04-science-project", name: "Scientific Depth & Hypothesis", weight: 0.35, max_score: 10 },
+  { id: "c-sp-2", track_id: "track-04-science-project", name: "Working Demonstration", weight: 0.35, max_score: 10 },
+  { id: "c-sp-3", track_id: "track-04-science-project", name: "Poster & Documentation", weight: 0.30, max_score: 10 },
+  // Useless Project
+  { id: "c-up-1", track_id: "track-05-useless-project", name: "Concept Absurdity & Humor", weight: 0.40, max_score: 10 },
+  { id: "c-up-2", track_id: "track-05-useless-project", name: "Technical Over-engineering", weight: 0.40, max_score: 10 },
+  { id: "c-up-3", track_id: "track-05-useless-project", name: "Deadpan Stage Presentation", weight: 0.20, max_score: 10 },
+  // Article Writing
+  { id: "c-aw-1", track_id: "track-06-article-writing", name: "Technical Depth & Content", weight: 0.40, max_score: 10 },
+  { id: "c-aw-2", track_id: "track-06-article-writing", name: "Structure & Clarity", weight: 0.30, max_score: 10 },
+  { id: "c-aw-3", track_id: "track-06-article-writing", name: "Originality of Perspective", weight: 0.30, max_score: 10 },
+  // Poster Presentation
+  { id: "c-pp-1", track_id: "track-07-poster-presentation", name: "Visual Infographic Quality", weight: 0.40, max_score: 10 },
+  { id: "c-pp-2", track_id: "track-07-poster-presentation", name: "Technical Rigor", weight: 0.30, max_score: 10 },
+  { id: "c-pp-3", track_id: "track-07-poster-presentation", name: "Q&A Booth Defense", weight: 0.30, max_score: 10 },
+  // Scrap Product
+  { id: "c-sc-1", track_id: "track-08-scrap-product", name: "Scrap Resourcefulness & Re-use", weight: 0.35, max_score: 10 },
+  { id: "c-sc-2", track_id: "track-08-scrap-product", name: "Functional Machine Output", weight: 0.35, max_score: 10 },
+  { id: "c-sc-3", track_id: "track-08-scrap-product", name: "Structural Craft & Rigidity", weight: 0.30, max_score: 10 },
 ];
 
-// All places / venues are dynamically added and updated by Admin
-export const initialVenues: Venue[] = [];
-
-// All schools register dynamically or are added by admin
 export const initialSchools: School[] = [];
-
-// Tickets generated dynamically per registered school
 export const initialSchoolTickets: SchoolTicket[] = [];
-
-// Teams added by registered schools
 export const initialTeams: Team[] = [];
-
-// Students added by registered faculty or desk walk-in
 export const initialStudents: Student[] = [];
 
-// Event timeline slots are added and managed dynamically by Admin / Event Coordinators
-export const initialSchedule: ScheduleItem[] = [];
-
-// Notices are posted dynamically by Admin / Event Coordinators
-export const initialAnnouncements: Announcement[] = [];
+export const initialAnnouncements: Announcement[] = [
+  {
+    id: "ann-01",
+    author_id: "organizer-default",
+    title: "Official Schedule Released",
+    body: "Registration commences at 9:00 AM Near Reception. Inaugural Ceremony at 10:00 AM in College Auditorium.",
+    audience: "all",
+    urgent: true,
+    created_at: new Date().toISOString(),
+  },
+  {
+    id: "ann-02",
+    author_id: "organizer-default",
+    title: "Preliminary Rounds Begin at 10:30 AM",
+    body: "Robotics at College Dome, Quiz at College Auditorium, Scrap at Mechanical Workshop, Useless Project at Computer Lab 1.",
+    audience: "faculty",
+    urgent: false,
+    created_at: new Date().toISOString(),
+  },
+];
 
 export const defaultProfile: Profile = {
   id: "organizer-default",
@@ -88,7 +310,7 @@ export const defaultProfile: Profile = {
   school_id: null,
   full_name: "Lead Organizer",
   email: "admin@spark.edu",
-  phone: "+91 98765 00001",
+  phone: "+91 94471 23456",
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
 };

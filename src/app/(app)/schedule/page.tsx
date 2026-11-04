@@ -65,7 +65,7 @@ export default function SchedulePage() {
             Fest Schedule: 05 November 2026
           </h1>
           <p className="text-sm sm:text-base font-bold text-black mt-2 max-w-2xl leading-relaxed">
-            All events kick off at <span className="underline decoration-black decoration-2">07:00 AM sharp</span>. Visiting delegations must complete fast-pass QR check-in prior to competition heats.
+            Registration commences at <span className="underline decoration-black decoration-2">09:00 AM sharp</span> (Near Reception), followed by the Inaugural Ceremony at 10:00 AM in the College Auditorium.
           </p>
         </div>
 

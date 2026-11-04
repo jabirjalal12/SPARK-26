@@ -40,8 +40,8 @@ export default function OrganizerSchedulePage() {
     description: "",
     trackId: "",
     venueId: "",
-    startsAt: "2026-11-05T07:00",
-    endsAt: "2026-11-05T08:00",
+    startsAt: "2026-11-05T09:00",
+    endsAt: "2026-11-05T09:30",
     type: "competition" as "ceremony" | "competition" | "break" | "judging" | "other",
   });
 

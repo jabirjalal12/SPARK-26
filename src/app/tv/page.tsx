@@ -19,6 +19,7 @@ import {
   ShieldCheck,
   Building2,
   Zap,
+  Layers,
 } from "lucide-react";
 
 export default function StandaloneTvPage() {
@@ -172,6 +173,11 @@ export default function StandaloneTvPage() {
     const lower = trackName.toLowerCase();
     if (lower.includes("robo")) return <Bot className="w-6 h-6 text-black" />;
     if (lower.includes("scrap")) return <Wrench className="w-6 h-6 text-black" />;
+    if (lower.includes("quiz")) return <Trophy className="w-6 h-6 text-black" />;
+    if (lower.includes("idea")) return <Sparkles className="w-6 h-6 text-black" />;
+    if (lower.includes("science")) return <Zap className="w-6 h-6 text-black" />;
+    if (lower.includes("article")) return <Award className="w-6 h-6 text-black" />;
+    if (lower.includes("poster")) return <Layers className="w-6 h-6 text-black" />;
     return <Sparkles className="w-6 h-6 text-black" />;
   };
 

@@ -31,13 +31,14 @@ import {
   HelpCircle,
   Eye,
   Hammer,
+  FileText,
 } from "lucide-react";
 
 export default function LandingPage() {
   const { tracks = [], schedule = [], venues = [], teams = [], schools = [], resultsPublished } = useFestStore();
 
   // Program starts 5/11/2026 at 7:00 AM local time
-  const targetDate = new Date("2026-11-05T07:00:00").getTime();
+  const targetDate = new Date("2026-11-05T09:00:00").getTime();
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
     hours: 0,
@@ -69,16 +70,26 @@ export default function LandingPage() {
     return () => clearInterval(interval);
   }, [targetDate]);
 
-  const trackIcons = {
+  const trackIcons: Record<string, any> = {
     robotics: Bot,
-    "build-from-scrap": Wrench,
+    quiz: Trophy,
+    ideathon: Sparkles,
+    "science-project": Sparkles,
     "useless-projects": Sparkles,
+    "article-writing": FileText,
+    "poster-presentation": Award,
+    "build-from-scrap": Wrench,
   };
 
   const trackBgColors: Record<string, string> = {
     robotics: "bg-[#2196F3]",
-    "build-from-scrap": "bg-[#4CAF50]",
+    quiz: "bg-[#7C3AED]",
+    ideathon: "bg-[#059669]",
+    "science-project": "bg-[#0284C7]",
     "useless-projects": "bg-[#FF5252]",
+    "article-writing": "bg-[#D97706]",
+    "poster-presentation": "bg-[#DB2777]",
+    "build-from-scrap": "bg-[#166534]",
   };
 
   const filteredSchedule = schedule.filter((item) => {
@@ -95,7 +106,7 @@ export default function LandingPage() {
           OFFICIAL DATE
         </span>
         <span>
-          SPARK 2026 Kicks Off on <strong className="underline decoration-2">05 November 2026 at 07:00 AM</strong> — Venue: <strong className="underline decoration-2">College Campus</strong>
+          SPARK 2026 Kicks Off on <strong className="underline decoration-2">05 November 2026 at 09:00 AM</strong> — Venue: <strong className="underline decoration-2">College Campus</strong>
         </span>
       </div>
 
@@ -204,7 +215,7 @@ export default function LandingPage() {
           </a>
           <a href="#schedule">
             <Button size="lg" variant="primary" className="text-base px-7 font-black uppercase tracking-wider">
-              View Schedules (07:00 AM)
+              View Schedules (09:00 AM)
             </Button>
           </a>
         </div>
@@ -237,7 +248,7 @@ export default function LandingPage() {
             </div>
             <div>
               <p className="text-[10px] text-slate-700 font-black uppercase tracking-wider">Start Time</p>
-              <p className="text-sm font-black text-black">07:00 AM Sharp</p>
+              <p className="text-sm font-black text-black">09:00 AM Sharp</p>
             </div>
           </div>
 
@@ -449,7 +460,7 @@ export default function LandingPage() {
                 </div>
                 <h3 className="text-xl font-black text-black">Official Itinerary in Preparation</h3>
                 <p className="text-xs sm:text-sm font-bold text-slate-700 max-w-md mx-auto">
-                  Event slots, arena heats, and safety scrutiny rounds starting 05 November 2026 at 07:00 AM are currently being configured by Event Coordinators in the Organizer Window.
+                  Event slots, arena heats, and safety scrutiny rounds starting 05 November 2026 at 09:00 AM are currently being configured by Event Coordinators in the Organizer Window.
                 </p>
                 <div className="pt-2">
                   <Link href="/register">
