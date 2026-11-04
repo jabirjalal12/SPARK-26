@@ -157,7 +157,7 @@ export default function LandingPage() {
         </h1>
 
         <p className="mt-6 text-base sm:text-xl font-bold text-black max-w-2xl mx-auto leading-relaxed bg-white border-[3px] border-black p-4 sm:p-5 shadow-[6px_6px_0px_#000000]">
-          Three relentless competitive tracks: <strong className="underline decoration-[#2196F3] decoration-2">Robotics Arena</strong>, <strong className="underline decoration-[#4CAF50] decoration-2">Build from Scrap</strong>, and <strong className="underline decoration-[#FF5252] decoration-2">Useless Projects</strong>. Visiting schools field one accredited faculty coordinator and student squads for collegiate engineering glory.
+          Featuring <strong className="underline decoration-[#FF5252] decoration-2">around 9 competitive events</strong> and high-stakes technical challenges across multiple engineering arenas. Visiting schools field one accredited faculty coordinator and student squads for collegiate engineering glory.
         </p>
 
         {/* Live Countdown Timer to 5/11/2026 7:00 AM */}
@@ -265,11 +265,11 @@ export default function LandingPage() {
               <div>
                 <div className="inline-flex items-center gap-2 bg-[#FFEB3B] text-black px-4 py-1.5 font-black text-xs uppercase tracking-widest border-2 border-black shadow-[3px_3px_0px_#000000] mb-5">
                   <Sparkles className="w-3.5 h-3.5 fill-black" />
-                  ABOUT SPARK 2026 — 1ST EDITION
+                  ABOUT SPARK 2026
                 </div>
                 <h2 className="text-4xl sm:text-6xl font-black text-black tracking-tight leading-[1.05]">
-                  Student Projects &<br />
-                  <span className="bg-black text-[#FFEB3B] px-3 inline-block mt-1">Robo Kreations</span>
+                  SPARK<br />
+                  <span className="bg-black text-[#FFEB3B] px-3 inline-block mt-1">TECH FEST 2026</span>
                 </h2>
               </div>
               <div className="lg:max-w-sm p-4 bg-[#FFFBEB] border-[3px] border-black shadow-[5px_5px_0px_#000000]">
@@ -277,7 +277,7 @@ export default function LandingPage() {
                 <p className="text-xl font-black text-black leading-tight">ACE Engineering College</p>
                 <p className="text-xs font-bold text-slate-700 mt-1">Department of Mechanical &amp; Electronics Engineering</p>
                 <div className="mt-3 pt-3 border-t-2 border-black flex items-center gap-2 flex-wrap">
-                  <span className="bg-[#FF5252] text-black border border-black px-2 py-0.5 text-[10px] font-black uppercase">1st Edition</span>
+
                   <span className="bg-[#4CAF50] text-black border border-black px-2 py-0.5 text-[10px] font-black uppercase">05 Nov 2026</span>
                   <span className="bg-[#2196F3] text-black border border-black px-2 py-0.5 text-[10px] font-black uppercase">3 Arenas</span>
                 </div>
@@ -325,13 +325,13 @@ export default function LandingPage() {
               </div>
               <div className="p-6 sm:p-8 flex-1 space-y-4 text-sm sm:text-base font-medium text-slate-900 leading-relaxed">
                 <p>
-                  SPARK — <strong>Student Projects &amp; Robo Kreations</strong> — was conceived by the faculty of ACE Engineering College to give inter-school students a stage that rewards <em>actual engineering output</em>, not theoretical presentation.
+                  <strong>SPARK</strong> was conceived by the faculty of ACE Engineering College to give inter-school students a stage that rewards <em>actual engineering output</em>, not theoretical presentation.
                 </p>
                 <p>
                   Visiting school delegations arrive at 07:00 AM, check in their full squad with a single QR scan, and immediately enter the arena. Over one adrenaline-charged day, student teams program, fabricate, solder, and stress-test functional machines under live judging — every run, every failure, and every breakthrough captured in real-time digital scoring.
                 </p>
                 <p>
-                  The winning institution earns the <strong>SPARK Rolling Trophy</strong> — and the mandate to raise the bar even higher at the next edition.
+                  The winning institution earns the <strong>SPARK Rolling Trophy</strong> — and the ultimate championship title.
                 </p>
               </div>
               <div className="px-6 sm:px-8 pb-6 pt-2 border-t-[3px] border-black flex flex-wrap gap-2.5">
