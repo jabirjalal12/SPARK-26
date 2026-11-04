@@ -116,6 +116,7 @@ interface FestStoreContextType {
   reportIssue: (issue: { title: string; description: string; severity: "low" | "medium" | "high" | "critical" }) => void;
   resolveIssue: (id: string, notes: string) => void;
   addScheduleItem: (item: Omit<ScheduleItem, "id">) => void;
+  updateScheduleItem: (id: string, updates: Partial<Omit<ScheduleItem, "id">>) => Promise<void>;
   importScheduleItems: (items: Omit<ScheduleItem, "id">[]) => Promise<number>;
   deleteScheduleItem: (id: string) => void;
   addVenue: (venue: Omit<Venue, "id" | "created_at">) => Promise<Venue>;
@@ -1231,6 +1232,34 @@ export function FestStoreProvider({ children }: { children: React.ReactNode }) {
     return newItems.length;
   };
 
+  const updateScheduleItem = async (id: string, updates: Partial<Omit<ScheduleItem, "id">>) => {
+    let updatedItem: ScheduleItem | undefined;
+    setSchedule((prev) => {
+      const next = prev.map((s) => {
+        if (s.id === id) {
+          updatedItem = { ...s, ...updates };
+          return updatedItem;
+        }
+        return s;
+      });
+      return [...next].sort(
+        (a, b) => new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime()
+      );
+    });
+
+    if (isSupabaseConfigured()) {
+      try {
+        await createClient().from("schedule_items").update(updates).eq("id", id);
+      } catch (e) {
+        console.warn("Failed updating schedule item in Supabase:", e);
+      }
+    }
+
+    if (updatedItem) {
+      logAudit("UPDATE_SCHEDULE_ITEM", "schedule_items", id, null, updatedItem);
+    }
+  };
+
   const deleteScheduleItem = async (id: string) => {
     setSchedule((prev) => prev.filter((s) => s.id !== id));
     if (isSupabaseConfigured()) {
@@ -1387,6 +1416,7 @@ export function FestStoreProvider({ children }: { children: React.ReactNode }) {
     reportIssue,
     resolveIssue,
     addScheduleItem,
+    updateScheduleItem,
     importScheduleItems,
     deleteScheduleItem,
     addVenue,

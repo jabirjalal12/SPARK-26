@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useFestStore } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
+import { ScheduleItem } from "@/lib/types/database";
 import * as XLSX from "xlsx";
 import {
   Calendar,
@@ -23,6 +24,7 @@ import {
   FileText,
   Check,
   Sparkles,
+  Pencil,
 } from "lucide-react";
 
 interface ParsedEventRow {
@@ -48,6 +50,7 @@ export default function OrganizerSchedulePage() {
     venues,
     tracks,
     addScheduleItem,
+    updateScheduleItem,
     importScheduleItems,
     deleteScheduleItem,
     addVenue,
@@ -58,12 +61,25 @@ export default function OrganizerSchedulePage() {
 
   const [activeTab, setActiveTab] = useState<"schedule" | "venues">("schedule");
   const [eventModalOpen, setEventModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
   const [venueModalOpen, setVenueModalOpen] = useState(false);
   const [importModalOpen, setImportModalOpen] = useState(false);
   const canEdit = isSuperAdmin || isEventCoordinator;
 
-  // Single event form
+  // Single add event form
   const [eventForm, setEventForm] = useState({
+    title: "",
+    description: "",
+    trackId: "",
+    venueId: "",
+    startsAt: "2026-11-05T09:00",
+    endsAt: "2026-11-05T09:30",
+    type: "competition" as "ceremony" | "competition" | "break" | "judging" | "other",
+  });
+
+  // Edit / Modify event form
+  const [editingItem, setEditingItem] = useState<ScheduleItem | null>(null);
+  const [editForm, setEditForm] = useState({
     title: "",
     description: "",
     trackId: "",
@@ -88,6 +104,24 @@ export default function OrganizerSchedulePage() {
   const [isImporting, setIsImporting] = useState(false);
   const [importError, setImportError] = useState<string | null>(null);
   const [importSuccess, setImportSuccess] = useState<string | null>(null);
+
+  // Helper to convert ISO string to YYYY-MM-DDTHH:mm for datetime-local
+  const toDatetimeLocal = (isoString?: string | null): string => {
+    if (!isoString) return "2026-11-05T09:00";
+    try {
+      const d = new Date(isoString);
+      if (isNaN(d.getTime())) return "2026-11-05T09:00";
+      const pad = (n: number) => String(n).padStart(2, "0");
+      const year = d.getFullYear();
+      const month = pad(d.getMonth() + 1);
+      const day = pad(d.getDate());
+      const hours = pad(d.getHours());
+      const minutes = pad(d.getMinutes());
+      return `${year}-${month}-${day}T${hours}:${minutes}`;
+    } catch {
+      return "2026-11-05T09:00";
+    }
+  };
 
   // Helper to parse dates and times robustly
   const parseEventDateTime = (val: any, defaultTime: string, defaultDate = "2026-11-05"): string => {
@@ -268,7 +302,7 @@ export default function OrganizerSchedulePage() {
     reader.readAsArrayBuffer(file);
   };
 
-  // Download Sample Template (Excel .xlsx)
+  // Download Sample Template (Excel .xlsx or CSV)
   const downloadSampleTemplate = (format: "xlsx" | "csv") => {
     const sampleRows = [
       {
@@ -421,6 +455,40 @@ export default function OrganizerSchedulePage() {
       type: "competition",
     });
     setEventModalOpen(false);
+  };
+
+  // Open Edit / Modify Modal
+  const openEditModal = (item: ScheduleItem) => {
+    setEditingItem(item);
+    setEditForm({
+      title: item.title,
+      description: item.description || "",
+      trackId: item.track_id || "",
+      venueId: item.venue_id || "",
+      startsAt: toDatetimeLocal(item.starts_at),
+      endsAt: toDatetimeLocal(item.ends_at),
+      type: item.type,
+    });
+    setEditModalOpen(true);
+  };
+
+  // Submit Edit / Modify
+  const handleUpdateEvent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingItem || !editForm.title) return;
+
+    await updateScheduleItem(editingItem.id, {
+      title: editForm.title,
+      description: editForm.description || null,
+      track_id: editForm.trackId || null,
+      venue_id: editForm.venueId || null,
+      starts_at: new Date(editForm.startsAt).toISOString(),
+      ends_at: new Date(editForm.endsAt).toISOString(),
+      type: editForm.type,
+    });
+
+    setEditModalOpen(false);
+    setEditingItem(null);
   };
 
   const handleAddVenue = async (e: React.FormEvent) => {
@@ -629,13 +697,26 @@ export default function OrganizerSchedulePage() {
                     </div>
 
                     {canEdit && (
-                      <button
-                        onClick={() => deleteScheduleItem(item.id)}
-                        className="self-end sm:self-center p-2 border-2 border-black bg-[#FF5252] text-black shadow-[2px_2px_0px_#000000] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all cursor-pointer"
-                        title="Delete event slot"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      <div className="flex items-center gap-2 self-end sm:self-center">
+                        {/* MODIFY BUTTON */}
+                        <button
+                          onClick={() => openEditModal(item)}
+                          className="px-3 py-1.5 border-2 border-black bg-[#FFEB3B] text-black shadow-[2px_2px_0px_#000000] hover:bg-black hover:text-white hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all cursor-pointer flex items-center gap-1.5 text-xs font-black uppercase"
+                          title="Modify event details"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                          <span>Modify</span>
+                        </button>
+
+                        {/* DELETE BUTTON */}
+                        <button
+                          onClick={() => deleteScheduleItem(item.id)}
+                          className="p-1.5 border-2 border-black bg-[#FF5252] text-black shadow-[2px_2px_0px_#000000] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all cursor-pointer"
+                          title="Delete event slot"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     )}
                   </div>
                 );
@@ -1062,7 +1143,138 @@ export default function OrganizerSchedulePage() {
         </form>
       </Modal>
 
-      {/* MODAL 3: ADD PLACE / VENUE */}
+      {/* MODAL 3: MODIFY EVENT SLOT */}
+      <Modal
+        isOpen={editModalOpen}
+        onClose={() => {
+          setEditModalOpen(false);
+          setEditingItem(null);
+        }}
+        title={`Modify Event Slot: ${editingItem?.title || ""}`}
+        description="Update event schedule timings, assigned campus places, or track competitions."
+      >
+        <form onSubmit={handleUpdateEvent} className="space-y-4 font-sans text-black">
+          <div>
+            <label className="text-xs font-black text-black block mb-1">Event Title *</label>
+            <input
+              type="text"
+              required
+              value={editForm.title}
+              onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+              placeholder="e.g. Robotics Round 1 Trials"
+              className="w-full px-3 py-2 border-2 border-black bg-[#FFFBEB] text-xs font-bold text-black"
+            />
+          </div>
+
+          <div>
+            <label className="text-xs font-black text-black block mb-1">Description</label>
+            <textarea
+              rows={2}
+              value={editForm.description}
+              onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+              placeholder="Details on what happens during this round..."
+              className="w-full px-3 py-2 border-2 border-black bg-[#FFFBEB] text-xs font-medium text-black"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-black text-black block mb-1">Event Type</label>
+              <select
+                value={editForm.type}
+                onChange={(e) => setEditForm({ ...editForm, type: e.target.value as any })}
+                className="w-full px-3 py-2 border-2 border-black bg-white text-xs font-bold text-black"
+              >
+                <option value="competition">Competition</option>
+                <option value="judging">Judging / Pitch</option>
+                <option value="ceremony">Ceremony</option>
+                <option value="break">Break / Meal</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="text-xs font-black text-black block mb-1">Assign Place / Venue</label>
+              <select
+                value={editForm.venueId}
+                onChange={(e) => setEditForm({ ...editForm, venueId: e.target.value })}
+                className="w-full px-3 py-2 border-2 border-black bg-white text-xs font-bold text-black"
+              >
+                <option value="">-- Select Campus Venue --</option>
+                {venues.map((v) => (
+                  <option key={v.id} value={v.id}>
+                    {v.name} ({v.location})
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="text-xs font-black text-black block mb-1">Track / Arena (Optional)</label>
+            <select
+              value={editForm.trackId}
+              onChange={(e) => setEditForm({ ...editForm, trackId: e.target.value })}
+              className="w-full px-3 py-2 border-2 border-black bg-white text-xs font-bold text-black"
+            >
+              <option value="">General / All Tracks</option>
+              {tracks.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-black text-black block mb-1">Starts At *</label>
+              <input
+                type="datetime-local"
+                required
+                value={editForm.startsAt}
+                onChange={(e) => setEditForm({ ...editForm, startsAt: e.target.value })}
+                className="w-full px-3 py-2 border-2 border-black bg-white text-xs font-bold text-black"
+              />
+            </div>
+
+            <div>
+              <label className="text-xs font-black text-black block mb-1">Ends At *</label>
+              <input
+                type="datetime-local"
+                required
+                value={editForm.endsAt}
+                onChange={(e) => setEditForm({ ...editForm, endsAt: e.target.value })}
+                className="w-full px-3 py-2 border-2 border-black bg-white text-xs font-bold text-black"
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-3 border-t-2 border-black">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setEditModalOpen(false);
+                setEditingItem(null);
+              }}
+              className="border-2 border-black text-xs font-black"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              size="sm"
+              className="bg-[#FFEB3B] text-black border-2 border-black shadow-[3px_3px_0px_#000000] text-xs font-black uppercase hover:bg-black hover:text-white"
+            >
+              Save Changes
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* MODAL 4: ADD PLACE / VENUE */}
       <Modal
         isOpen={venueModalOpen}
         onClose={() => setVenueModalOpen(false)}
