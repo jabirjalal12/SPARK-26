@@ -288,7 +288,7 @@ export function FestStoreProvider({ children }: { children: React.ReactNode }) {
 
   const logAudit = useCallback((action: string, target_type: string, target_id: string | null, old_data: any, new_data: any) => {
     const newLog: AuditLog = {
-      id: "aud-" + Date.now() + "-" + Math.random().toString(36).substring(2, 6),
+      id: generateSafeUUID(),
       actor_id: currentProfile.id,
       action,
       target_type,
@@ -347,7 +347,7 @@ export function FestStoreProvider({ children }: { children: React.ReactNode }) {
 
     // Create checkin log records
     const newCheckins: Checkin[] = studentIds.map((sid) => ({
-      id: "chk-" + Date.now() + "-" + sid,
+      id: generateSafeUUID(),
       student_id: sid,
       school_id: schoolId,
       volunteer_id: volunteerId,
@@ -432,7 +432,7 @@ export function FestStoreProvider({ children }: { children: React.ReactNode }) {
   // WALK-IN STUDENT
   const addWalkinStudent = (data: { school_id: string; track_id: string; name: string; class: string }) => {
     const newStudent: Student = {
-      id: "s-walk-" + Date.now(),
+      id: generateSafeUUID(),
       school_id: data.school_id,
       track_id: data.track_id,
       team_id: null,
@@ -449,7 +449,7 @@ export function FestStoreProvider({ children }: { children: React.ReactNode }) {
 
     setCheckins((prev) => [
       {
-        id: "chk-walk-" + Date.now(),
+        id: generateSafeUUID(),
         student_id: newStudent.id,
         school_id: data.school_id,
         volunteer_id: currentProfile.id,
@@ -509,7 +509,7 @@ export function FestStoreProvider({ children }: { children: React.ReactNode }) {
         const school = schools.find((s) => s.id === schoolId);
         const code = school ? school.code : "SCH";
         const newTicket: SchoolTicket = {
-          id: "tkt-" + Date.now(),
+          id: generateSafeUUID(),
           school_id: schoolId,
           token_hash: `TKT-${code}-${Math.random().toString(36).substring(2, 10)}`,
           revoked_at: null,
@@ -549,7 +549,7 @@ export function FestStoreProvider({ children }: { children: React.ReactNode }) {
     );
 
     const newTicket: SchoolTicket = {
-      id: "tkt-" + Date.now(),
+      id: generateSafeUUID(),
       school_id: schoolId,
       token_hash: `TKT-${code}-${Math.random().toString(36).substring(2, 10)}`,
       revoked_at: null,
@@ -576,7 +576,7 @@ export function FestStoreProvider({ children }: { children: React.ReactNode }) {
     const code = `SCH-${(schoolData.city || "GEN").substring(0, 3).toUpperCase()}-${Math.floor(100 + Math.random() * 900)}`;
     const now = new Date().toISOString();
     const newSchool: School = {
-      id: "sch-" + Date.now(),
+      id: generateSafeUUID(),
       name: schoolData.name || "New Visiting Institution",
       code,
       address: schoolData.address || "",
@@ -614,7 +614,7 @@ export function FestStoreProvider({ children }: { children: React.ReactNode }) {
   // ADD STUDENT
   const addStudent = (studentData: { school_id: string; track_id: string; name: string; class: string; team_id?: string | null }) => {
     const newStudent: Student = {
-      id: "stu-" + Date.now(),
+      id: generateSafeUUID(),
       school_id: studentData.school_id,
       track_id: studentData.track_id,
       team_id: studentData.team_id || null,
@@ -648,7 +648,7 @@ export function FestStoreProvider({ children }: { children: React.ReactNode }) {
   // ADD TEAM
   const addTeam = (teamData: { school_id: string; track_id: string; name: string; project_title: string; project_summary: string; table_number?: string }) => {
     const newTeam: Team = {
-      id: "team-" + Date.now(),
+      id: generateSafeUUID(),
       school_id: teamData.school_id,
       track_id: teamData.track_id,
       name: teamData.name,
@@ -683,7 +683,7 @@ export function FestStoreProvider({ children }: { children: React.ReactNode }) {
   const saveScore = (scoreData: { team_id: string; criterion_id: string; value: number; feedback?: string }) => {
     const now = new Date().toISOString();
     const newScore: Score = {
-      id: "sc-" + Date.now(),
+      id: generateSafeUUID(),
       entered_by: currentProfile.id,
       team_id: scoreData.team_id,
       criterion_id: scoreData.criterion_id,
@@ -799,7 +799,7 @@ export function FestStoreProvider({ children }: { children: React.ReactNode }) {
   // ISSUE REPORTS
   const reportIssue = (issue: { title: string; description: string; severity: "low" | "medium" | "high" | "critical" }) => {
     const newIssue: IssueReport = {
-      id: "iss-" + Date.now(),
+      id: generateSafeUUID(),
       reported_by: currentProfile.id,
       title: issue.title,
       description: issue.description,

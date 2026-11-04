@@ -77,10 +77,31 @@ export default function RegisterSchoolPage() {
           },
         });
 
+        let authUser = authData?.user;
+
+        // If email already registered, attempt sign-in to finish profile & school setup
         if (authError) {
-          setErrors({ form: authError.message });
-          setIsSubmitting(false);
-          return;
+          const isAlreadyRegistered =
+            authError.message.toLowerCase().includes("already registered") ||
+            authError.message.toLowerCase().includes("already in use");
+
+          if (isAlreadyRegistered) {
+            const { data: sData, error: sErr } = await supabase.auth.signInWithPassword({
+              email: formData.facultyEmail,
+              password: formData.password,
+            });
+            if (!sErr && sData?.user) {
+              authUser = sData.user;
+            } else {
+              setErrors({ form: "An account with this faculty email already exists. Please log in or check your password." });
+              setIsSubmitting(false);
+              return;
+            }
+          } else {
+            setErrors({ form: authError.message });
+            setIsSubmitting(false);
+            return;
+          }
         }
 
         // 2. Generate unique school code & deterministic school UUID
@@ -89,7 +110,23 @@ export default function RegisterSchoolPage() {
           ? crypto.randomUUID() 
           : "00000000-0000-0000-0000-" + Math.random().toString(16).substring(2, 14).padEnd(12, "0");
 
-        // 3. Insert School into Supabase (without .select() to avoid RLS returning scan failure)
+        // 3. Pre-insert Profile so auth.uid() exists in profiles table before audit triggers fire
+        if (authUser) {
+          try {
+            await supabase.from("profiles").upsert({
+              id: authUser.id,
+              role: "faculty",
+              full_name: formData.facultyName,
+              email: formData.facultyEmail,
+              phone: formData.contactPhone,
+              school_id: null,
+            });
+          } catch (pErr) {
+            console.warn("Pre-insert profile notice:", pErr);
+          }
+        }
+
+        // 4. Insert School into Supabase
         const { error: schoolError } = await supabase
           .from("schools")
           .insert({
@@ -118,30 +155,41 @@ export default function RegisterSchoolPage() {
           address: formData.address,
           contact_email: formData.contactEmail,
           contact_phone: formData.contactPhone,
-          status: "pending",
+          status: "pending" as const,
           arrived: false,
         };
 
-        // 4. Update Profile in Supabase
-        if (authData.user) {
-          await supabase.from("profiles").upsert({
-            id: authData.user.id,
-            role: "faculty",
-            full_name: formData.facultyName,
-            email: formData.facultyEmail,
-            phone: formData.contactPhone,
-            school_id: schoolData.id,
-          });
+        // 5. Update Profile with created school_id
+        if (authUser) {
+          try {
+            await supabase.from("profiles").upsert({
+              id: authUser.id,
+              role: "faculty",
+              full_name: formData.facultyName,
+              email: formData.facultyEmail,
+              phone: formData.contactPhone,
+              school_id: schoolId,
+            });
+          } catch (pErr2) {
+            console.warn("Update profile school_id notice:", pErr2);
+          }
         }
 
-        // 5. Generate School Ticket
+        // 6. Generate School Ticket
         const tokenHash = `TKT-${code}-${Math.random().toString(36).substring(2, 10)}`;
-        await supabase.from("school_tickets").insert({
-          school_id: schoolData.id,
-          token_hash: tokenHash,
-        });
+        try {
+          await supabase.from("school_tickets").insert({
+            school_id: schoolId,
+            token_hash: tokenHash,
+          });
+        } catch (tErr) {
+          console.warn("School ticket insert notice:", tErr);
+        }
 
-        // 6. Automatically log in the faculty so their session is established immediately
+        // Also add to local store cache
+        addSchool(schoolData);
+
+        // 7. Automatically log in the faculty so their session is established immediately
         let isAuthenticated = false;
         try {
           const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
