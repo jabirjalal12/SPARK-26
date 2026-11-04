@@ -52,7 +52,7 @@ export function PillNav() {
         { href: "/dashboard", label: "Overview", icon: Home },
         { href: "/faculty/students", label: "Students", icon: Users },
         { href: "/faculty/teams", label: "Teams", icon: Sparkles },
-        { href: "/faculty/ticket", label: "School Pass", icon: QrCode },
+        { href: "/faculty/ticket", label: "Ticket", icon: QrCode },
         { href: "/faculty/info-sheet", label: "Info Sheet", icon: FileText },
         { href: "/schedule", label: "Schedule", icon: Calendar },
         { href: "/announcements", label: "Notices", icon: Bell },

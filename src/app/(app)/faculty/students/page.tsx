@@ -1,3 +1,4 @@
+import Link from "next/link";
 ﻿"use client";
 
 import React, { useState } from "react";
@@ -9,6 +10,8 @@ import { Modal } from "@/components/ui/modal";
 import {
   Users,
   Plus,
+  QrCode,
+  ArrowRight,
   Upload,
   Trash2,
   CheckCircle2,
@@ -133,9 +136,29 @@ export default function FacultyStudentsPage() {
         </div>
       </div>
 
+      {/* Next Step: Ticket Window Banner */}
+      <div className="p-4 sm:p-5 border-[3px] border-black bg-[#FFEB3B] shadow-[5px_5px_0px_#000000] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="bg-black text-[#FFEB3B] text-[10px] font-black uppercase px-2 py-0.5">NEXT STEP</span>
+            <h3 className="font-black text-black text-base">Generate Official Delegation Ticket</h3>
+          </div>
+          <p className="text-xs font-bold text-slate-800 max-w-xl">
+            After enrolling your student participants (name &amp; class), open the <strong>Ticket</strong> window to generate and download your official Delegation Pass with QR code. This ticket will be scanned at the venue entrance by Registration Desk staff to admit your squad.
+          </p>
+        </div>
+        <Link href="/faculty/ticket" className="flex-shrink-0">
+          <Button variant="primary" className="text-xs font-black uppercase tracking-wider shadow-[3px_3px_0px_#000000]">
+            <QrCode className="w-4 h-4 mr-1.5" />
+            <span>Open Ticket Window</span>
+            <ArrowRight className="w-4 h-4 ml-1.5" />
+          </Button>
+        </Link>
+      </div>
+
       {/* Minor Privacy Guarantee Banner */}
-      <div className="p-3.5 rounded-xl bg-indigo-950/40 border border-indigo-500/30 text-indigo-200 text-xs flex items-center gap-3">
-        <ShieldAlert className="w-5 h-5 flex-shrink-0 text-indigo-400" />
+      <div className="p-3.5 border-2 border-black bg-white shadow-[3px_3px_0px_#000000] text-black text-xs flex items-center gap-3">
+        <ShieldAlert className="w-5 h-5 flex-shrink-0 text-black" />
         <p>
           <strong>Minor Student Privacy Enforced:</strong> As per fest rules, no minor student emails or contact numbers are collected. Verification is managed strictly via your single School Ticket QR code.
         </p>

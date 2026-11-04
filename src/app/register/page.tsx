@@ -198,16 +198,28 @@ export default function RegisterSchoolPage() {
               Your institution <strong className="text-black">{registeredSchool.name}</strong> has been enrolled for SPARK 2026.
             </p>
 
-            <div className="my-6 p-5 border-2 border-black bg-[#FFEB3B] max-w-xs mx-auto shadow-[3px_3px_0px_#000000]">
-              <p className="text-xs uppercase tracking-wider font-black text-black">
-                Assigned School Code
+            <div className="my-6 p-5 border-2 border-black bg-[#FFFBEB] text-left shadow-[4px_4px_0px_#000000] space-y-3">
+              <p className="text-xs font-black uppercase text-black bg-[#FFEB3B] px-2 py-0.5 border border-black inline-block">
+                NEXT STEPS TO COMPLETE ENROLLMENT
               </p>
-              <p className="text-3xl font-black text-black font-mono tracking-widest mt-1">
-                {registeredSchool.code}
-              </p>
-              <p className="text-[11px] font-bold text-slate-800 mt-2">
-                Use this identifier to retrieve your delegation pass at the desk.
-              </p>
+              <div className="space-y-2.5 text-xs font-bold text-slate-800">
+                <div className="flex items-start gap-2.5">
+                  <span className="w-5 h-5 bg-black text-[#FFEB3B] flex items-center justify-center font-mono font-black text-xs flex-shrink-0">1</span>
+                  <p>Proceed to your <strong>Faculty Delegation Portal</strong>.</p>
+                </div>
+                <div className="flex items-start gap-2.5">
+                  <span className="w-5 h-5 bg-black text-[#FFEB3B] flex items-center justify-center font-mono font-black text-xs flex-shrink-0">2</span>
+                  <p>Add your student participants (<strong>Full Name &amp; Class/Grade</strong>).</p>
+                </div>
+                <div className="flex items-start gap-2.5">
+                  <span className="w-5 h-5 bg-black text-[#FFEB3B] flex items-center justify-center font-mono font-black text-xs flex-shrink-0">3</span>
+                  <p>Open the <strong>Ticket</strong> window to generate your official Delegation Entry Ticket with QR Code.</p>
+                </div>
+                <div className="flex items-start gap-2.5">
+                  <span className="w-5 h-5 bg-[#4CAF50] text-black flex items-center justify-center font-mono font-black text-xs flex-shrink-0">✓</span>
+                  <p>This QR ticket will be scanned at the venue entrance by Registration Desk staff to verify and admit your student squad.</p>
+                </div>
+              </div>
             </div>
 
             <div className="p-4 border-2 border-black bg-[#FFFBEB] text-black text-xs text-left flex items-start gap-3 mb-6 shadow-[2px_2px_0px_#000000]">

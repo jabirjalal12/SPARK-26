@@ -1,3 +1,4 @@
+import Link from "next/link";
 ﻿"use client";
 
 import React from "react";
@@ -8,6 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Printer,
+  QrCode,
+  ArrowRight,
   ShieldCheck,
   Download,
   Building2,
@@ -111,27 +114,47 @@ export default function FacultyTicketPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b-[3px] border-black">
         <div>
-          <Badge variant="default" className="mb-1.5">
-            OFFICIAL ENTRY CREDENTIAL
-          </Badge>
+          <div className="inline-block bg-[#FFEB3B] text-black border-2 border-black px-2.5 py-0.5 text-xs font-black uppercase mb-2 shadow-[2px_2px_0px_#000000]">
+            OFFICIAL DELEGATION TICKET
+          </div>
           <h1 className="text-2xl sm:text-4xl font-black text-black">
-            School Ticket & QR Pass
+            Generate Delegation Pass
           </h1>
           <p className="text-xs font-bold text-slate-800 mt-1">
-            Single official pass for {facultySchool?.name} (Code: {facultySchool?.code})
+            Official entry ticket for {facultySchool?.name} • Scanned at the venue by Registration Desk users
           </p>
         </div>
 
         <div className="flex items-center gap-2">
-          <Button variant="secondary" size="sm" onClick={() => window.print()} className="text-xs">
+          <Button variant="secondary" size="sm" onClick={() => window.print()} className="text-xs font-black">
             <Printer className="h-4 w-4 mr-1.5" />
             <span>Print Pass</span>
           </Button>
-          <Button variant="yellow" size="sm" onClick={handleDownloadPDF} className="text-xs">
+          <Button variant="yellow" size="sm" onClick={handleDownloadPDF} className="text-xs font-black shadow-[3px_3px_0px_#000000]">
             <Download className="h-4 w-4 mr-1.5" />
-            <span>Download PDF</span>
+            <span>Generate &amp; Download PDF</span>
           </Button>
         </div>
+      </div>
+
+      {/* Venue Scanning Notice Banner */}
+      <div className="p-4 border-[3px] border-black bg-[#2196F3] text-black shadow-[5px_5px_0px_#000000] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div className="space-y-0.5">
+          <p className="text-xs font-black uppercase tracking-wider text-black bg-[#FFEB3B] border border-black px-2 py-0.5 inline-block">
+            VENUE REGISTRATION DESK PROTOCOL
+          </p>
+          <p className="text-xs font-bold text-black mt-1 leading-relaxed">
+            This QR Ticket is scanned at the College Campus entrance by Registration Desk users. A single scan verifies and admits your entire student squad.
+          </p>
+        </div>
+        {schoolStudents.length === 0 && (
+          <Link href="/faculty/students" className="flex-shrink-0">
+            <Button variant="primary" size="sm" className="text-xs font-black uppercase shadow-[2px_2px_0px_#000000]">
+              <span>Add Students First</span>
+              <ArrowRight className="w-3.5 h-3.5 ml-1" />
+            </Button>
+          </Link>
+        )}
       </div>
 
       {/* Main Ticket Card */}
