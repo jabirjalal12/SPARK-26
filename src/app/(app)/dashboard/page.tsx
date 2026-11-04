@@ -220,7 +220,7 @@ export default function DashboardPage() {
         <div className="p-4 border-[3px] border-black bg-[#FF9800] text-black shadow-[4px_4px_0px_#000000]">
           <div className="flex items-center justify-between mb-1">
             <Sparkles className="w-5 h-5 text-black" />
-            <span className="text-[11px] font-mono font-black bg-white px-1.5 py-0.2 border border-black">3 Tracks</span>
+            <span className="text-[11px] font-mono font-black bg-white px-1.5 py-0.2 border border-black">{tracks.length} Tracks</span>
           </div>
           <div className="text-2xl sm:text-3xl font-black text-black">{teams.length}</div>
           <p className="text-[11px] font-black uppercase mt-1">Active Teams</p>
@@ -290,7 +290,7 @@ export default function DashboardPage() {
                   </div>
                   <p className="font-black text-sm text-black">Track Scoring Oversight</p>
                   <p className="text-[11px] font-bold text-slate-700 mt-1">
-                    Monitor live judge marks, enter evaluations across all 3 tracks, and review rubric criteria.
+                    Monitor live judge marks, enter evaluations across all competition tracks, and review rubric criteria.
                   </p>
                   <div className="mt-3 font-black text-black text-[11px] flex items-center gap-1 group-hover:underline">
                     <span>Open Scoring Terminal</span>
@@ -564,7 +564,7 @@ export default function DashboardPage() {
                 <div className="p-4 border-2 border-black bg-[#FFFBEB] hover:bg-[#FFEB3B] shadow-[2px_2px_0px_#000000] transition-all">
                   <Sparkles className="w-5 h-5 text-black mb-2" />
                   <p className="font-black text-black">Score Entry</p>
-                  <p className="text-[11px] font-bold text-slate-700 mt-0.5">Score all 3 track arenas</p>
+                  <p className="text-[11px] font-bold text-slate-700 mt-0.5">Score all track arenas</p>
                 </div>
               </Link>
 

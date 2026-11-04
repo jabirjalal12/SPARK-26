@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Modal } from "@/components/ui/modal";
 import {
   ShieldCheck,
+  ShieldAlert,
   CheckCircle2,
   Clock,
   ArrowLeft,
@@ -35,6 +36,9 @@ export default function SchoolCheckinPage() {
     tracks,
     checkInBatch,
     addWalkinStudent,
+    isVolunteer,
+    isRegistrationHead,
+    isSuperAdmin,
   } = useFestStore();
 
   const school = schools.find((s) => s.id === schoolId || s.code.toLowerCase() === schoolId?.toLowerCase());
@@ -54,6 +58,30 @@ export default function SchoolCheckinPage() {
     classGrade: "12-A",
     trackId: tracks[0]?.id || "",
   });
+
+  // Route Guard: Volunteer, Registration Head & Super Admin Only
+  const canCheckin = isVolunteer || isRegistrationHead || isSuperAdmin;
+  if (!canCheckin) {
+    return (
+      <div className="max-w-xl mx-auto mt-12 p-8 border-[3px] border-black bg-white shadow-[6px_6px_0px_#000000] text-center">
+        <div className="w-12 h-12 bg-[#FF5252] border-2 border-black flex items-center justify-center mx-auto mb-4 shadow-[2px_2px_0px_#000]">
+          <ShieldAlert className="w-6 h-6 text-black" />
+        </div>
+        <h2 className="text-xl font-black text-black">Desk Check-in Clearance Required</h2>
+        <p className="text-xs font-bold text-slate-700 mt-2">
+          Only registration desk volunteers, registration heads, and administrators can verify attending student rosters.
+        </p>
+        <div className="mt-6">
+          <Link
+            href="/dashboard"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-[#FFEB3B] hover:bg-black hover:text-white border-2 border-black font-black text-xs shadow-[2px_2px_0px_#000000] transition-colors"
+          >
+            <span>Return to Dashboard</span>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   if (!school) {
     return (

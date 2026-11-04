@@ -663,10 +663,10 @@ export default function StandaloneTvPage() {
                 >
                   <div className="flex items-center justify-between text-[10px] font-black uppercase text-slate-800 mb-1">
                     <span className="px-1.5 py-0.5 bg-black text-[#FFEB3B]">
-                      {item.audience.toUpperCase()}
+                      {(item.audience || "ALL").toUpperCase()}
                     </span>
                     <span>
-                      {new Date(item.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                      {item.created_at ? new Date(item.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "LIVE"}
                     </span>
                   </div>
                   <h4 className="font-black text-sm text-black">{item.title}</h4>

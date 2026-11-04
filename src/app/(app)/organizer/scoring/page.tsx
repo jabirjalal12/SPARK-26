@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import { useFestStore } from "@/lib/store";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Button } from "@/components/ui/button";
@@ -90,6 +91,29 @@ export default function OrganizerScoringPage() {
     setTimeout(() => setToastMessage(null), 3000);
   };
 
+  // Route Guard: Event Coordinator & Super Admin Only
+  if (!canScore) {
+    return (
+      <div className="max-w-xl mx-auto mt-12 p-8 border-[3px] border-black bg-white shadow-[6px_6px_0px_#000000] text-center">
+        <div className="w-12 h-12 bg-[#FF5252] border-2 border-black flex items-center justify-center mx-auto mb-4 shadow-[2px_2px_0px_#000]">
+          <Lock className="w-6 h-6 text-black" />
+        </div>
+        <h2 className="text-xl font-black text-black">Scoring Clearance Required</h2>
+        <p className="text-xs font-bold text-slate-700 mt-2">
+          Only Event Coordinators and Super Administrators have clearance to oversee and submit official track scores.
+        </p>
+        <div className="mt-6">
+          <Link
+            href="/dashboard"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-[#FFEB3B] hover:bg-black hover:text-white border-2 border-black font-black text-xs shadow-[2px_2px_0px_#000000] transition-colors"
+          >
+            <span>Return to Operations Hub</span>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
       {/* Header */}
@@ -102,7 +126,7 @@ export default function OrganizerScoringPage() {
             Score Entry by Track
           </h1>
           <p className="text-xs font-bold text-slate-800 mt-1">
-            Super Admin and Event Coordinators evaluate teams across all 3 tracks.
+            Super Admin and Event Coordinators evaluate teams across all competition tracks.
           </p>
         </div>
 

@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useFestStore } from "@/lib/store";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Button } from "@/components/ui/button";
@@ -17,11 +18,12 @@ import {
   ArrowRight,
   Sparkles,
   Zap,
+  ShieldAlert,
 } from "lucide-react";
 
 export default function VolunteerScanPage() {
   const router = useRouter();
-  const { schools, students, schoolTickets } = useFestStore();
+  const { schools, students, schoolTickets, isVolunteer, isRegistrationHead, isSuperAdmin } = useFestStore();
   const [scannerOpen, setScannerOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 

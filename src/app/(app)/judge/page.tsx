@@ -12,6 +12,8 @@ import {
   Award,
   CheckCircle2,
   Clock,
+  ShieldAlert,
+  Lock,
   QrCode,
   Sliders,
   ChevronRight,
@@ -136,6 +138,30 @@ export default function JudgeScoringArena() {
   // Evaluation statistics
   const scoredCount = trackTeams.filter((t) => getTeamEvaluation(t.id).isScored).length;
   const pendingCount = trackTeams.length - scoredCount;
+
+  // Route Guard: Judge, Coordinator & Super Admin Only
+  const canJudge = isJudge || isSuperAdmin || isEventCoordinator;
+  if (!canJudge) {
+    return (
+      <div className="max-w-xl mx-auto mt-12 p-8 border-[3px] border-black bg-white shadow-[6px_6px_0px_#000000] text-center">
+        <div className="w-12 h-12 bg-[#FF5252] border-2 border-black flex items-center justify-center mx-auto mb-4 shadow-[2px_2px_0px_#000]">
+          <ShieldAlert className="w-6 h-6 text-black" />
+        </div>
+        <h2 className="text-xl font-black text-black">Jury Clearance Required</h2>
+        <p className="text-xs font-bold text-slate-700 mt-2">
+          Only official fest judges, event coordinators, and super administrators have clearance to enter and evaluate team scores.
+        </p>
+        <div className="mt-6">
+          <Link
+            href="/dashboard"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-[#FFEB3B] hover:bg-black hover:text-white border-2 border-black font-black text-xs shadow-[2px_2px_0px_#000000] transition-colors"
+          >
+            <span>Return to Dashboard</span>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto pb-16">

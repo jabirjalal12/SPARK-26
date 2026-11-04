@@ -274,7 +274,8 @@ export default function LoginPage() {
       if (typeof window !== "undefined") {
         const params = new URLSearchParams(window.location.search);
         const redirectParam = params.get("redirect");
-        if (redirectParam && redirectParam.startsWith("/")) {
+        // Prevent CWE-601: Open Redirect vulnerability by validating target is relative and not protocol-relative
+        if (redirectParam && redirectParam.startsWith("/") && !redirectParam.startsWith("//") && !redirectParam.includes("\\")) {
           destination = redirectParam;
         } else if (profile?.role === "tv_display" || isTv) {
           destination = "/tv";

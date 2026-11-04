@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import { useFestStore } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
@@ -105,6 +106,35 @@ export default function OrganizerSchedulePage() {
         return "bg-[#4CAF50] text-black";
     }
   };
+
+  // Route Guard: Event Coordinator & Super Admin Only
+  if (!canEdit) {
+    return (
+      <div className="max-w-xl mx-auto mt-12 p-8 border-[3px] border-black bg-white shadow-[6px_6px_0px_#000000] text-center">
+        <div className="w-12 h-12 bg-[#FF5252] border-2 border-black flex items-center justify-center mx-auto mb-4 shadow-[2px_2px_0px_#000]">
+          <Calendar className="w-6 h-6 text-black" />
+        </div>
+        <h2 className="text-xl font-black text-black">Schedule Editor Clearance Required</h2>
+        <p className="text-xs font-bold text-slate-700 mt-2">
+          Only Event Coordinators and Super Administrators have clearance to edit timetables, stages, and venues.
+        </p>
+        <div className="mt-6 flex items-center justify-center gap-3">
+          <Link
+            href="/schedule"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-[#FFEB3B] hover:bg-black hover:text-white border-2 border-black font-black text-xs shadow-[2px_2px_0px_#000000] transition-colors"
+          >
+            <span>View Public Schedule</span>
+          </Link>
+          <Link
+            href="/dashboard"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-black hover:text-white border-2 border-black font-black text-xs shadow-[2px_2px_0px_#000000] transition-colors"
+          >
+            <span>Return to Dashboard</span>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto font-sans">
