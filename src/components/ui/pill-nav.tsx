@@ -38,7 +38,6 @@ export function PillNav() {
   const {
     currentProfile,
     activeOrganizerSubRole,
-    switchRole,
     switchOrganizerSubRole,
     isSuperAdmin,
     isEventCoordinator,
@@ -47,6 +46,14 @@ export function PillNav() {
 
   const [roleMenuOpen, setRoleMenuOpen] = useState(false);
   const role = currentProfile.role;
+
+  // Close profile dropdown when clicking anywhere outside
+  React.useEffect(() => {
+    if (!roleMenuOpen) return;
+    const handleOutsideClick = () => setRoleMenuOpen(false);
+    window.addEventListener("click", handleOutsideClick);
+    return () => window.removeEventListener("click", handleOutsideClick);
+  }, [roleMenuOpen]);
 
   // Active navigation tabs per role & organizer sub-role
   const getNavLinks = () => {
@@ -222,7 +229,10 @@ export function PillNav() {
 
             <div className="relative">
               <button
-                onClick={() => setRoleMenuOpen(!roleMenuOpen)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setRoleMenuOpen(!roleMenuOpen);
+                }}
                 className="flex items-center gap-2 px-3 py-1.5 rounded-none bg-white hover:bg-[#FFEB3B] border-[3px] border-black shadow-[3px_3px_0px_#000000] text-xs font-black text-black hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer"
               >
                 <span className="w-2.5 h-2.5 rounded-full bg-[#4CAF50] border border-black animate-pulse" />
@@ -241,76 +251,6 @@ export function PillNav() {
                   <p className="text-[11px] font-bold text-slate-800 truncate">{currentProfile.email}</p>
                   <div className="mt-1.5 inline-block bg-black text-[#FFEB3B] px-2 py-0.5 text-[10px] font-black uppercase tracking-wider">
                     {getRoleBadgeLabel()}
-                  </div>
-                </div>
-
-                <div className="space-y-1 mb-2 pb-2 border-b-2 border-black">
-                  <p className="text-[10px] font-black uppercase tracking-wider text-black px-2 pt-1">
-                    Switch Active Role
-                  </p>
-                  <div className="grid grid-cols-2 gap-1">
-                    <button
-                      onClick={() => {
-                        switchRole("organizer");
-                        switchOrganizerSubRole("super_admin");
-                        setRoleMenuOpen(false);
-                      }}
-                      className={cn(
-                        "text-left px-2 py-1 text-[11px] font-black border transition-colors cursor-pointer",
-                        role === "organizer" ? "bg-black text-white border-black" : "bg-white hover:bg-[#FFFBEB] border-slate-300"
-                      )}
-                    >
-                      Organizer
-                    </button>
-                    <button
-                      onClick={() => {
-                        switchRole("judge");
-                        setRoleMenuOpen(false);
-                      }}
-                      className={cn(
-                        "text-left px-2 py-1 text-[11px] font-black border transition-colors cursor-pointer",
-                        role === "judge" ? "bg-[#9C27B0] text-white border-black" : "bg-white hover:bg-[#FFFBEB] border-slate-300"
-                      )}
-                    >
-                      Judge (Jury)
-                    </button>
-                    <button
-                      onClick={() => {
-                        switchRole("faculty");
-                        setRoleMenuOpen(false);
-                      }}
-                      className={cn(
-                        "text-left px-2 py-1 text-[11px] font-black border transition-colors cursor-pointer",
-                        role === "faculty" ? "bg-[#4CAF50] text-black border-black" : "bg-white hover:bg-[#FFFBEB] border-slate-300"
-                      )}
-                    >
-                      Faculty
-                    </button>
-                    <button
-                      onClick={() => {
-                        switchRole("volunteer");
-                        setRoleMenuOpen(false);
-                      }}
-                      className={cn(
-                        "text-left px-2 py-1 text-[11px] font-black border transition-colors cursor-pointer",
-                        role === "volunteer" ? "bg-[#2196F3] text-black border-black" : "bg-white hover:bg-[#FFFBEB] border-slate-300"
-                      )}
-                    >
-                      Volunteer
-                    </button>
-                    <button
-                      onClick={() => {
-                        switchRole("tv_display");
-                        setRoleMenuOpen(false);
-                        window.location.href = "/tv";
-                      }}
-                      className={cn(
-                        "text-left px-2 py-1 text-[11px] font-black border transition-colors cursor-pointer col-span-2",
-                        role === "tv_display" ? "bg-[#00E5FF] text-black border-black" : "bg-white hover:bg-[#FFFBEB] border-slate-300"
-                      )}
-                    >
-                      📺 TV Display Screen
-                    </button>
                   </div>
                 </div>
 
