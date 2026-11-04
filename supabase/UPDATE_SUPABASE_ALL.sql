@@ -258,6 +258,9 @@ ON CONFLICT (id) DO UPDATE SET
   capacity = EXCLUDED.capacity;
 
 -- 6. AUTO-CONFIRM USERS TRIGGER
+DROP TRIGGER IF EXISTS on_auth_user_created_auto_confirm ON auth.users;
+DROP FUNCTION IF EXISTS public.auto_confirm_new_users();
+
 CREATE OR REPLACE FUNCTION public.auto_confirm_new_users()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -271,7 +274,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-DROP TRIGGER IF EXISTS on_auth_user_created_auto_confirm ON auth.users;
 CREATE TRIGGER on_auth_user_created_auto_confirm
   BEFORE INSERT ON auth.users
   FOR EACH ROW
@@ -287,10 +289,16 @@ SET
   email_change_token_current = COALESCE(email_change_token_current, '')
 WHERE email_confirmed_at IS NULL;
 
--- 7. ROBUST FACTORY RESET RPC FUNCTION
+-- 7. ROBUST FACTORY RESET RPC FUNCTION (Explicit DROP to prevent 42P13 return type conflict)
+DROP FUNCTION IF EXISTS public.factory_reset_fest();
+
 CREATE OR REPLACE FUNCTION public.factory_reset_fest()
-RETURNS void LANGUAGE plpgsql SECURITY DEFINER AS $$
+RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER AS $$
 BEGIN
+  -- 1. Disassociate school references from user profiles first
+  UPDATE public.profiles SET school_id = NULL WHERE true;
+
+  -- 2. Wipe all fest operational and registration records
   DELETE FROM public.checkins WHERE true;
   DELETE FROM public.scores WHERE true;
   DELETE FROM public.results WHERE true;
@@ -303,9 +311,14 @@ BEGIN
   DELETE FROM public.announcements WHERE true;
   DELETE FROM public.schools WHERE true;
   DELETE FROM public.audit_log WHERE true;
-  UPDATE public.profiles SET school_id = NULL WHERE true;
+
+  RETURN jsonb_build_object('success', true, 'message', 'Fest records have been successfully reset to factory state.');
 END;
 $$;
+
+GRANT EXECUTE ON FUNCTION public.factory_reset_fest() TO authenticated;
+GRANT EXECUTE ON FUNCTION public.factory_reset_fest() TO anon;
+GRANT EXECUTE ON FUNCTION public.factory_reset_fest() TO service_role;
 
 -- 8. REFRESH SCHEMA CACHE
 NOTIFY pgrst, 'reload schema';
