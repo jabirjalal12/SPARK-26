@@ -14,11 +14,11 @@ export default function OrganizerPassPage() {
   const badgeNumber = `EXEC-${(currentProfile.id || "SA1").substring(0, 6).toUpperCase()}`;
 
   const subRoleTitle =
-    activeOrganizerSubRole === "super_admin"
-      ? "Super Administrator • Fest Director"
-      : activeOrganizerSubRole === "event_coordinator"
+    currentProfile.role === "event_coordinator"
       ? "Event Coordinator • Arena Operations"
-      : "Head of Institutional Registration";
+      : currentProfile.role === "registration_head"
+      ? "Head of Institutional Registration"
+      : "Super Administrator • Fest Director";
 
   return (
     <div className="max-w-2xl mx-auto space-y-6 pb-16">

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useFestStore } from "@/lib/store";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { fetchUserProfile } from "@/lib/supabase/db";
+import { UserRole } from "@/lib/types/database";
 import { Button } from "@/components/ui/button";
 import {
   Lock,
@@ -51,6 +52,12 @@ export default function LoginPage() {
 
     try {
       const trimmedEmail = email.trim().toLowerCase();
+      const isCoord = trimmedEmail.includes("coord") || trimmedEmail.includes("event");
+      const isRegHead = trimmedEmail.includes("reg") || trimmedEmail.includes("reception");
+      const isAdm = trimmedEmail.includes("admin") || trimmedEmail.includes("organizer");
+      const isJdg = trimmedEmail.includes("judge") || trimmedEmail.includes("jury");
+      const isVol = trimmedEmail.includes("vol");
+      const isTv = trimmedEmail.includes("tv") || trimmedEmail.includes("display");
 
       if (!trimmedEmail || !trimmedEmail.includes("@")) {
         setErrorMessage("Please enter a valid email address.");
@@ -94,10 +101,43 @@ export default function LoginPage() {
         });
 
         // Self-healing fallback for known demo accounts if not yet provisioned
+
+        const detectedRole: UserRole = isTv
+          ? "tv_display"
+          : isJdg
+          ? "judge"
+          : isVol
+          ? "volunteer"
+          : isCoord
+          ? "event_coordinator"
+          : isRegHead
+          ? "registration_head"
+          : isAdm
+          ? "super_admin"
+          : "faculty";
+
+        const detectedName = isTv
+          ? "Venue TV Display Screen"
+          : isCoord
+          ? "Event Operations Coordinator"
+          : isRegHead
+          ? "Head of Registration Desk"
+          : isAdm
+          ? "Super Administrator"
+          : isJdg
+          ? "Dr. Evelyn Reed (Chief Jury)"
+          : isVol
+          ? "Campus Operations Volunteer"
+          : "Visiting Faculty Coordinator";
+
         if (error && (error.message.toLowerCase().includes("invalid") || error.message.toLowerCase().includes("not confirmed"))) {
           const isKnownDemo =
             (trimmedEmail === "admin@spark.in" ||
               trimmedEmail === "admin@spark.edu" ||
+              trimmedEmail === "coordinator@spark.in" ||
+              trimmedEmail === "coordinator@spark.edu" ||
+              trimmedEmail === "registration@spark.in" ||
+              trimmedEmail === "registration@spark.edu" ||
               trimmedEmail === "judge@spark.in" ||
               trimmedEmail === "volunteer@spark.in" ||
               trimmedEmail === "faculty@spark.in" ||
@@ -105,13 +145,10 @@ export default function LoginPage() {
             password === "123456";
 
           if (isKnownDemo) {
-            const role = trimmedEmail.includes("tv") ? "tv_display" : trimmedEmail.includes("judge") ? "judge" : trimmedEmail.includes("vol") ? "volunteer" : trimmedEmail.includes("fac") ? "faculty" : "organizer";
-            const name = trimmedEmail.includes("tv") ? "Venue TV Display Screen" : trimmedEmail.includes("judge") ? "Dr. Evelyn Reed (Chief Jury)" : trimmedEmail.includes("vol") ? "Campus Operations Volunteer" : trimmedEmail.includes("fac") ? "Visiting Faculty Coordinator" : "Super Administrator";
-
             const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
               email: trimmedEmail,
               password,
-              options: { data: { full_name: name, role } }
+              options: { data: { full_name: detectedName, role: detectedRole } }
             });
 
             if (!signUpError && (signUpData.session || signUpData.user)) {
@@ -129,21 +166,15 @@ export default function LoginPage() {
 
         if (data?.user) {
           profile = await fetchUserProfile(data.user.id);
-          const isAdm = trimmedEmail.includes("admin") || trimmedEmail.includes("organizer");
-          const isJdg = trimmedEmail.includes("judge") || trimmedEmail.includes("jury");
-          const isVol = trimmedEmail.includes("vol");
-          const isTv = trimmedEmail.includes("tv") || trimmedEmail.includes("display");
 
           if (!profile) {
             // Upsert profile in Supabase so RLS and foreign keys always have a profile row
-            const fallbackRole = isTv ? "tv_display" : isJdg ? "judge" : isVol ? "volunteer" : isAdm ? "organizer" : "faculty";
-            const fallbackName = isTv ? "Venue TV Display Screen" : isAdm ? "Super Administrator" : isJdg ? "Dr. Evelyn Reed (Chief Jury)" : isVol ? "Campus Operations Volunteer" : "Visiting Faculty Coordinator";
             try {
               const { data: upsertedProf } = await supabase.from("profiles").upsert({
                 id: data.user.id,
                 email: trimmedEmail,
-                full_name: fallbackName,
-                role: fallbackRole,
+                full_name: detectedName,
+                role: detectedRole,
               }).select().single();
               if (upsertedProf) profile = upsertedProf;
             } catch (pErr) {
@@ -152,32 +183,28 @@ export default function LoginPage() {
           }
 
           if (profile) {
+            // Upgrade legacy organizer with sub_roles into real first-class roles
+            if (profile.role === "organizer" && profile.sub_roles && profile.sub_roles.length > 0) {
+              profile.role = profile.sub_roles[0] as UserRole;
+            } else if (profile.role === "organizer") {
+              profile.role = isCoord ? "event_coordinator" : isRegHead ? "registration_head" : "super_admin";
+            }
             setCurrentProfile(profile);
             switchRole(profile.role);
-            if (profile.sub_roles && profile.sub_roles.length > 0) {
-              switchOrganizerSubRole(profile.sub_roles[0]);
-            } else if (isAdm) {
-              switchOrganizerSubRole("super_admin");
-            }
           } else {
             // Robust local profile fallback
-            const fallbackRole = isTv ? "tv_display" : isJdg ? "judge" : isVol ? "volunteer" : isAdm ? "organizer" : "faculty";
             profile = {
               id: data.user.id,
-              role: fallbackRole,
-              sub_roles: isAdm ? ["super_admin", "event_coordinator", "registration_head"] : undefined,
+              role: detectedRole,
               school_id: null,
-              full_name: data.user.user_metadata?.full_name || (isAdm ? "Super Administrator" : "Fest Staff"),
+              full_name: data.user.user_metadata?.full_name || detectedName,
               email: data.user.email || trimmedEmail,
               phone: null,
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString(),
             };
             setCurrentProfile(profile);
-            switchRole(fallbackRole);
-            if (isAdm) {
-              switchOrganizerSubRole("super_admin");
-            }
+            switchRole(detectedRole);
           }
         }
       } else {
@@ -186,31 +213,38 @@ export default function LoginPage() {
           switchRole("tv_display");
         } else if (trimmedEmail.includes("judge") || trimmedEmail.includes("jury")) {
           switchRole("judge");
-        } else if (trimmedEmail.includes("fac")) {
-          switchRole("faculty");
+        } else if (trimmedEmail.includes("coord") || trimmedEmail.includes("event")) {
+          switchRole("event_coordinator");
+        } else if (trimmedEmail.includes("reg") || trimmedEmail.includes("reception")) {
+          switchRole("registration_head");
         } else if (trimmedEmail.includes("vol")) {
           switchRole("volunteer");
+        } else if (trimmedEmail.includes("fac")) {
+          switchRole("faculty");
         } else {
-          switchRole("organizer");
-          switchOrganizerSubRole("super_admin");
+          switchRole("super_admin");
         }
       }
 
-      // Determine destination route
+      // Determine destination route based on real role
       let destination = "/dashboard";
       if (typeof window !== "undefined") {
         const params = new URLSearchParams(window.location.search);
         const redirectParam = params.get("redirect");
         if (redirectParam && redirectParam.startsWith("/")) {
           destination = redirectParam;
-        } else if (profile?.role === "tv_display" || trimmedEmail.includes("tv") || trimmedEmail.includes("display")) {
+        } else if (profile?.role === "tv_display" || isTv) {
           destination = "/tv";
-        } else if (profile?.role === "judge" || trimmedEmail.includes("judge") || trimmedEmail.includes("jury")) {
+        } else if (profile?.role === "judge" || isJdg) {
           destination = "/judge";
         } else if (profile?.role === "faculty" || trimmedEmail.includes("fac")) {
           destination = "/faculty/students";
-        } else if (profile?.role === "volunteer" || trimmedEmail.includes("vol")) {
+        } else if (profile?.role === "volunteer" || isVol) {
           destination = "/volunteer/duties";
+        } else if (profile?.role === "event_coordinator" || isCoord) {
+          destination = "/organizer/schedule";
+        } else if (profile?.role === "registration_head" || isRegHead) {
+          destination = "/organizer/schools";
         } else {
           destination = "/dashboard";
         }

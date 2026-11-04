@@ -37,8 +37,6 @@ export function PillNav() {
   const pathname = usePathname();
   const {
     currentProfile,
-    activeOrganizerSubRole,
-    switchOrganizerSubRole,
     isSuperAdmin,
     isEventCoordinator,
     isRegistrationHead,
@@ -98,24 +96,21 @@ export function PillNav() {
       ];
     }
 
-    // Organizer sub-role links
-    if (isSuperAdmin) {
+    // Event Coordinator Real Role
+    if (role === "event_coordinator") {
       return [
         { href: "/dashboard", label: "Telemetry", icon: Home },
-        { href: "/organizer/schools", label: "Approvals", icon: ShieldCheck },
-        { href: "/organizer/checkins", label: "Desk Arrivals", icon: RotateCcw },
+        { href: "/organizer/schedule", label: "Schedule", icon: Calendar },
         { href: "/organizer/scoring", label: "Scoring", icon: Sparkles },
-        { href: "/passes", label: "Passes Terminal", icon: QrCode },
-        { href: "/organizer/pass", label: "Executive Pass", icon: ShieldCheck },
-        { href: "/organizer/results", label: "Publish", icon: Trophy },
-        { href: "/announcements", label: "Notices", icon: Bell },
+        { href: "/volunteer/issues", label: "Issues", icon: AlertTriangle },
+        { href: "/announcements", label: "Broadcast", icon: Bell },
         { href: "/organizer/export", label: "Export", icon: Sliders },
         { href: "/organizer/audit", label: "Audit Log", icon: History },
-        { href: "/organizer/settings", label: "Settings", icon: Settings },
       ];
     }
 
-    if (isRegistrationHead) {
+    // Registration Head Real Role
+    if (role === "registration_head") {
       return [
         { href: "/dashboard", label: "Telemetry", icon: Home },
         { href: "/organizer/schools", label: "Approvals", icon: ShieldCheck },
@@ -126,15 +121,19 @@ export function PillNav() {
       ];
     }
 
-    // Event Coordinator
+    // Super Admin / Core Organizer
     return [
       { href: "/dashboard", label: "Telemetry", icon: Home },
-      { href: "/organizer/schedule", label: "Schedule", icon: Calendar },
+      { href: "/organizer/schools", label: "Approvals", icon: ShieldCheck },
+      { href: "/organizer/checkins", label: "Desk Arrivals", icon: RotateCcw },
       { href: "/organizer/scoring", label: "Scoring", icon: Sparkles },
-      { href: "/volunteer/issues", label: "Issues", icon: AlertTriangle },
-      { href: "/announcements", label: "Broadcast", icon: Bell },
+      { href: "/passes", label: "Passes Terminal", icon: QrCode },
+      { href: "/organizer/pass", label: "Executive Pass", icon: ShieldCheck },
+      { href: "/organizer/results", label: "Publish", icon: Trophy },
+      { href: "/announcements", label: "Notices", icon: Bell },
       { href: "/organizer/export", label: "Export", icon: Sliders },
       { href: "/organizer/audit", label: "Audit Log", icon: History },
+      { href: "/organizer/settings", label: "Settings", icon: Settings },
     ];
   };
 
@@ -145,9 +144,10 @@ export function PillNav() {
     if (role === "faculty") return "Visiting Faculty Lead";
     if (role === "volunteer") return "Registration Desk Volunteer";
     if (role === "judge") return "Official Fest Judge";
-    if (activeOrganizerSubRole === "super_admin") return "Super Admin (Organizer)";
-    if (activeOrganizerSubRole === "event_coordinator") return "Event Coordinator (Organizer)";
-    return "Registration Head (Organizer)";
+    if (role === "event_coordinator") return "Event Coordinator";
+    if (role === "registration_head") return "Registration Head";
+    if (role === "super_admin" || role === "admin" || role === "organizer") return "Super Administrator";
+    return "Staff Official";
   };
 
   const getMyPassHref = () => {
@@ -177,45 +177,6 @@ export function PillNav() {
               </span>
             </div>
           </Link>
-
-          {/* Organizer Sub-role Switcher (If in organizer mode) */}
-          {role === "organizer" && (
-            <div className="hidden lg:flex items-center gap-1 bg-[#FFFBEB] border-2 border-black p-1 shadow-[2px_2px_0px_#000000]">
-              <button
-                onClick={() => switchOrganizerSubRole("super_admin")}
-                className={cn(
-                  "px-3 py-1 text-xs font-black transition-all cursor-pointer border",
-                  activeOrganizerSubRole === "super_admin"
-                    ? "bg-black text-white border-black shadow-[2px_2px_0px_#2196F3]"
-                    : "text-black border-transparent hover:bg-[#FFEB3B]"
-                )}
-              >
-                Super Admin
-              </button>
-              <button
-                onClick={() => switchOrganizerSubRole("event_coordinator")}
-                className={cn(
-                  "px-3 py-1 text-xs font-black transition-all cursor-pointer border",
-                  activeOrganizerSubRole === "event_coordinator"
-                    ? "bg-black text-white border-black shadow-[2px_2px_0px_#2196F3]"
-                    : "text-black border-transparent hover:bg-[#FFEB3B]"
-                )}
-              >
-                Event Coordinator
-              </button>
-              <button
-                onClick={() => switchOrganizerSubRole("registration_head")}
-                className={cn(
-                  "px-3 py-1 text-xs font-black transition-all cursor-pointer border",
-                  activeOrganizerSubRole === "registration_head"
-                    ? "bg-black text-white border-black shadow-[2px_2px_0px_#2196F3]"
-                    : "text-black border-transparent hover:bg-[#FFEB3B]"
-                )}
-              >
-                Registration Head
-              </button>
-            </div>
-          )}
 
           {/* Role Switcher Pill & Dropdown */}
           <div className="flex items-center gap-2">
@@ -264,59 +225,6 @@ export function PillNav() {
                     <QrCode className="w-3.5 h-3.5" />
                   </Link>
                 </div>
-
-                {role === "organizer" && (
-                  <div className="space-y-1 mb-2">
-                    <p className="text-[10px] font-black uppercase tracking-wider text-black px-2 pt-1">
-                      Active Sub-Role View
-                    </p>
-                    <button
-                      onClick={() => {
-                        switchOrganizerSubRole("super_admin");
-                        setRoleMenuOpen(false);
-                      }}
-                      className={cn(
-                        "w-full text-left px-3 py-1.5 text-xs font-bold flex items-center justify-between border-2 transition-colors cursor-pointer",
-                        activeOrganizerSubRole === "super_admin"
-                          ? "bg-black text-white border-black shadow-[2px_2px_0px_#2196F3]"
-                          : "text-black border-transparent hover:bg-[#FFFBEB] hover:border-black"
-                      )}
-                    >
-                      <span>Super Admin</span>
-                      {activeOrganizerSubRole === "super_admin" && <CheckCircle2 className="w-3.5 h-3.5 text-[#FFEB3B]" />}
-                    </button>
-                    <button
-                      onClick={() => {
-                        switchOrganizerSubRole("event_coordinator");
-                        setRoleMenuOpen(false);
-                      }}
-                      className={cn(
-                        "w-full text-left px-3 py-1.5 text-xs font-bold flex items-center justify-between border-2 transition-colors cursor-pointer",
-                        activeOrganizerSubRole === "event_coordinator"
-                          ? "bg-black text-white border-black shadow-[2px_2px_0px_#2196F3]"
-                          : "text-black border-transparent hover:bg-[#FFFBEB] hover:border-black"
-                      )}
-                    >
-                      <span>Event Coordinator</span>
-                      {activeOrganizerSubRole === "event_coordinator" && <CheckCircle2 className="w-3.5 h-3.5 text-[#FFEB3B]" />}
-                    </button>
-                    <button
-                      onClick={() => {
-                        switchOrganizerSubRole("registration_head");
-                        setRoleMenuOpen(false);
-                      }}
-                      className={cn(
-                        "w-full text-left px-3 py-1.5 text-xs font-bold flex items-center justify-between border-2 transition-colors cursor-pointer",
-                        activeOrganizerSubRole === "registration_head"
-                          ? "bg-black text-white border-black shadow-[2px_2px_0px_#2196F3]"
-                          : "text-black border-transparent hover:bg-[#FFFBEB] hover:border-black"
-                      )}
-                    >
-                      <span>Registration Head</span>
-                      {activeOrganizerSubRole === "registration_head" && <CheckCircle2 className="w-3.5 h-3.5 text-[#FFEB3B]" />}
-                    </button>
-                  </div>
-                )}
 
                 <div className="mt-3 pt-2 border-t-2 border-black flex justify-between items-center text-xs font-bold">
                   <Link href="/" className="text-black hover:underline" onClick={() => setRoleMenuOpen(false)}>

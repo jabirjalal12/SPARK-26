@@ -279,6 +279,33 @@ export function FestStoreProvider({ children }: { children: React.ReactNode }) {
         sub_roles: undefined,
       };
     }
+    if (currentRole === "event_coordinator") {
+      return {
+        ...defaultProfile,
+        id: "coordinator-main",
+        full_name: "Event Operations Coordinator",
+        email: "coordinator@spark.in",
+        role: "event_coordinator",
+      };
+    }
+    if (currentRole === "registration_head") {
+      return {
+        ...defaultProfile,
+        id: "registration-head-main",
+        full_name: "Head of Registration Desk",
+        email: "registration@spark.in",
+        role: "registration_head",
+      };
+    }
+    if (currentRole === "super_admin" || currentRole === "admin") {
+      return {
+        ...defaultProfile,
+        id: "super-admin-main",
+        full_name: "Super Administrator",
+        email: "admin@spark.in",
+        role: currentRole,
+      };
+    }
     return {
       ...defaultProfile,
       role: currentRole,
@@ -286,16 +313,27 @@ export function FestStoreProvider({ children }: { children: React.ReactNode }) {
     };
   }, [customProfile, currentRole, activeOrganizerSubRole]);
 
-  // Role permissions
-  const isOrganizer = currentRole === "organizer";
+  // Role permissions: Super Admin, Event Coordinator, and Registration Head are full first-class roles
+  const isSuperAdmin: boolean =
+    currentRole === "super_admin" ||
+    currentRole === "admin" ||
+    (currentRole === "organizer" && (activeOrganizerSubRole === "super_admin" || currentProfile.sub_roles?.includes("super_admin") === true));
+
+  const isEventCoordinator: boolean =
+    currentRole === "event_coordinator" ||
+    (currentRole === "organizer" && (activeOrganizerSubRole === "event_coordinator" || currentProfile.sub_roles?.includes("event_coordinator") === true)) ||
+    isSuperAdmin;
+
+  const isRegistrationHead: boolean =
+    currentRole === "registration_head" ||
+    (currentRole === "organizer" && (activeOrganizerSubRole === "registration_head" || currentProfile.sub_roles?.includes("registration_head") === true)) ||
+    isSuperAdmin;
+
+  const isOrganizer = isSuperAdmin || isEventCoordinator || isRegistrationHead || currentRole === "organizer";
   const isFaculty = currentRole === "faculty";
   const isVolunteer = currentRole === "volunteer";
   const isJudge = currentRole === "judge";
   const isTvDisplay = currentRole === "tv_display";
-
-  const isSuperAdmin = isOrganizer && (activeOrganizerSubRole === "super_admin" || currentProfile.sub_roles?.includes("super_admin") || false);
-  const isEventCoordinator = isOrganizer && (activeOrganizerSubRole === "event_coordinator" || currentProfile.sub_roles?.includes("event_coordinator") || isSuperAdmin);
-  const isRegistrationHead = isOrganizer && (activeOrganizerSubRole === "registration_head" || currentProfile.sub_roles?.includes("registration_head") || isSuperAdmin);
 
   const switchRole = (role: UserRole) => {
     setCurrentRole(role);

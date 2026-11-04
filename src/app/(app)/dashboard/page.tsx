@@ -81,9 +81,11 @@ export default function DashboardPage() {
   const getSubRoleTitle = () => {
     if (role === "faculty") return "Visiting Faculty Coordinator";
     if (role === "volunteer") return "Registration Desk Volunteer";
-    if (activeOrganizerSubRole === "super_admin") return "Super Admin (Organizer)";
-    if (activeOrganizerSubRole === "event_coordinator") return "Event Coordinator (Organizer)";
-    return "Registration Head (Organizer)";
+    if (role === "judge") return "Official Fest Judge";
+    if (role === "event_coordinator") return "Event Coordinator";
+    if (role === "registration_head") return "Registration Head Desk";
+    if (role === "super_admin" || role === "admin" || role === "organizer") return "Super Administrator";
+    return "Staff Official";
   };
 
   return (
