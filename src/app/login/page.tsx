@@ -17,6 +17,7 @@ import {
   CheckCircle2,
   AlertCircle,
   Database,
+  Sparkles,
 } from "lucide-react";
 
 export default function LoginPage() {
@@ -49,7 +50,9 @@ export default function LoginPage() {
     setErrorMessage("");
 
     try {
-      if (!email || !email.includes("@")) {
+      const trimmedEmail = email.trim().toLowerCase();
+
+      if (!trimmedEmail || !trimmedEmail.includes("@")) {
         setErrorMessage("Please enter a valid email address.");
         setIsLoading(false);
         return;
@@ -60,7 +63,7 @@ export default function LoginPage() {
       if (mode === "magic-link") {
         if (supabaseConfigured) {
           const { error } = await supabase.auth.signInWithOtp({
-            email,
+            email: trimmedEmail,
             options: {
               emailRedirectTo: `${window.location.origin}/dashboard`,
             },
@@ -86,7 +89,7 @@ export default function LoginPage() {
 
       if (supabaseConfigured) {
         const { data, error } = await supabase.auth.signInWithPassword({
-          email,
+          email: trimmedEmail,
           password,
         });
 
@@ -98,21 +101,46 @@ export default function LoginPage() {
 
         if (data.user) {
           profile = await fetchUserProfile(data.user.id);
+          const isAdm = trimmedEmail.includes("admin") || trimmedEmail.includes("organizer");
+          const isJdg = trimmedEmail.includes("judge") || trimmedEmail.includes("jury");
+          const isVol = trimmedEmail.includes("vol");
+
           if (profile) {
             setCurrentProfile(profile);
             switchRole(profile.role);
             if (profile.sub_roles && profile.sub_roles.length > 0) {
               switchOrganizerSubRole(profile.sub_roles[0]);
+            } else if (isAdm) {
+              switchOrganizerSubRole("super_admin");
+            }
+          } else {
+            // Robust profile fallback
+            const fallbackRole = isJdg ? "judge" : isVol ? "volunteer" : isAdm ? "organizer" : "faculty";
+            profile = {
+              id: data.user.id,
+              role: fallbackRole,
+              sub_roles: isAdm ? ["super_admin", "event_coordinator", "registration_head"] : undefined,
+              school_id: null,
+              full_name: data.user.user_metadata?.full_name || (isAdm ? "Super Administrator" : "Fest Staff"),
+              email: data.user.email || trimmedEmail,
+              phone: null,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            };
+            setCurrentProfile(profile);
+            switchRole(fallbackRole);
+            if (isAdm) {
+              switchOrganizerSubRole("super_admin");
             }
           }
         }
       } else {
         // Fallback when Supabase keys in .env.local are still placeholder
-        if (email.toLowerCase().includes("judge") || email.toLowerCase().includes("jury")) {
+        if (trimmedEmail.includes("judge") || trimmedEmail.includes("jury")) {
           switchRole("judge");
-        } else if (email.toLowerCase().includes("fac")) {
+        } else if (trimmedEmail.includes("fac")) {
           switchRole("faculty");
-        } else if (email.toLowerCase().includes("vol")) {
+        } else if (trimmedEmail.includes("vol")) {
           switchRole("volunteer");
         } else {
           switchRole("organizer");
@@ -120,27 +148,28 @@ export default function LoginPage() {
         }
       }
 
+      // Determine destination route
       let destination = "/dashboard";
       if (typeof window !== "undefined") {
         const params = new URLSearchParams(window.location.search);
         const redirectParam = params.get("redirect");
         if (redirectParam && redirectParam.startsWith("/")) {
           destination = redirectParam;
-        } else if (profile?.role === "judge" || email.toLowerCase().includes("judge") || email.toLowerCase().includes("jury")) {
+        } else if (profile?.role === "judge" || trimmedEmail.includes("judge") || trimmedEmail.includes("jury")) {
           destination = "/judge";
-        } else if (profile?.role === "faculty" || email.toLowerCase().includes("fac")) {
+        } else if (profile?.role === "faculty" || trimmedEmail.includes("fac")) {
           destination = "/faculty/students";
-        } else if (profile?.role === "volunteer" || email.toLowerCase().includes("vol")) {
+        } else if (profile?.role === "volunteer" || trimmedEmail.includes("vol")) {
           destination = "/volunteer/duties";
+        } else {
+          destination = "/dashboard";
         }
-      } else if (profile?.role === "faculty") {
-        destination = "/faculty/students";
       }
 
-      router.push(destination);
+      // Full window navigation guarantees cookies are transferred cleanly to Next.js middleware
+      window.location.href = destination;
     } catch (err: any) {
       setErrorMessage(err?.message || "Authentication failed. Please check credentials.");
-    } finally {
       setIsLoading(false);
     }
   };
@@ -165,19 +194,66 @@ export default function LoginPage() {
             </div>
             <h1 className="text-2xl font-black text-black tracking-tight">Staff Portal Sign In</h1>
             <p className="text-xs font-bold text-slate-800 mt-1">
-              Authorized access for Organizers, Visiting Faculty, and Desk Volunteers.
+              Authorized access for Organizers, Judges, Visiting Faculty, and Desk Volunteers.
             </p>
           </div>
 
-          {/* Supabase Connection Status Tag */}
-          <div className="mb-5 p-2.5 bg-[#FFFBEB] border-2 border-black flex items-center justify-between text-xs font-black">
-            <span className="flex items-center gap-1.5">
-              <Database className="w-3.5 h-3.5 text-black" />
-              <span>Backend: Supabase Auth & RLS</span>
-            </span>
-            <span className={`px-2 py-0.5 border border-black text-[10px] uppercase font-black ${supabaseConfigured ? 'bg-[#4CAF50] text-black' : 'bg-[#FFEB3B] text-black'}`}>
-              {supabaseConfigured ? "Connected" : "Live Client"}
-            </span>
+          {/* Quick Credential Presets */}
+          <div className="p-3 bg-[#FFFBEB] border-2 border-black space-y-2 mb-5 shadow-[2px_2px_0px_#000000]">
+            <p className="text-[10px] font-black uppercase tracking-wider text-black flex items-center justify-between">
+              <span>Quick Fill Accounts</span>
+              <span className="text-slate-600 font-mono text-[9px]">Password: 123456</span>
+            </p>
+            <div className="grid grid-cols-2 gap-1.5">
+              <button
+                type="button"
+                onClick={() => {
+                  setEmail("admin@spark.in");
+                  setPassword("123456");
+                  setErrorMessage("");
+                }}
+                className="px-2 py-1.5 bg-black text-[#FFEB3B] text-[11px] font-black border border-black hover:bg-slate-800 text-left transition-colors cursor-pointer"
+              >
+                ★ Super Admin
+                <span className="block text-[9px] text-slate-300 font-normal">admin@spark.in</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setEmail("judge@spark.in");
+                  setPassword("123456");
+                  setErrorMessage("");
+                }}
+                className="px-2 py-1.5 bg-[#9C27B0] text-white text-[11px] font-black border border-black hover:opacity-90 text-left transition-colors cursor-pointer"
+              >
+                ⚖ Fest Judge
+                <span className="block text-[9px] text-purple-200 font-normal">judge@spark.in</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setEmail("faculty@spark.in");
+                  setPassword("123456");
+                  setErrorMessage("");
+                }}
+                className="px-2 py-1.5 bg-[#4CAF50] text-black text-[11px] font-black border border-black hover:opacity-90 text-left transition-colors cursor-pointer"
+              >
+                🏫 Visiting Faculty
+                <span className="block text-[9px] text-slate-900 font-normal">faculty@spark.in</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setEmail("volunteer@spark.in");
+                  setPassword("123456");
+                  setErrorMessage("");
+                }}
+                className="px-2 py-1.5 bg-[#2196F3] text-black text-[11px] font-black border border-black hover:opacity-90 text-left transition-colors cursor-pointer"
+              >
+                🎫 Volunteer Crew
+                <span className="block text-[9px] text-slate-900 font-normal">volunteer@spark.in</span>
+              </button>
+            </div>
           </div>
 
           {/* Method tabs */}
@@ -248,7 +324,7 @@ export default function LoginPage() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="organizer@spark.edu"
+                    placeholder="admin@spark.in"
                     className="w-full pl-9 pr-3 py-2 border-2 border-black text-sm font-bold bg-[#FFFBEB] focus:outline-none focus:ring-2 focus:ring-black"
                   />
                 </div>

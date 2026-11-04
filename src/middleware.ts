@@ -29,11 +29,6 @@ export async function middleware(request: NextRequest) {
   );
   if (isPublic) return NextResponse.next();
 
-  // Obsolete judge route → redirect to organizer scoring
-  if (pathname.startsWith("/judge")) {
-    return NextResponse.redirect(new URL("/organizer/scoring", request.url));
-  }
-
   // ── Supabase SSR auth check ──────────────────────────────────────────────
   let response = NextResponse.next({ request });
 
