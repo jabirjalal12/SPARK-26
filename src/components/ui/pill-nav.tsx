@@ -20,6 +20,7 @@ import {
   ClipboardList,
   AlertTriangle,
   Sliders,
+  Key,
   ChevronDown,
   LogOut,
   Home,
@@ -126,8 +127,7 @@ export function PillNav() {
       { href: "/organizer/schools", label: "Approvals", icon: ShieldCheck },
       { href: "/organizer/checkins", label: "Desk Arrivals", icon: RotateCcw },
       { href: "/organizer/scoring", label: "Scoring", icon: Sparkles },
-      { href: "/passes", label: "Passes Terminal", icon: QrCode },
-      { href: "/organizer/pass", label: "Executive Pass", icon: ShieldCheck },
+      { href: "/passes", label: "Role Logins", icon: Key },
       { href: "/organizer/results", label: "Publish", icon: Trophy },
       { href: "/announcements", label: "Notices", icon: Bell },
       { href: "/organizer/export", label: "Export", icon: Sliders },
@@ -179,13 +179,15 @@ export function PillNav() {
 
           {/* Role Switcher Pill & Dropdown */}
           <div className="flex items-center gap-2">
-            <Link
-              href={getMyPassHref()}
-              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-[#FFEB3B] hover:bg-black hover:text-white border-[3px] border-black shadow-[3px_3px_0px_#000000] text-xs font-black text-black hover:-translate-x-0.5 hover:-translate-y-0.5 transition-all"
-            >
-              <QrCode className="w-3.5 h-3.5" />
-              <span>My ID Pass</span>
-            </Link>
+            {role === "faculty" && (
+              <Link
+                href="/faculty/ticket"
+                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-[#FFEB3B] hover:bg-black hover:text-white border-[3px] border-black shadow-[3px_3px_0px_#000000] text-xs font-black text-black hover:-translate-x-0.5 hover:-translate-y-0.5 transition-all"
+              >
+                <QrCode className="w-3.5 h-3.5" />
+                <span>School QR Ticket</span>
+              </Link>
+            )}
 
             <div className="relative">
               <button
@@ -214,16 +216,18 @@ export function PillNav() {
                   </div>
                 </div>
 
-                <div className="mb-2">
-                  <Link
-                    href={getMyPassHref()}
-                    onClick={() => setRoleMenuOpen(false)}
-                    className="w-full px-3 py-1.5 bg-[#FFEB3B] hover:bg-black hover:text-white border-2 border-black flex items-center justify-between text-xs font-black transition-colors"
-                  >
-                    <span>View My Official ID Pass</span>
-                    <QrCode className="w-3.5 h-3.5" />
-                  </Link>
-                </div>
+                {role === "faculty" && (
+                  <div className="mb-2">
+                    <Link
+                      href="/faculty/ticket"
+                      onClick={() => setRoleMenuOpen(false)}
+                      className="w-full px-3 py-1.5 bg-[#FFEB3B] hover:bg-black hover:text-white border-2 border-black flex items-center justify-between text-xs font-black transition-colors"
+                    >
+                      <span>School QR Ticket</span>
+                      <QrCode className="w-3.5 h-3.5" />
+                    </Link>
+                  </div>
+                )}
 
                 <div className="mt-3 pt-2 border-t-2 border-black flex justify-between items-center text-xs font-bold">
                   <Link href="/" className="text-black hover:underline" onClick={() => setRoleMenuOpen(false)}>

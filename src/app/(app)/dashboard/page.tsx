@@ -30,6 +30,7 @@ import {
   FileText,
   Settings,
   Bell,
+  Key,
 } from "lucide-react";
 
 export default function DashboardPage() {
@@ -116,8 +117,8 @@ export default function DashboardPage() {
               <div className="flex items-center gap-2">
                 <Link href="/passes?create=true">
                   <Button size="sm" variant="yellow" className="text-xs font-black border-2 border-black shadow-[2px_2px_0px_#000000]">
-                    <QrCode className="w-4 h-4 mr-1.5" />
-                    <span>+ Issue ID Pass</span>
+                    <Key className="w-4 h-4 mr-1.5" />
+                    <span>+ Create Role Login (ID & Pass)</span>
                   </Button>
                 </Link>
                 <Link href="/organizer/results">
@@ -142,12 +143,7 @@ export default function DashboardPage() {
                     <span>Schedule Editor</span>
                   </Button>
                 </Link>
-                <Link href="/organizer/pass">
-                  <Button size="sm" variant="outline" className="text-xs font-black border-2 border-black shadow-[2px_2px_0px_#000000] bg-white">
-                    <QrCode className="w-4 h-4 mr-1.5" />
-                    <span>My Pass</span>
-                  </Button>
-                </Link>
+                
               </div>
             )}
             {role === "registration_head" && (
@@ -367,25 +363,7 @@ export default function DashboardPage() {
                 </div>
               </Link>
 
-              {/* Window 6: Coordinator Official ID Badge */}
-              <Link href="/organizer/pass" className="block group">
-                <div className="p-4 border-[3px] border-black bg-[#FFFBEB] group-hover:bg-black group-hover:text-white shadow-[3px_3px_0px_#000000] group-hover:-translate-x-0.5 group-hover:-translate-y-0.5 transition-all">
-                  <div className="flex items-center justify-between mb-2">
-                    <QrCode className="w-6 h-6 text-black group-hover:text-white" />
-                    <span className="text-[10px] font-mono font-black uppercase px-1.5 py-0.5 bg-[#FF5252] text-black">
-                      Official ID
-                    </span>
-                  </div>
-                  <p className="font-black text-sm text-black group-hover:text-white">Coordinator ID Pass</p>
-                  <p className="text-[11px] font-bold text-slate-700 group-hover:text-slate-300 mt-1">
-                    View, download, and print your executive accreditation badge with full arena access.
-                  </p>
-                  <div className="mt-3 font-black text-black group-hover:text-[#FFEB3B] text-[11px] flex items-center gap-1 group-hover:underline">
-                    <span>View Accreditation Badge</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </div>
-                </div>
-              </Link>
+
             </div>
           </div>
 
@@ -600,9 +578,9 @@ export default function DashboardPage() {
 
               <Link href="/passes" className="block">
                 <div className="p-4 border-2 border-black bg-[#FFFBEB] hover:bg-[#FFEB3B] shadow-[2px_2px_0px_#000000] transition-all">
-                  <QrCode className="w-5 h-5 text-black mb-2" />
-                  <p className="font-black text-black">Passes Terminal</p>
-                  <p className="text-[11px] font-bold text-slate-700 mt-0.5">Issue & Print ID Passes</p>
+                  <Key className="w-5 h-5 text-black mb-2" />
+                  <p className="font-black text-black">Role Logins (ID & Pass)</p>
+                  <p className="text-[11px] font-bold text-slate-700 mt-0.5">Create & manage accounts</p>
                 </div>
               </Link>
 

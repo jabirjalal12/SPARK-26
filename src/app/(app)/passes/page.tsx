@@ -3,70 +3,161 @@
 import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useFestStore } from "@/lib/store";
-import { IdPassCard, PassRole } from "@/components/passes/id-pass-card";
+import { UserRole } from "@/lib/types/database";
+import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import {
-  QrCode,
+  Key,
+  UserPlus,
   Users,
   Search,
   Filter,
-  Award,
-  Building2,
   ShieldCheck,
   ShieldAlert,
-  Sparkles,
-  ArrowRight,
-  Printer,
-  Download,
-  Plus,
-  Trash2,
-  CheckCircle2,
+  Copy,
   Check,
-  Bot,
-  User,
+  Eye,
+  EyeOff,
+  Trash2,
+  RefreshCw,
+  Sparkles,
+  Lock,
+  ArrowRight,
   ExternalLink,
+  Phone,
+  Mail,
+  Building,
+  CheckCircle2,
 } from "lucide-react";
 
-export interface IssuedPass {
+export interface ManagedCredential {
   id: string;
-  role: PassRole;
   name: string;
-  badgeNumber: string;
-  title: string;
-  organization: string;
-  accessLevel: string;
-  trackName: string;
-  tableNumber?: string;
+  email: string;
+  passwordText: string;
+  role: UserRole;
+  jurisdiction: string;
   phone?: string;
-  isCustom?: boolean;
   createdAt: string;
+  isSystem?: boolean;
 }
 
-export default function UniversalPassesCenter() {
-  const {
-    currentProfile,
-    schools,
-    students,
-    tracks,
-    isSuperAdmin,
-  } = useFestStore();
+const DEFAULT_SYSTEM_ACCOUNTS: ManagedCredential[] = [
+  {
+    id: "sys-01",
+    name: "Fest Director (Super Administrator)",
+    email: "admin@spark.in",
+    passwordText: "123456",
+    role: "super_admin",
+    jurisdiction: "Full Campus Access • All Terminals & Arenas",
+    phone: "+91 98765 43210",
+    createdAt: "2026-11-01T09:00:00Z",
+    isSystem: true,
+  },
+  {
+    id: "sys-02",
+    name: "Event Operations Coordinator",
+    email: "coordinator@spark.in",
+    passwordText: "123456",
+    role: "event_coordinator",
+    jurisdiction: "All Competition Tracks • Arena Schedules & Heats",
+    phone: "+91 98765 43211",
+    createdAt: "2026-11-01T09:00:00Z",
+    isSystem: true,
+  },
+  {
+    id: "sys-03",
+    name: "Head of Registration Desk",
+    email: "registration@spark.in",
+    passwordText: "123456",
+    role: "registration_head",
+    jurisdiction: "Central Quadrangle Desk • Approvals & Undo",
+    phone: "+91 98765 43212",
+    createdAt: "2026-11-01T09:00:00Z",
+    isSystem: true,
+  },
+  {
+    id: "sys-04",
+    name: "Registration Fast Scanner Volunteer",
+    email: "volunteer@spark.in",
+    passwordText: "123456",
+    role: "volunteer",
+    jurisdiction: "Registration Gate Booth 1 • QR Scanner",
+    phone: "+91 98765 43213",
+    createdAt: "2026-11-01T09:00:00Z",
+    isSystem: true,
+  },
+  {
+    id: "sys-05",
+    name: "Dr. Evelyn Reed (Chief Jury)",
+    email: "judge@spark.in",
+    passwordText: "123456",
+    role: "judge",
+    jurisdiction: "Track 1: AI Hackathon Jury Arena",
+    phone: "+91 98765 43214",
+    createdAt: "2026-11-01T09:00:00Z",
+    isSystem: true,
+  },
+  {
+    id: "sys-06",
+    name: "Visiting Faculty Coordinator",
+    email: "faculty@spark.in",
+    passwordText: "123456",
+    role: "faculty",
+    jurisdiction: "School Delegation Squads & Tickets",
+    phone: "+91 98765 43215",
+    createdAt: "2026-11-01T09:00:00Z",
+    isSystem: true,
+  },
+  {
+    id: "sys-07",
+    name: "Venue TV Kiosk Screen",
+    email: "tv@spark.in",
+    passwordText: "123456",
+    role: "tv_display",
+    jurisdiction: "Auditorium Mainstage Display Feed",
+    phone: "",
+    createdAt: "2026-11-01T09:00:00Z",
+    isSystem: true,
+  },
+];
 
-  const [selectedRole, setSelectedRole] = useState<PassRole | "all">("all");
+export default function PortalCredentialsCenter() {
+  const { isSuperAdmin, tracks } = useFestStore();
+
+  const [managedUsers, setManagedUsers] = useState<ManagedCredential[]>([]);
+  const [selectedRoleFilter, setSelectedRoleFilter] = useState<UserRole | "all">("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [createModalOpen, setCreateModalOpen] = useState(false);
-  const [customPasses, setCustomPasses] = useState<IssuedPass[]>([]);
+  const [resetModalOpen, setResetModalOpen] = useState(false);
+  const [selectedUserForReset, setSelectedUserForReset] = useState<ManagedCredential | null>(null);
+  const [newPasswordInput, setNewPasswordInput] = useState("");
+  const [revealedPasswords, setRevealedPasswords] = useState<Record<string, boolean>>({});
+  const [copiedId, setCopiedId] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [successShareModal, setSuccessShareModal] = useState<ManagedCredential | null>(null);
 
-  // Load custom passes from localStorage on mount
+  // Form state for creating user
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+    role: "event_coordinator" as UserRole,
+    jurisdiction: "",
+    phone: "",
+  });
+
+  // Load custom credentials from localStorage on mount
   useEffect(() => {
     try {
-      const saved = localStorage.getItem("spark_custom_issued_passes");
+      const saved = localStorage.getItem("spark_managed_credentials");
       if (saved) {
-        setCustomPasses(JSON.parse(saved));
+        const parsed: ManagedCredential[] = JSON.parse(saved);
+        setManagedUsers(parsed);
       }
     } catch (e) {
-      console.warn("Failed to read custom passes from storage", e);
+      console.warn("Failed to read credentials from storage", e);
     }
   }, []);
 
@@ -80,293 +171,242 @@ export default function UniversalPassesCenter() {
     }
   }, []);
 
-  // Base roster of core staff and personnel
-  const baseStaffPasses: IssuedPass[] = useMemo(() => [
-    {
-      id: "org-01",
-      role: "organizer",
-      name: "Super Administrator",
-      badgeNumber: "EXEC-DIR-01",
-      title: "Fest Director • Supreme Executive Council",
-      organization: "SPARK Core Executive Council",
-      accessLevel: "FULL CAMPUS ACCESS • ALL AREAS • ADMIN HQ",
-      trackName: "Campus Wide HQ",
-      createdAt: "2026-11-01T09:00:00Z",
-    },
-    {
-      id: "coord-01",
-      role: "event_coordinator",
-      name: "Dr. Evelyn Reed (Chief Coordinator)",
-      badgeNumber: "COORD-OPS-01",
-      title: "Event Operations Coordinator",
-      organization: "SPARK Core Executive Council",
-      accessLevel: "FULL CAMPUS ACCESS • ALL ARENAS • STAGE • HQ",
-      trackName: "All 8 Arena Tracks",
-      createdAt: "2026-11-01T09:00:00Z",
-    },
-    {
-      id: "reg-01",
-      role: "registration_head",
-      name: "Prof. Sunita Menon",
-      badgeNumber: "REG-HEAD-01",
-      title: "Head of Institutional Registration Desk",
-      organization: "SPARK Core Executive Council",
-      accessLevel: "REGISTRATION DESK • ALL ACCESS • ADMIN HQ",
-      trackName: "Central Quadrangle Desk",
-      createdAt: "2026-11-01T09:00:00Z",
-    },
-    {
-      id: "jdg-01",
-      role: "judge",
-      name: "Prof. Vikram Singhania",
-      badgeNumber: "JDG-VKS-01",
-      title: "Chief Evaluation Jury • Robotics Track",
-      organization: "National Robotics Council",
-      accessLevel: "ALL-ACCESS • JURY ROOM • EVALUATION DESK",
-      trackName: "Robotics Arena",
-      createdAt: "2026-11-01T09:00:00Z",
-    },
-    {
-      id: "jdg-02",
-      role: "judge",
-      name: "Dr. Ananya Roy",
-      badgeNumber: "JDG-ANR-02",
-      title: "Senior Jury Member • Ideathon",
-      organization: "Technology Innovation Foundation",
-      accessLevel: "ALL-ACCESS • JURY ROOM • SCORING ARENA",
-      trackName: "Ideathon Hall",
-      createdAt: "2026-11-01T09:00:00Z",
-    },
-    {
-      id: "vol-01",
-      role: "volunteer",
-      name: "Aryan Kulkarni",
-      badgeNumber: "VOL-DK1-01",
-      title: "Fast Scanner Marshall",
-      organization: "SPARK Student Volunteer Taskforce",
-      accessLevel: "REGISTRATION DESK • ARENA FLOOR • OPS CREW",
-      trackName: "Main Entrance Gate 1",
-      createdAt: "2026-11-01T09:00:00Z",
-    },
-    {
-      id: "vol-02",
-      role: "volunteer",
-      name: "Neha Joshi",
-      badgeNumber: "VOL-TRK-02",
-      title: "Arena Floor Marshall",
-      organization: "SPARK Student Volunteer Taskforce",
-      accessLevel: "ARENA FLOOR • OPS CREW • STAGE",
-      trackName: "Robotics Arena Floor",
-      createdAt: "2026-11-01T09:00:00Z",
-    },
-  ], []);
-
-  // Dynamic faculty passes from approved schools
-  const facultyPasses: IssuedPass[] = useMemo(() => {
-    return schools.map((sch) => ({
-      id: `fac-${sch.id}`,
-      role: "faculty",
-      name: sch.contact_email ? `Visiting Faculty (${sch.name})` : "Visiting Faculty Lead",
-      badgeNumber: `FAC-${sch.code || "SCH"}`,
-      title: "Accompanying Visiting Faculty Lead",
-      organization: sch.name,
-      accessLevel: "DELEGATION ACCESS • VISITOR LOUNGE • CAMPUS ARENA",
-      trackName: `Squad of ${students.filter((s) => s.school_id === sch.id).length} Students`,
-      createdAt: sch.created_at || "2026-11-01T09:00:00Z",
-    }));
-  }, [schools, students]);
-
-  // Dynamic student passes
-  const studentPasses: IssuedPass[] = useMemo(() => {
-    return students.slice(0, 20).map((stu) => {
-      const sch = schools.find((s) => s.id === stu.school_id);
-      const trk = tracks.find((t) => t.id === stu.track_id);
-      return {
-        id: `stu-${stu.id}`,
-        role: "student",
-        name: stu.name,
-        badgeNumber: `STU-${(stu.id || "001").substring(0, 6).toUpperCase()}`,
-        title: `Grade/Class: ${stu.class || "11"}`,
-        organization: sch?.name || "Visiting School",
-        accessLevel: "PARTICIPANT • ARENA FLOOR • COMPETITION STATIONS",
-        trackName: trk?.name || "Competition Arena",
-        createdAt: "2026-11-01T09:00:00Z",
-      };
-    });
-  }, [students, schools, tracks]);
-
-  // Combine all passes
-  const allPasses = useMemo(() => {
-    return [
-      ...customPasses,
-      ...baseStaffPasses,
-      ...facultyPasses,
-      ...studentPasses,
-    ];
-  }, [customPasses, baseStaffPasses, facultyPasses, studentPasses]);
-
-  const [activePass, setActivePass] = useState<IssuedPass>(allPasses[0] || baseStaffPasses[0]);
-
-  // Keep active pass synchronized
-  useEffect(() => {
-    if (!activePass && allPasses.length > 0) {
-      setActivePass(allPasses[0]);
-    }
-  }, [allPasses, activePass]);
-
-  // Filter passes
-  const filteredPasses = useMemo(() => {
-    return allPasses.filter((pass) => {
-      const matchesRole = selectedRole === "all" || pass.role === selectedRole;
-      const q = searchQuery.toLowerCase();
-      const matchesSearch =
-        pass.name.toLowerCase().includes(q) ||
-        pass.organization.toLowerCase().includes(q) ||
-        pass.badgeNumber.toLowerCase().includes(q) ||
-        pass.trackName.toLowerCase().includes(q);
-      return matchesRole && matchesSearch;
-    });
-  }, [allPasses, selectedRole, searchQuery]);
-
-  // --- NEW PASS CREATION FORM STATE ---
-  const [formRole, setFormRole] = useState<PassRole>("event_coordinator");
-  const [formName, setFormName] = useState("");
-  const [formTitle, setFormTitle] = useState("Event Operations Coordinator");
-  const [formOrg, setFormOrg] = useState("SPARK 2026 Core Executive Council");
-  const [formTrack, setFormTrack] = useState("All Arenas & Stage HQ");
-  const [formAccess, setFormAccess] = useState("FULL CAMPUS ACCESS • ALL ARENAS • STAGE • HQ");
-  const [formBadgeNumber, setFormBadgeNumber] = useState(`COORD-${Math.floor(1000 + Math.random() * 9000)}`);
-  const [formTable, setFormTable] = useState("");
-  const [formPhone, setFormPhone] = useState("");
-
-  // Auto-update defaults when role changes in modal
-  const handleRoleSelection = (role: PassRole) => {
-    setFormRole(role);
-    const rand = Math.floor(1000 + Math.random() * 9000);
-    switch (role) {
-      case "event_coordinator":
-        setFormTitle("Event Operations Coordinator");
-        setFormOrg("SPARK 2026 Core Executive Council");
-        setFormTrack("All Arenas & Stage HQ");
-        setFormAccess("FULL CAMPUS ACCESS • ALL ARENAS • STAGE • HQ");
-        setFormBadgeNumber(`COORD-${rand}`);
-        break;
-      case "registration_head":
-        setFormTitle("Head of Registration Desk");
-        setFormOrg("SPARK 2026 Core Executive Council");
-        setFormTrack("Central Quadrangle Entrance");
-        setFormAccess("REGISTRATION DESK • ALL ACCESS • ADMIN HQ");
-        setFormBadgeNumber(`REG-${rand}`);
-        break;
-      case "judge":
-        setFormTitle("Distinguished Evaluation Jury");
-        setFormOrg("SPARK Academic Jury Council");
-        setFormTrack(tracks[0]?.name || "Robotics Arena");
-        setFormAccess("ALL-ACCESS • JURY ROOM • EVALUATION DESK");
-        setFormBadgeNumber(`JDG-${rand}`);
-        break;
-      case "volunteer":
-        setFormTitle("Campus Operations Volunteer");
-        setFormOrg("SPARK Student Taskforce");
-        setFormTrack("Registration & Ground Logistics");
-        setFormAccess("REGISTRATION DESK • ARENA FLOOR • OPS CREW");
-        setFormBadgeNumber(`VOL-${rand}`);
-        break;
-      case "faculty":
-        setFormTitle("Visiting School Faculty Lead");
-        setFormOrg(schools[0]?.name || "Visiting Delegation");
-        setFormTrack("All Arenas • Faculty Lounge");
-        setFormAccess("DELEGATION ACCESS • VISITOR LOUNGE • CAMPUS ARENA");
-        setFormBadgeNumber(`FAC-${rand}`);
-        break;
-      case "student":
-        setFormTitle("Student Competitor Squad Member");
-        setFormOrg(schools[0]?.name || "Visiting Delegation");
-        setFormTrack(tracks[0]?.name || "Robotics Track");
-        setFormAccess("PARTICIPANT • ARENA FLOOR • COMPETITION STATIONS");
-        setFormBadgeNumber(`STU-${rand}`);
-        break;
-      case "organizer":
-      default:
-        setFormTitle("Super Administrator • Fest Director");
-        setFormOrg("SPARK 2026 Core Executive Council");
-        setFormTrack("Campus Wide HQ");
-        setFormAccess("FULL CAMPUS ACCESS • ALL AREAS • ADMIN HQ");
-        setFormBadgeNumber(`EXEC-${rand}`);
-        break;
+  // Save custom credentials to localStorage
+  const saveCustomCredentials = (list: ManagedCredential[]) => {
+    setManagedUsers(list);
+    try {
+      localStorage.setItem("spark_managed_credentials", JSON.stringify(list));
+    } catch (e) {
+      console.warn("Failed to persist credentials to storage", e);
     }
   };
 
-  // Submit and create ID pass
-  const handleCreatePass = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formName.trim() || !formBadgeNumber.trim()) return;
+  // Combine baseline system accounts with custom accounts
+  const allAccounts = useMemo(() => {
+    return [...DEFAULT_SYSTEM_ACCOUNTS, ...managedUsers];
+  }, [managedUsers]);
 
-    const newPass: IssuedPass = {
-      id: `custom-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-      role: formRole,
-      name: formName.trim(),
-      badgeNumber: formBadgeNumber.trim().toUpperCase(),
-      title: formTitle.trim(),
-      organization: formOrg.trim(),
-      accessLevel: formAccess.trim(),
-      trackName: formTrack.trim(),
-      tableNumber: formTable.trim() || undefined,
-      phone: formPhone.trim() || undefined,
-      isCustom: true,
+  // Filtered accounts
+  const filteredAccounts = useMemo(() => {
+    return allAccounts.filter((acc) => {
+      if (selectedRoleFilter !== "all" && acc.role !== selectedRoleFilter) {
+        return false;
+      }
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        return (
+          acc.name.toLowerCase().includes(q) ||
+          acc.email.toLowerCase().includes(q) ||
+          acc.jurisdiction.toLowerCase().includes(q) ||
+          acc.role.toLowerCase().includes(q)
+        );
+      }
+      return true;
+    });
+  }, [allAccounts, selectedRoleFilter, searchQuery]);
+
+  // Quick stats
+  const totalCount = allAccounts.length;
+  const coordCount = allAccounts.filter((a) => a.role === "event_coordinator").length;
+  const regCount = allAccounts.filter((a) => a.role === "registration_head").length;
+  const volCount = allAccounts.filter((a) => a.role === "volunteer").length;
+  const judgeCount = allAccounts.filter((a) => a.role === "judge").length;
+
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3500);
+  };
+
+  const copyToClipboard = (text: string, id: string, label: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedId(id);
+    showToast(`Copied ${label} to clipboard!`);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const togglePasswordVisibility = (id: string) => {
+    setRevealedPasswords((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const generateRandomPassword = () => {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    let rand = "";
+    for (let i = 0; i < 6; i++) {
+      rand += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return `SPARK@${rand}`;
+  };
+
+  const handleCreateSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.name.trim() || !formData.email.trim() || !formData.password.trim()) {
+      alert("Please enter Name, Login ID (Email), and Password.");
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      alert("Password must be at least 6 characters.");
+      return;
+    }
+
+    const trimmedEmail = formData.email.trim().toLowerCase();
+
+    // Check duplicate email
+    if (allAccounts.some((a) => a.email.toLowerCase() === trimmedEmail)) {
+      alert("An account with this Login ID / Email already exists.");
+      return;
+    }
+
+    const newCred: ManagedCredential = {
+      id: "usr-" + Date.now().toString(36),
+      name: formData.name.trim(),
+      email: trimmedEmail,
+      passwordText: formData.password.trim(),
+      role: formData.role,
+      jurisdiction: formData.jurisdiction.trim() || getDefaultJurisdiction(formData.role),
+      phone: formData.phone.trim() || undefined,
       createdAt: new Date().toISOString(),
+      isSystem: false,
     };
 
-    const updated = [newPass, ...customPasses];
-    setCustomPasses(updated);
-    try {
-      localStorage.setItem("spark_custom_issued_passes", JSON.stringify(updated));
-    } catch (err) {
-      console.warn("Storage write failed", err);
+    // If Supabase is live, provision auth account
+    if (isSupabaseConfigured()) {
+      try {
+        const supabase = createClient();
+        await supabase.auth.signUp({
+          email: trimmedEmail,
+          password: formData.password.trim(),
+          options: {
+            data: {
+              full_name: formData.name.trim(),
+              role: formData.role,
+            },
+          },
+        });
+
+        await supabase.from("profiles").upsert({
+          id: newCred.id,
+          email: trimmedEmail,
+          full_name: formData.name.trim(),
+          role: formData.role,
+          phone: formData.phone.trim() || null,
+        });
+      } catch (err) {
+        console.warn("Supabase provision attempt:", err);
+      }
     }
 
-    setActivePass(newPass);
+    const updated = [newCred, ...managedUsers];
+    saveCustomCredentials(updated);
+
+    setFormData({
+      name: "",
+      email: "",
+      password: "",
+      role: "event_coordinator",
+      jurisdiction: "",
+      phone: "",
+    });
+
     setCreateModalOpen(false);
-
-    // Reset form for next use
-    setFormName("");
-    setFormTable("");
-    setFormPhone("");
-    handleRoleSelection("event_coordinator");
-
-    setToastMessage(`✓ Official ID Pass successfully issued for ${newPass.name}!`);
-    setTimeout(() => setToastMessage(null), 4000);
+    setSuccessShareModal(newCred);
+    showToast(`Successfully created Login ID & Password for ${newCred.name}`);
   };
 
-  // Delete / Revoke custom pass
-  const handleDeletePass = (id: string, name: string) => {
-    if (!confirm(`Are you sure you want to revoke and delete the official badge for "${name}"?`)) return;
+  const handleDeleteUser = (id: string, name: string) => {
+    if (!confirm(`Are you sure you want to revoke and delete credentials for ${name}?`)) return;
+    const updated = managedUsers.filter((u) => u.id !== id);
+    saveCustomCredentials(updated);
+    showToast(`Deleted credentials for ${name}`);
+  };
 
-    const updated = customPasses.filter((p) => p.id !== id);
-    setCustomPasses(updated);
-    try {
-      localStorage.setItem("spark_custom_issued_passes", JSON.stringify(updated));
-    } catch {}
+  const handleOpenReset = (user: ManagedCredential) => {
+    setSelectedUserForReset(user);
+    setNewPasswordInput(generateRandomPassword());
+    setResetModalOpen(true);
+  };
 
-    if (activePass?.id === id) {
-      setActivePass(baseStaffPasses[0]);
+  const handleResetSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedUserForReset || !newPasswordInput.trim()) return;
+
+    if (newPasswordInput.trim().length < 6) {
+      alert("New password must be at least 6 characters.");
+      return;
     }
 
-    setToastMessage(`Credential for "${name}" has been revoked.`);
-    setTimeout(() => setToastMessage(null), 3000);
+    const updatedUsers = managedUsers.map((u) => {
+      if (u.id === selectedUserForReset.id) {
+        return { ...u, passwordText: newPasswordInput.trim() };
+      }
+      return u;
+    });
+
+    saveCustomCredentials(updatedUsers);
+    setResetModalOpen(false);
+    showToast(`Password reset successfully for ${selectedUserForReset.name}`);
+    setSelectedUserForReset(null);
   };
 
-  // Trigger batch print
-  const handlePrintAll = () => {
-    window.print();
+  const getDefaultJurisdiction = (r: UserRole) => {
+    if (r === "event_coordinator") return "All Competition Tracks • Arena Schedules";
+    if (r === "registration_head") return "Central Quadrangle Desk • Arrivals & Undo";
+    if (r === "volunteer") return "Registration Desk Scanner • Duty Roster";
+    if (r === "judge") return "Official Marks Evaluation Arena";
+    if (r === "faculty") return "School Delegation Student Roster";
+    return "Campus HQ Administration";
   };
+
+  const getRoleBadgeStyle = (r: UserRole) => {
+    if (r === "super_admin") return "bg-[#FFEB3B] text-black border-black";
+    if (r === "event_coordinator") return "bg-[#FF5252] text-black border-black";
+    if (r === "registration_head") return "bg-[#00BCD4] text-black border-black";
+    if (r === "volunteer") return "bg-[#2196F3] text-white border-black";
+    if (r === "judge") return "bg-[#9C27B0] text-white border-black";
+    if (r === "faculty") return "bg-[#4CAF50] text-white border-black";
+    return "bg-black text-white border-black";
+  };
+
+  const getRoleDisplayName = (r: UserRole) => {
+    if (r === "super_admin") return "Super Administrator";
+    if (r === "event_coordinator") return "Event Coordinator";
+    if (r === "registration_head") return "Registration Head";
+    if (r === "volunteer") return "Desk Volunteer";
+    if (r === "judge") return "Fest Judge";
+    if (r === "faculty") return "Visiting Faculty";
+    if (r === "tv_display") return "TV Display Kiosk";
+    return r;
+  };
+
+  // Route Guard: Super Admin Only
+  if (!isSuperAdmin) {
+    return (
+      <div className="max-w-xl mx-auto mt-12 p-8 border-[3px] border-black bg-white shadow-[6px_6px_0px_#000000] text-center">
+        <div className="w-12 h-12 bg-[#FF5252] border-2 border-black flex items-center justify-center mx-auto mb-4 shadow-[2px_2px_0px_#000]">
+          <ShieldAlert className="w-6 h-6 text-black" />
+        </div>
+        <h2 className="text-xl font-black text-black">Super Admin Clearance Required</h2>
+        <p className="text-xs font-bold text-slate-700 mt-2">
+          Provisioning portal Login IDs and Passwords for other roles is restricted exclusively to Super Administrators.
+        </p>
+        <div className="mt-6">
+          <Link
+            href="/dashboard"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-[#FFEB3B] hover:bg-black hover:text-white border-2 border-black font-black text-xs shadow-[2px_2px_0px_#000000] transition-colors"
+          >
+            <span>Return to Operations Hub</span>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-16 font-sans text-black">
-      {/* Toast Alert */}
+    <div className="space-y-6 max-w-7xl mx-auto pb-16 font-sans">
+      {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed top-20 right-5 z-50 bg-[#4CAF50] text-black border-[3px] border-black px-4 py-3 shadow-[6px_6px_0px_#000000] flex items-center gap-2 text-xs font-black uppercase animate-in slide-in-from-top-4">
-          <CheckCircle2 className="w-5 h-5 text-black" />
+        <div className="fixed top-20 right-5 z-50 p-3 bg-black text-[#FFEB3B] border-2 border-white shadow-[4px_4px_0px_#000000] flex items-center gap-2 text-xs font-black animate-in fade-in slide-in-from-top-2">
+          <CheckCircle2 className="w-4 h-4 text-[#4CAF50]" />
           <span>{toastMessage}</span>
         </div>
       )}
@@ -376,476 +416,489 @@ export default function UniversalPassesCenter() {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-2 flex-wrap">
-              <span className="text-[10px] font-black uppercase tracking-wider bg-[#FFEB3B] text-black px-2 py-0.5 border border-black shadow-[2px_2px_0px_#000000]">
-                SUPER ADMIN ACCREDITATION HUB
+              <span className="px-2.5 py-0.5 text-xs font-black uppercase bg-[#FFEB3B] text-black border border-black shadow-[2px_2px_0px_#000]">
+                SUPER ADMIN TERMINAL
               </span>
-              <span className="text-[10px] font-black uppercase tracking-wider bg-black text-[#FFEB3B] px-2 py-0.5 border border-black">
-                {allPasses.length} Total Verified Credentials
-              </span>
-              <span className="text-xs font-bold text-slate-800">
-                Official Tamper-Proof ID Pass Terminal
-              </span>
+              <span className="text-xs font-bold text-slate-700">Role Credentials & Access Provisioning</span>
             </div>
-
-            <h1 className="text-2xl sm:text-4xl font-black text-black tracking-tight flex items-center gap-2.5">
-              <QrCode className="w-8 h-8 text-black" />
-              <span>Official Fest ID Pass &amp; Badge Terminal</span>
+            <h1 className="text-2xl sm:text-4xl font-black text-black tracking-tight">
+              Portal Login ID & Password Manager
             </h1>
-
-            <p className="text-xs font-bold text-slate-700 mt-1 max-w-2xl">
-              Super Admin authority window to generate, customize, preview, and print official credentials for Event Coordinators, Registration Heads, Judges, Volunteers, Visiting Faculty, and Student Competitors.
+            <p className="text-xs font-bold text-slate-800 mt-1 max-w-2xl">
+              Create and manage login accounts (ID & Password) for Event Coordinators, Registration Heads, Desk Volunteers, and Judges to log into the SPARK 2026 portal.
             </p>
           </div>
 
-          {/* Super Admin Action Buttons */}
-          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap flex-shrink-0">
+          <div className="flex items-center gap-2">
             <Button
-              variant="yellow"
               onClick={() => setCreateModalOpen(true)}
-              className="text-xs font-black border-2 border-black shadow-[4px_4px_0px_#000000] flex items-center gap-2 px-4 py-2.5"
+              variant="yellow"
+              className="text-xs font-black border-2 border-black shadow-[3px_3px_0px_#000000] cursor-pointer"
             >
-              <Plus className="w-4 h-4 text-black" />
-              <span>+ Issue New ID Pass</span>
-            </Button>
-
-            <Button
-              variant="secondary"
-              onClick={handlePrintAll}
-              className="text-xs font-black border-2 border-black shadow-[3px_3px_0px_#000000] flex items-center gap-1.5"
-              title="Print badge cards sheet"
-            >
-              <Printer className="w-4 h-4 text-black" />
-              <span>Print Sheet</span>
+              <UserPlus className="w-4 h-4 mr-1.5" />
+              <span>+ Create Role Login ID & Pass</span>
             </Button>
           </div>
         </div>
       </div>
 
-      {/* Role Filter Tabs */}
-      <div className="flex flex-wrap items-center gap-2 p-3 bg-[#FFFBEB] border-[3px] border-black shadow-[4px_4px_0px_#000000]">
-        <span className="text-xs font-black uppercase text-black mr-2">Filter Roles:</span>
-        <button
-          onClick={() => setSelectedRole("all")}
-          className={`px-3 py-1.5 text-xs font-black border-2 transition-all cursor-pointer ${
-            selectedRole === "all" ? "bg-black text-white border-black shadow-[2px_2px_0px_#2196F3]" : "bg-white text-black border-black hover:bg-slate-100"
-          }`}
-        >
-          All Passes ({allPasses.length})
-        </button>
-
-        <button
-          onClick={() => setSelectedRole("event_coordinator")}
-          className={`px-3 py-1.5 text-xs font-black border-2 transition-all cursor-pointer ${
-            selectedRole === "event_coordinator" ? "bg-[#FF5252] text-black border-black shadow-[2px_2px_0px_#000000]" : "bg-white text-black border-black hover:bg-slate-100"
-          }`}
-        >
-          Event Coordinators ({allPasses.filter((p) => p.role === "event_coordinator").length})
-        </button>
-
-        <button
-          onClick={() => setSelectedRole("registration_head")}
-          className={`px-3 py-1.5 text-xs font-black border-2 transition-all cursor-pointer ${
-            selectedRole === "registration_head" ? "bg-[#00BCD4] text-black border-black shadow-[2px_2px_0px_#000000]" : "bg-white text-black border-black hover:bg-slate-100"
-          }`}
-        >
-          Registration Heads ({allPasses.filter((p) => p.role === "registration_head").length})
-        </button>
-
-        <button
-          onClick={() => setSelectedRole("judge")}
-          className={`px-3 py-1.5 text-xs font-black border-2 transition-all cursor-pointer ${
-            selectedRole === "judge" ? "bg-[#9C27B0] text-white border-black shadow-[2px_2px_0px_#000000]" : "bg-white text-black border-black hover:bg-slate-100"
-          }`}
-        >
-          Judges / Jury ({allPasses.filter((p) => p.role === "judge").length})
-        </button>
-
-        <button
-          onClick={() => setSelectedRole("volunteer")}
-          className={`px-3 py-1.5 text-xs font-black border-2 transition-all cursor-pointer ${
-            selectedRole === "volunteer" ? "bg-[#2196F3] text-black border-black shadow-[2px_2px_0px_#000000]" : "bg-white text-black border-black hover:bg-slate-100"
-          }`}
-        >
-          Volunteers ({allPasses.filter((p) => p.role === "volunteer").length})
-        </button>
-
-        <button
-          onClick={() => setSelectedRole("faculty")}
-          className={`px-3 py-1.5 text-xs font-black border-2 transition-all cursor-pointer ${
-            selectedRole === "faculty" ? "bg-[#4CAF50] text-black border-black shadow-[2px_2px_0px_#000000]" : "bg-white text-black border-black hover:bg-slate-100"
-          }`}
-        >
-          Faculty Leads ({allPasses.filter((p) => p.role === "faculty").length})
-        </button>
-
-        <button
-          onClick={() => setSelectedRole("organizer")}
-          className={`px-3 py-1.5 text-xs font-black border-2 transition-all cursor-pointer ${
-            selectedRole === "organizer" ? "bg-black text-[#FFEB3B] border-black shadow-[2px_2px_0px_#000000]" : "bg-white text-black border-black hover:bg-slate-100"
-          }`}
-        >
-          Super Admin ({allPasses.filter((p) => p.role === "organizer").length})
-        </button>
-
-        <button
-          onClick={() => setSelectedRole("student")}
-          className={`px-3 py-1.5 text-xs font-black border-2 transition-all cursor-pointer ${
-            selectedRole === "student" ? "bg-[#FF9800] text-black border-black shadow-[2px_2px_0px_#000000]" : "bg-white text-black border-black hover:bg-slate-100"
-          }`}
-        >
-          Students ({allPasses.filter((p) => p.role === "student").length})
-        </button>
+      {/* Metrics Row */}
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+        <div className="p-3 border-2 border-black bg-white shadow-[3px_3px_0px_#000000]">
+          <span className="text-[10px] font-black uppercase text-slate-600 block">Total User Accounts</span>
+          <span className="text-2xl font-black text-black mt-1 block">{totalCount}</span>
+        </div>
+        <div className="p-3 border-2 border-black bg-[#FF5252]/20 shadow-[3px_3px_0px_#000000]">
+          <span className="text-[10px] font-black uppercase text-black block">Event Coordinators</span>
+          <span className="text-2xl font-black text-black mt-1 block">{coordCount}</span>
+        </div>
+        <div className="p-3 border-2 border-black bg-[#00BCD4]/20 shadow-[3px_3px_0px_#000000]">
+          <span className="text-[10px] font-black uppercase text-black block">Registration Heads</span>
+          <span className="text-2xl font-black text-black mt-1 block">{regCount}</span>
+        </div>
+        <div className="p-3 border-2 border-black bg-[#2196F3]/20 shadow-[3px_3px_0px_#000000]">
+          <span className="text-[10px] font-black uppercase text-black block">Desk Volunteers</span>
+          <span className="text-2xl font-black text-black mt-1 block">{volCount}</span>
+        </div>
+        <div className="p-3 border-2 border-black bg-[#9C27B0]/20 shadow-[3px_3px_0px_#000000] col-span-2 sm:col-span-1">
+          <span className="text-[10px] font-black uppercase text-black block">Official Judges</span>
+          <span className="text-2xl font-black text-black mt-1 block">{judgeCount}</span>
+        </div>
       </div>
 
-      {/* Main Split Layout: Directory List (7 Cols) + Live Badge Preview (5 Cols) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Pass Directory List (7 Cols) */}
-        <div className="lg:col-span-7 space-y-3">
-          {/* Search Box */}
-          <div className="relative">
-            <Search className="w-4 h-4 absolute left-3 top-3 text-slate-500" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by name, institution, track, or badge code..."
-              className="w-full pl-9 pr-3 py-2 text-xs font-bold border-2 border-black bg-white focus:outline-none focus:ring-2 focus:ring-black"
-            />
+      {/* Filter and Search Bar */}
+      <div className="p-4 border-[3px] border-black bg-white shadow-[4px_4px_0px_#000000] flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+        {/* Role Filter Pills */}
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <button
+            onClick={() => setSelectedRoleFilter("all")}
+            className={`px-2.5 py-1 text-xs font-black border-2 border-black transition-all cursor-pointer ${
+              selectedRoleFilter === "all" ? "bg-black text-white shadow-[2px_2px_0px_#2196F3]" : "bg-white hover:bg-[#FFEB3B]"
+            }`}
+          >
+            All Roles ({allAccounts.length})
+          </button>
+          <button
+            onClick={() => setSelectedRoleFilter("event_coordinator")}
+            className={`px-2.5 py-1 text-xs font-black border-2 border-black transition-all cursor-pointer ${
+              selectedRoleFilter === "event_coordinator" ? "bg-[#FF5252] text-black shadow-[2px_2px_0px_#000]" : "bg-white hover:bg-[#FF5252]/20"
+            }`}
+          >
+            Coordinators ({coordCount})
+          </button>
+          <button
+            onClick={() => setSelectedRoleFilter("registration_head")}
+            className={`px-2.5 py-1 text-xs font-black border-2 border-black transition-all cursor-pointer ${
+              selectedRoleFilter === "registration_head" ? "bg-[#00BCD4] text-black shadow-[2px_2px_0px_#000]" : "bg-white hover:bg-[#00BCD4]/20"
+            }`}
+          >
+            Reg Heads ({regCount})
+          </button>
+          <button
+            onClick={() => setSelectedRoleFilter("volunteer")}
+            className={`px-2.5 py-1 text-xs font-black border-2 border-black transition-all cursor-pointer ${
+              selectedRoleFilter === "volunteer" ? "bg-[#2196F3] text-white shadow-[2px_2px_0px_#000]" : "bg-white hover:bg-[#2196F3]/20"
+            }`}
+          >
+            Volunteers ({volCount})
+          </button>
+          <button
+            onClick={() => setSelectedRoleFilter("judge")}
+            className={`px-2.5 py-1 text-xs font-black border-2 border-black transition-all cursor-pointer ${
+              selectedRoleFilter === "judge" ? "bg-[#9C27B0] text-white shadow-[2px_2px_0px_#000]" : "bg-white hover:bg-[#9C27B0]/20"
+            }`}
+          >
+            Judges ({judgeCount})
+          </button>
+        </div>
+
+        {/* Search */}
+        <div className="relative w-full md:w-72">
+          <Search className="absolute left-3 top-2.5 w-4 h-4 text-black" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search name, ID or role..."
+            className="w-full pl-9 pr-3 py-1.5 nb-input text-xs"
+          />
+        </div>
+      </div>
+
+      {/* Credentials Table / Cards */}
+      <div className="p-6 border-[3px] border-black bg-white shadow-[6px_6px_0px_#000000]">
+        <div className="flex items-center justify-between pb-3 border-b-2 border-black mb-4">
+          <div className="flex items-center gap-2">
+            <Key className="w-5 h-5 text-black" />
+            <h2 className="text-sm font-black uppercase tracking-tight text-black">
+              Provisioned Portal User Accounts ({filteredAccounts.length})
+            </h2>
           </div>
+          <span className="text-[11px] font-bold text-slate-600">
+            Click 👁️ to reveal password • Copy to share with staff
+          </span>
+        </div>
 
-          <div className="space-y-2.5 max-h-[720px] overflow-y-auto pr-1">
-            {filteredPasses.length === 0 ? (
-              <div className="p-12 text-center bg-white border-[3px] border-black shadow-[4px_4px_0px_#000000]">
-                <Users className="w-10 h-10 text-slate-400 mx-auto mb-2" />
-                <p className="text-sm font-black text-black">No passes match your filter criteria.</p>
-                <p className="text-xs font-bold text-slate-600 mt-1">
-                  Click <strong>+ Issue New ID Pass</strong> to create credentials for any personnel.
-                </p>
-              </div>
-            ) : (
-              filteredPasses.map((p) => {
-                const isSelected = activePass?.id === p.id;
-                const roleBadgeColor =
-                  p.role === "judge"
-                    ? "bg-[#9C27B0] text-white"
-                    : p.role === "faculty"
-                    ? "bg-[#4CAF50] text-black"
-                    : p.role === "volunteer"
-                    ? "bg-[#2196F3] text-black"
-                    : p.role === "student"
-                    ? "bg-[#FF9800] text-black"
-                    : p.role === "event_coordinator"
-                    ? "bg-[#FF5252] text-black"
-                    : p.role === "registration_head"
-                    ? "bg-[#00BCD4] text-black"
-                    : "bg-black text-[#FFEB3B]";
+        {filteredAccounts.length === 0 ? (
+          <div className="p-8 border-2 border-dashed border-black bg-[#FFFBEB] text-center">
+            <p className="text-xs font-black text-black">No matching credentials found.</p>
+            <p className="text-[11px] font-bold text-slate-600 mt-1">Try another search or role filter.</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {filteredAccounts.map((acc) => {
+              const isRevealed = revealedPasswords[acc.id] || false;
+              const displayPass = isRevealed ? acc.passwordText : "••••••••";
 
-                return (
-                  <div
-                    key={p.id}
-                    onClick={() => setActivePass(p)}
-                    className={`w-full p-4 border-[3px] border-black text-left flex items-center justify-between gap-3 transition-all cursor-pointer ${
-                      isSelected
-                        ? "bg-[#FFEB3B] text-black shadow-[4px_4px_0px_#000000] -translate-x-0.5 -translate-y-0.5"
-                        : "bg-white hover:bg-[#FFFBEB] shadow-[2px_2px_0px_#000000]"
-                    }`}
-                  >
-                    <div className="space-y-1 min-w-0 flex-1">
+              const fullCredentialsString = `Official: ${acc.name}\nRole: ${getRoleDisplayName(acc.role)}\nPortal Login URL: ${typeof window !== "undefined" ? window.location.origin : ""}/login\nLogin ID (Email): ${acc.email}\nPassword: ${acc.passwordText}`;
+
+              return (
+                <div
+                  key={acc.id}
+                  className="p-4 border-2 border-black bg-[#FFFBEB] shadow-[3px_3px_0px_#000000] hover:-translate-x-0.5 hover:-translate-y-0.5 transition-all"
+                >
+                  <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+                    {/* Official Info */}
+                    <div className="space-y-1 min-w-[240px]">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className={`text-[9px] font-black uppercase px-2 py-0.5 border border-black shadow-[1px_1px_0px_#000000] ${roleBadgeColor}`}>
-                          {p.role.replace("_", " ")}
+                        <span className={`px-2 py-0.5 text-[10px] font-black uppercase border ${getRoleBadgeStyle(acc.role)}`}>
+                          {getRoleDisplayName(acc.role)}
                         </span>
-                        <span className="font-mono text-xs font-black text-slate-900 bg-white border border-black px-1.5 py-0.2">
-                          {p.badgeNumber}
-                        </span>
-                        {p.isCustom && (
-                          <span className="text-[9px] font-black uppercase bg-emerald-200 text-emerald-950 px-1.5 py-0.2 border border-emerald-900">
-                            Custom Issued
+                        {acc.isSystem && (
+                          <span className="px-1.5 py-0.2 text-[9px] font-mono font-bold bg-black text-[#FFEB3B] border border-black">
+                            SYSTEM
                           </span>
                         )}
+                        <span className="font-black text-sm text-black">{acc.name}</span>
                       </div>
-                      <p className="font-black text-base text-black truncate">{p.name}</p>
-                      <p className="text-xs font-bold text-slate-800 truncate">
-                        {p.title} • {p.organization}
-                      </p>
-                      <p className="text-[11px] font-bold text-slate-600 truncate">
-                        Track: {p.trackName} {p.tableNumber ? `• Table ${p.tableNumber}` : ""}
+                      <p className="text-[11px] font-bold text-slate-700">
+                        {acc.jurisdiction} {acc.phone && `• ${acc.phone}`}
                       </p>
                     </div>
 
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      {p.isCustom && (
+                    {/* Login Credentials Box */}
+                    <div className="flex flex-wrap items-center gap-2 bg-white border-2 border-black p-2 shadow-[2px_2px_0px_#000000] w-full lg:w-auto">
+                      {/* Login ID */}
+                      <div className="flex items-center gap-1.5 px-2 py-1 bg-slate-50 border border-black text-xs font-mono">
+                        <span className="text-[10px] font-bold text-slate-500 uppercase">ID:</span>
+                        <strong className="text-black select-all">{acc.email}</strong>
                         <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeletePass(p.id, p.name);
-                          }}
-                          className="p-1.5 bg-white hover:bg-[#FF5252] text-black border-2 border-black shadow-[1px_1px_0px_#000000] transition-colors"
-                          title="Revoke / Delete Pass"
+                          onClick={() => copyToClipboard(acc.email, `id-${acc.id}`, "Login ID")}
+                          className="p-1 hover:bg-[#FFEB3B] border border-black ml-1 cursor-pointer"
+                          title="Copy Login ID"
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
+                          {copiedId === `id-${acc.id}` ? (
+                            <Check className="w-3 h-3 text-[#4CAF50]" />
+                          ) : (
+                            <Copy className="w-3 h-3 text-black" />
+                          )}
                         </button>
+                      </div>
+
+                      {/* Password */}
+                      <div className="flex items-center gap-1.5 px-2 py-1 bg-slate-50 border border-black text-xs font-mono">
+                        <span className="text-[10px] font-bold text-slate-500 uppercase">Pass:</span>
+                        <strong className="text-black select-all">{displayPass}</strong>
+                        <button
+                          onClick={() => togglePasswordVisibility(acc.id)}
+                          className="p-1 hover:bg-[#FFEB3B] border border-black ml-1 cursor-pointer"
+                          title={isRevealed ? "Hide Password" : "Show Password"}
+                        >
+                          {isRevealed ? (
+                            <EyeOff className="w-3 h-3 text-black" />
+                          ) : (
+                            <Eye className="w-3 h-3 text-black" />
+                          )}
+                        </button>
+                        <button
+                          onClick={() => copyToClipboard(acc.passwordText, `pw-${acc.id}`, "Password")}
+                          className="p-1 hover:bg-[#FFEB3B] border border-black cursor-pointer"
+                          title="Copy Password"
+                        >
+                          {copiedId === `pw-${acc.id}` ? (
+                            <Check className="w-3 h-3 text-[#4CAF50]" />
+                          ) : (
+                            <Copy className="w-3 h-3 text-black" />
+                          )}
+                        </button>
+                      </div>
+
+                      {/* Copy Both */}
+                      <button
+                        onClick={() => copyToClipboard(fullCredentialsString, `both-${acc.id}`, "Full Credentials")}
+                        className="px-2 py-1 bg-[#FFEB3B] hover:bg-black hover:text-white border border-black text-[11px] font-black uppercase shadow-[1px_1px_0px_#000] cursor-pointer flex items-center gap-1"
+                        title="Copy full credentials package for WhatsApp / SMS"
+                      >
+                        <Copy className="w-3 h-3" />
+                        <span>Copy Both</span>
+                      </button>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-1.5">
+                      {!acc.isSystem && (
+                        <>
+                          <button
+                            onClick={() => handleOpenReset(acc)}
+                            className="px-2 py-1 text-xs font-black bg-white hover:bg-[#FFEB3B] border-2 border-black shadow-[2px_2px_0px_#000000] cursor-pointer"
+                            title="Reset password"
+                          >
+                            Reset
+                          </button>
+                          <button
+                            onClick={() => handleDeleteUser(acc.id, acc.name)}
+                            className="p-1.5 text-xs font-black bg-white hover:bg-[#FF5252] border-2 border-black shadow-[2px_2px_0px_#000000] cursor-pointer"
+                            title="Revoke and delete account"
+                          >
+                            <Trash2 className="w-3.5 h-3.5 text-black" />
+                          </button>
+                        </>
                       )}
-                      <ArrowRight className="w-4 h-4 text-black" />
                     </div>
                   </div>
-                );
-              })
-            )}
+                </div>
+              );
+            })}
           </div>
-        </div>
-
-        {/* Live Badge Preview (5 Cols) */}
-        <div className="lg:col-span-5 flex flex-col items-center">
-          <div className="w-full bg-[#FFFBEB] border-[3px] border-black p-4 shadow-[6px_6px_0px_#000000] mb-4 text-center">
-            <span className="text-[10px] font-black uppercase tracking-wider bg-[#FFEB3B] border border-black px-2 py-0.5 inline-block">
-              LIVE ACCREDITATION PREVIEW
-            </span>
-            <p className="text-xs font-bold text-slate-700 mt-1">
-              Showing official credential pass for <strong>{activePass.name}</strong>.
-            </p>
-          </div>
-
-          {activePass && (
-            <div className="w-full flex justify-center">
-              <IdPassCard
-                role={activePass.role}
-                name={activePass.name}
-                badgeNumber={activePass.badgeNumber}
-                title={activePass.title}
-                organization={activePass.organization}
-                accessLevel={activePass.accessLevel}
-                trackName={activePass.trackName}
-                tableNumber={activePass.tableNumber}
-              />
-            </div>
-          )}
-        </div>
+        )}
       </div>
 
-      {/* ========================================================================= */}
-      {/* SUPER ADMIN ID PASS ISSUANCE WINDOW (MODAL DIALOG)                        */}
-      {/* ========================================================================= */}
+      {/* Modal: Create New ID & Password */}
       <Modal
         isOpen={createModalOpen}
         onClose={() => setCreateModalOpen(false)}
-        title="Super Admin Window: Issue New Official ID Pass"
+        title="Create Role Login ID & Password"
       >
-        <div className="text-black space-y-6">
-          <p className="text-xs font-bold text-slate-800 -mt-2">
-            Generate and verify an official tamper-proof lanyard badge for event coordinators, judges, registration staff, volunteers, faculty, or students.
+        <form onSubmit={handleCreateSubmit} className="space-y-4">
+          <p className="text-xs font-bold text-slate-700 bg-[#FFFBEB] p-2.5 border-2 border-black">
+            Provision user login credentials for a specific fest official. They will use this exact Login ID (email) and Password on the portal login screen.
           </p>
 
-          <form onSubmit={handleCreatePass} className="space-y-4">
-            {/* 1. Role Selection Grid */}
-            <div>
-              <label className="block text-xs font-black uppercase tracking-wider text-black mb-1.5">
-                Select Official Credential Role *
+          <div>
+            <label className="block text-xs font-black uppercase text-black mb-1">
+              Assign Role <span className="text-[#FF5252]">*</span>
+            </label>
+            <select
+              value={formData.role}
+              onChange={(e) => {
+                const r = e.target.value as UserRole;
+                setFormData((prev) => ({
+                  ...prev,
+                  role: r,
+                  jurisdiction: prev.jurisdiction || getDefaultJurisdiction(r),
+                }));
+              }}
+              className="w-full p-2 nb-input text-xs font-bold bg-white"
+            >
+              <option value="event_coordinator">Event Coordinator (Arena & Timelines)</option>
+              <option value="registration_head">Registration Head (Desk Approvals & Arrivals)</option>
+              <option value="volunteer">Desk Volunteer (Fast QR Scanner)</option>
+              <option value="judge">Official Judge (Marks Evaluation)</option>
+              <option value="faculty">Visiting School Faculty</option>
+              <option value="super_admin">Super Administrator (Full Clearance)</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-xs font-black uppercase text-black mb-1">
+              Official Full Name <span className="text-[#FF5252]">*</span>
+            </label>
+            <input
+              type="text"
+              required
+              value={formData.name}
+              onChange={(e) => {
+                const n = e.target.value;
+                const slug = n.toLowerCase().replace(/[^a-z0-9]/g, ".");
+                setFormData((prev) => ({
+                  ...prev,
+                  name: n,
+                  email: prev.email || (slug ? `${slug}@spark.in` : ""),
+                }));
+              }}
+              placeholder="e.g. Dr. Samantha Roy"
+              className="w-full p-2 nb-input text-xs"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-black uppercase text-black mb-1">
+              Login ID / Email <span className="text-[#FF5252]">*</span>
+            </label>
+            <input
+              type="email"
+              required
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              placeholder="e.g. samantha.coord@spark.in"
+              className="w-full p-2 nb-input text-xs font-mono"
+            />
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-xs font-black uppercase text-black">
+                Password <span className="text-[#FF5252]">*</span>
               </label>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                {[
-                  { role: "event_coordinator" as PassRole, label: "Event Coordinator", color: "bg-[#FF5252]" },
-                  { role: "registration_head" as PassRole, label: "Registration Head", color: "bg-[#00BCD4]" },
-                  { role: "judge" as PassRole, label: "Official Judge", color: "bg-[#9C27B0] text-white" },
-                  { role: "volunteer" as PassRole, label: "Volunteer Crew", color: "bg-[#2196F3]" },
-                  { role: "faculty" as PassRole, label: "Faculty Lead", color: "bg-[#4CAF50]" },
-                  { role: "student" as PassRole, label: "Student Participant", color: "bg-[#FF9800]" },
-                  { role: "organizer" as PassRole, label: "Super Admin", color: "bg-black text-[#FFEB3B]" },
-                ].map((item) => (
-                  <button
-                    key={item.role}
-                    type="button"
-                    onClick={() => handleRoleSelection(item.role)}
-                    className={`p-2 border-2 border-black text-xs font-black text-left transition-all cursor-pointer ${
-                      formRole === item.role
-                        ? `${item.color} shadow-[3px_3px_0px_#000000] -translate-x-0.5 -translate-y-0.5`
-                        : "bg-white text-black hover:bg-[#FFFBEB]"
-                    }`}
-                  >
-                    <span>{item.label}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* 2. Personal & Title Details */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-black uppercase tracking-wider text-black mb-1">
-                  Full Name / Honorific *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formName}
-                  onChange={(e) => setFormName(e.target.value)}
-                  placeholder="e.g. Dr. Sarah Jenkins"
-                  className="w-full px-3 py-2 border-2 border-black text-xs font-bold bg-[#FFFBEB] focus:outline-none focus:ring-2 focus:ring-black"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-black uppercase tracking-wider text-black mb-1">
-                  Official Title / Role Designation *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formTitle}
-                  onChange={(e) => setFormTitle(e.target.value)}
-                  placeholder="e.g. Senior Evaluation Jury • AI"
-                  className="w-full px-3 py-2 border-2 border-black text-xs font-bold bg-[#FFFBEB] focus:outline-none focus:ring-2 focus:ring-black"
-                />
-              </div>
-            </div>
-
-            {/* 3. Organization & Track Assignment */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-black uppercase tracking-wider text-black mb-1">
-                  Institution / Delegation / Organization *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formOrg}
-                  onChange={(e) => setFormOrg(e.target.value)}
-                  placeholder="e.g. Model Higher Secondary / Core Council"
-                  className="w-full px-3 py-2 border-2 border-black text-xs font-bold bg-[#FFFBEB] focus:outline-none focus:ring-2 focus:ring-black"
-                />
-                {schools.length > 0 && (
-                  <select
-                    onChange={(e) => {
-                      if (e.target.value) setFormOrg(e.target.value);
-                    }}
-                    className="w-full mt-1 px-2 py-1 border border-black text-[10px] font-bold bg-white"
-                  >
-                    <option value="">Quick pick from registered schools...</option>
-                    {schools.map((s) => (
-                      <option key={s.id} value={s.name}>
-                        {s.name} ({s.city})
-                      </option>
-                    ))}
-                  </select>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-xs font-black uppercase tracking-wider text-black mb-1">
-                  Assigned Track / Venue Arena *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formTrack}
-                  onChange={(e) => setFormTrack(e.target.value)}
-                  placeholder="e.g. Robotics Arena Floor"
-                  className="w-full px-3 py-2 border-2 border-black text-xs font-bold bg-[#FFFBEB] focus:outline-none focus:ring-2 focus:ring-black"
-                />
-                {tracks.length > 0 && (
-                  <select
-                    onChange={(e) => {
-                      if (e.target.value) setFormTrack(e.target.value);
-                    }}
-                    className="w-full mt-1 px-2 py-1 border border-black text-[10px] font-bold bg-white"
-                  >
-                    <option value="">Quick pick from competition tracks...</option>
-                    <option value="All 8 Arena Tracks & HQ">All 8 Arena Tracks &amp; HQ</option>
-                    <option value="Central Quadrangle Registration Desk">Central Quadrangle Registration Desk</option>
-                    {tracks.map((t) => (
-                      <option key={t.id} value={`${t.name} Arena`}>
-                        {t.name} Arena
-                      </option>
-                    ))}
-                  </select>
-                )}
-              </div>
-            </div>
-
-            {/* 4. Security Access Clearance & Badge Code */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div className="sm:col-span-2">
-                <label className="block text-xs font-black uppercase tracking-wider text-black mb-1">
-                  Security Access Level *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formAccess}
-                  onChange={(e) => setFormAccess(e.target.value)}
-                  placeholder="e.g. ALL-ACCESS • JURY ROOM • EVALUATION DESK"
-                  className="w-full px-3 py-2 border-2 border-black text-xs font-bold bg-[#FFFBEB] focus:outline-none focus:ring-2 focus:ring-black"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-black uppercase tracking-wider text-black mb-1">
-                  Badge Code ID *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formBadgeNumber}
-                  onChange={(e) => setFormBadgeNumber(e.target.value)}
-                  placeholder="e.g. COORD-5841"
-                  className="w-full px-3 py-2 border-2 border-black text-xs font-mono font-black bg-[#FFFBEB] focus:outline-none focus:ring-2 focus:ring-black uppercase"
-                />
-              </div>
-            </div>
-
-            {/* 5. Table & Contact Details */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-black uppercase tracking-wider text-black mb-1">
-                  Assigned Station / Table Number (Optional)
-                </label>
-                <input
-                  type="text"
-                  value={formTable}
-                  onChange={(e) => setFormTable(e.target.value)}
-                  placeholder="e.g. T-04 or Booth 1"
-                  className="w-full px-3 py-2 border-2 border-black text-xs font-bold bg-[#FFFBEB] focus:outline-none focus:ring-2 focus:ring-black"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-black uppercase tracking-wider text-black mb-1">
-                  Emergency Phone Contact (Optional)
-                </label>
-                <input
-                  type="text"
-                  value={formPhone}
-                  onChange={(e) => setFormPhone(e.target.value)}
-                  placeholder="+91 98765 43210"
-                  className="w-full px-3 py-2 border-2 border-black text-xs font-bold bg-[#FFFBEB] focus:outline-none focus:ring-2 focus:ring-black"
-                />
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex items-center justify-end gap-2 pt-4 border-t-2 border-black">
-              <Button
+              <button
                 type="button"
+                onClick={() => setFormData({ ...formData, password: generateRandomPassword() })}
+                className="text-[11px] font-black text-black underline hover:bg-[#FFEB3B] px-1 cursor-pointer"
+              >
+                🎲 Auto-Generate Password
+              </button>
+            </div>
+            <input
+              type="text"
+              required
+              value={formData.password}
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              placeholder="Enter at least 6 characters (e.g. 123456 or SPARK@829)"
+              className="w-full p-2 nb-input text-xs font-mono font-bold"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-black uppercase text-black mb-1">
+              Assigned Area / Jurisdiction
+            </label>
+            <input
+              type="text"
+              value={formData.jurisdiction}
+              onChange={(e) => setFormData({ ...formData, jurisdiction: e.target.value })}
+              placeholder="e.g. Track 1: AI Hackathon / Desk Booth 2"
+              className="w-full p-2 nb-input text-xs"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-black uppercase text-black mb-1">
+              Contact Phone (Optional)
+            </label>
+            <input
+              type="tel"
+              value={formData.phone}
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              placeholder="+91 98765 00000"
+              className="w-full p-2 nb-input text-xs"
+            />
+          </div>
+
+          <div className="flex justify-end gap-2 pt-3 border-t-2 border-black">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setCreateModalOpen(false)}
+              className="text-xs font-black"
+            >
+              Cancel
+            </Button>
+            <Button type="submit" variant="yellow" className="text-xs font-black shadow-[2px_2px_0px_#000]">
+              Create User Credentials
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Modal: Reset Password */}
+      <Modal
+        isOpen={resetModalOpen}
+        onClose={() => setResetModalOpen(false)}
+        title="Reset Account Password"
+      >
+        <form onSubmit={handleResetSubmit} className="space-y-4">
+          <p className="text-xs font-bold text-slate-700">
+            Set a new portal password for <strong>{selectedUserForReset?.name}</strong> ({selectedUserForReset?.email}).
+          </p>
+
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-xs font-black uppercase text-black">
+                New Password <span className="text-[#FF5252]">*</span>
+              </label>
+              <button
+                type="button"
+                onClick={() => setNewPasswordInput(generateRandomPassword())}
+                className="text-[11px] font-black text-black underline hover:bg-[#FFEB3B] px-1 cursor-pointer"
+              >
+                🎲 Auto-Generate
+              </button>
+            </div>
+            <input
+              type="text"
+              required
+              value={newPasswordInput}
+              onChange={(e) => setNewPasswordInput(e.target.value)}
+              className="w-full p-2 nb-input text-xs font-mono font-bold"
+            />
+          </div>
+
+          <div className="flex justify-end gap-2 pt-3 border-t-2 border-black">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setResetModalOpen(false)}
+              className="text-xs font-black"
+            >
+              Cancel
+            </Button>
+            <Button type="submit" variant="yellow" className="text-xs font-black shadow-[2px_2px_0px_#000]">
+              Save New Password
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Modal: Success Share Summary */}
+      <Modal
+        isOpen={!!successShareModal}
+        onClose={() => setSuccessShareModal(null)}
+        title="Role Credentials Created Successfully!"
+      >
+        {successShareModal && (
+          <div className="space-y-4">
+            <div className="p-4 border-2 border-black bg-[#4CAF50]/15 flex items-center gap-3">
+              <CheckCircle2 className="w-8 h-8 text-[#4CAF50]" />
+              <div>
+                <p className="font-black text-sm text-black">User Account is Ready!</p>
+                <p className="text-[11px] font-bold text-slate-700">
+                  This user can now log into the portal immediately with their credentials.
+                </p>
+              </div>
+            </div>
+
+            <div className="p-3 border-2 border-black bg-[#FFFBEB] font-mono text-xs space-y-1.5 select-all">
+              <p><strong>Official:</strong> {successShareModal.name}</p>
+              <p><strong>Role:</strong> {getRoleDisplayName(successShareModal.role)}</p>
+              <p><strong>Login URL:</strong> {typeof window !== "undefined" ? window.location.origin : ""}/login</p>
+              <p><strong>Login ID:</strong> {successShareModal.email}</p>
+              <p><strong>Password:</strong> {successShareModal.passwordText}</p>
+              {successShareModal.jurisdiction && <p><strong>Area:</strong> {successShareModal.jurisdiction}</p>}
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2 border-t-2 border-black">
+              <Button
+                variant="yellow"
+                onClick={() => {
+                  const str = `SPARK 2026 Portal Access Credentials:\nOfficial: ${successShareModal.name}\nRole: ${getRoleDisplayName(successShareModal.role)}\nLogin URL: ${window.location.origin}/login\nLogin ID: ${successShareModal.email}\nPassword: ${successShareModal.passwordText}`;
+                  copyToClipboard(str, "share-modal", "Credentials");
+                  setSuccessShareModal(null);
+                }}
+                className="text-xs font-black shadow-[2px_2px_0px_#000]"
+              >
+                <Copy className="w-4 h-4 mr-1.5" />
+                <span>Copy Credentials Message</span>
+              </Button>
+              <Button
                 variant="secondary"
-                size="sm"
-                onClick={() => setCreateModalOpen(false)}
+                onClick={() => setSuccessShareModal(null)}
                 className="text-xs font-black"
               >
-                Cancel
-              </Button>
-
-              <Button
-                type="submit"
-                variant="yellow"
-                size="sm"
-                className="text-xs font-black uppercase tracking-wider border-2 border-black shadow-[3px_3px_0px_#000000] px-6"
-              >
-                <Check className="w-4 h-4 mr-1.5" />
-                <span>Issue &amp; Save Official ID Pass</span>
+                Done
               </Button>
             </div>
-          </form>
-        </div>
+          </div>
+        )}
       </Modal>
     </div>
   );

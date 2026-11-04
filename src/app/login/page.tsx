@@ -102,7 +102,23 @@ export default function LoginPage() {
 
         // Self-healing fallback for known demo accounts if not yet provisioned
 
-        const detectedRole: UserRole = isTv
+        // Check if credentials match any account provisioned by Super Admin
+        let managedCred: any = null;
+        try {
+          const raw = localStorage.getItem("spark_managed_credentials");
+          if (raw) {
+            const list = JSON.parse(raw);
+            managedCred = list.find(
+              (c: any) =>
+                c.email.toLowerCase() === trimmedEmail &&
+                c.passwordText === password
+            );
+          }
+        } catch {}
+
+        const detectedRole: UserRole = managedCred
+          ? managedCred.role
+          : isTv
           ? "tv_display"
           : isJdg
           ? "judge"
@@ -116,7 +132,9 @@ export default function LoginPage() {
           ? "super_admin"
           : "faculty";
 
-        const detectedName = isTv
+        const detectedName = managedCred
+          ? managedCred.name
+          : isTv
           ? "Venue TV Display Screen"
           : isCoord
           ? "Event Operations Coordinator"
@@ -130,7 +148,7 @@ export default function LoginPage() {
           ? "Campus Operations Volunteer"
           : "Visiting Faculty Coordinator";
 
-        if (error && (error.message.toLowerCase().includes("invalid") || error.message.toLowerCase().includes("not confirmed"))) {
+        if (error && (managedCred || error.message.toLowerCase().includes("invalid") || error.message.toLowerCase().includes("not confirmed"))) {
           const isKnownDemo =
             (trimmedEmail === "admin@spark.in" ||
               trimmedEmail === "admin@spark.edu" ||
@@ -144,7 +162,7 @@ export default function LoginPage() {
               trimmedEmail === "tv@spark.in") &&
             password === "123456";
 
-          if (isKnownDemo) {
+          if (isKnownDemo || managedCred) {
             const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
               email: trimmedEmail,
               password,
@@ -209,7 +227,32 @@ export default function LoginPage() {
         }
       } else {
         // Fallback when Supabase keys in .env.local are still placeholder
-        if (trimmedEmail.includes("tv") || trimmedEmail.includes("display")) {
+        let managedCred: any = null;
+        try {
+          const raw = localStorage.getItem("spark_managed_credentials");
+          if (raw) {
+            const list = JSON.parse(raw);
+            managedCred = list.find(
+              (c: any) =>
+                c.email.toLowerCase() === trimmedEmail &&
+                c.passwordText === password
+            );
+          }
+        } catch {}
+
+        if (managedCred) {
+          switchRole(managedCred.role);
+          setCurrentProfile({
+            id: managedCred.id || "usr-" + Math.random().toString(36).substring(2, 8),
+            role: managedCred.role,
+            school_id: null,
+            full_name: managedCred.name,
+            email: managedCred.email,
+            phone: managedCred.phone || null,
+            created_at: managedCred.createdAt || new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          });
+        } else if (trimmedEmail.includes("tv") || trimmedEmail.includes("display")) {
           switchRole("tv_display");
         } else if (trimmedEmail.includes("judge") || trimmedEmail.includes("jury")) {
           switchRole("judge");
