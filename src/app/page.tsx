@@ -18,6 +18,9 @@ import {
   MapPin,
   Clock,
   ShieldCheck,
+  MessageSquare,
+  Send,
+  CheckCircle2,
   ChevronRight,
   Building2,
   Users,
@@ -35,7 +38,7 @@ import {
 } from "lucide-react";
 
 export default function LandingPage() {
-  const { tracks = [], schedule = [], venues = [], teams = [], schools = [], resultsPublished } = useFestStore();
+  const { tracks = [], schedule = [], venues = [], teams = [], schools = [], resultsPublished, reportIssue } = useFestStore();
 
   // Program starts 5/11/2026 at 7:00 AM local time
   const targetDate = new Date("2026-11-05T09:00:00").getTime();
@@ -47,6 +50,49 @@ export default function LandingPage() {
   });
 
   const [activeScheduleFilter, setActiveScheduleFilter] = useState<string>("all");
+
+  // Help Desk Message Column state (Dispatches directly to Event Coordinator)
+  const [helpForm, setHelpForm] = useState({
+    name: "",
+    contact: "",
+    school: "",
+    subject: "",
+    category: "general" as "general" | "schedule" | "technical" | "hospitality" | "urgent",
+    message: "",
+  });
+  const [helpSubmitted, setHelpSubmitted] = useState(false);
+  const [helpLoading, setHelpLoading] = useState(false);
+
+  const handleHelpSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!helpForm.name.trim() || !helpForm.message.trim() || !helpForm.contact.trim()) return;
+    setHelpLoading(true);
+
+    const severityMap: Record<string, "low" | "medium" | "high" | "critical"> = {
+      general: "low",
+      schedule: "medium",
+      technical: "high",
+      hospitality: "medium",
+      urgent: "critical",
+    };
+
+    reportIssue({
+      title: `[Help Desk] ${helpForm.subject || "General Inquiry"} — ${helpForm.name}`,
+      description: `Sender Name: ${helpForm.name}\nOfficial Contact: ${helpForm.contact}\nSchool / Delegation: ${helpForm.school || "Visiting Guest"}\nCategory: ${helpForm.category.toUpperCase()}\n\nMessage Details:\n${helpForm.message}`,
+      severity: severityMap[helpForm.category] || "medium",
+    });
+
+    setHelpLoading(false);
+    setHelpSubmitted(true);
+    setHelpForm({
+      name: "",
+      contact: "",
+      school: "",
+      subject: "",
+      category: "general",
+      message: "",
+    });
+  };
 
   useEffect(() => {
     const updateCountdown = () => {
@@ -701,46 +747,197 @@ export default function LandingPage() {
       </section>
 
       {/* ========================================================================= */}
-      {/* SECTION: HELPLINES & ON-CAMPUS SUPPORT                                    */}
+      {/* SECTION: HELP DESK & DISPATCH TO EVENT COORDINATOR                         */}
       {/* ========================================================================= */}
       <section id="helpline" className="py-20 border-t-[3px] border-black bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-12">
             <div className="inline-block bg-[#FF5252] text-black border-2 border-black px-3.5 py-1 text-xs font-black uppercase tracking-wider shadow-[3px_3px_0px_#000000] mb-2">
-              HELP DESK & CONTROL ROOM
+              HELP DESK &amp; CONTROL ROOM
             </div>
-            <h2 className="text-3xl sm:text-5xl font-black text-black">Event Support & Helplines</h2>
-            <p className="text-slate-800 font-bold text-sm sm:text-base mt-2">
-              On-campus rapid assistance for visiting faculty leads, volunteers, and participants.
+            <h2 className="text-3xl sm:text-5xl font-black text-black">Direct Event Coordinator Dispatch</h2>
+            <p className="text-slate-800 font-bold text-sm sm:text-base mt-2 max-w-2xl mx-auto">
+              Need assistance with scheduling, arena allocations, hospitality, or ground coordination? Send a message directly to the SPARK 2026 Event Operations Coordinator.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            <div className="p-6 text-center border-[3px] border-black bg-[#FFFBEB] shadow-[6px_6px_0px_#000000]">
-              <div className="w-12 h-12 border-2 border-black bg-[#2196F3] text-black shadow-[3px_3px_0px_#000000] flex items-center justify-center mx-auto mb-4">
-                <Phone className="w-6 h-6" />
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            {/* LEFT COLUMN: INTERACTIVE MESSAGE COLUMN TO EVENT COORDINATOR */}
+            <div className="lg:col-span-7 p-6 sm:p-8 border-[3px] border-black bg-[#FFFBEB] shadow-[8px_8px_0px_#000000]">
+              <div className="flex items-center gap-2 mb-4 pb-3 border-b-2 border-black">
+                <div className="p-2 bg-[#FFEB3B] border-2 border-black shadow-[2px_2px_0px_#000000]">
+                  <MessageSquare className="w-5 h-5 text-black" />
+                </div>
+                <div>
+                  <h3 className="font-black text-lg text-black">Message the Event Coordinator</h3>
+                  <p className="text-xs font-bold text-slate-700">Dispatches instantly to Coordinator Terminal &amp; Marshall Roster</p>
+                </div>
               </div>
-              <h3 className="font-black text-black text-base">Registration Desk Hotline</h3>
-              <p className="text-base text-black font-mono font-black mt-1">+91 98765 00001</p>
-              <p className="text-xs text-slate-700 font-bold mt-2">Central Quadrangle Booth 1</p>
+
+              {helpSubmitted ? (
+                <div className="p-6 border-2 border-black bg-[#4CAF50] text-black shadow-[4px_4px_0px_#000000] text-center space-y-3 animate-in fade-in zoom-in-95">
+                  <CheckCircle2 className="w-12 h-12 mx-auto text-black" />
+                  <h4 className="text-base font-black uppercase tracking-tight">Message Successfully Dispatched!</h4>
+                  <p className="text-xs font-bold text-slate-900 leading-relaxed max-w-md mx-auto">
+                    Your query has been logged and received directly by the <strong>Event Coordinator</strong>. A coordinator or ground marshal will follow up with you.
+                  </p>
+                  <Button
+                    variant="yellow"
+                    size="sm"
+                    onClick={() => setHelpSubmitted(false)}
+                    className="font-black text-xs mt-2 border-2 border-black shadow-[2px_2px_0px_#000000]"
+                  >
+                    Send Another Dispatch
+                  </Button>
+                </div>
+              ) : (
+                <form onSubmit={handleHelpSubmit} className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-black uppercase tracking-wider text-black mb-1">
+                        Your Full Name / Delegation Lead *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={helpForm.name}
+                        onChange={(e) => setHelpForm({ ...helpForm, name: e.target.value })}
+                        placeholder="Prof. Rajesh / Squad Captain"
+                        className="w-full px-3 py-2 border-2 border-black text-xs font-bold bg-white focus:outline-none focus:ring-2 focus:ring-black"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-black uppercase tracking-wider text-black mb-1">
+                        Contact Phone or Email *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={helpForm.contact}
+                        onChange={(e) => setHelpForm({ ...helpForm, contact: e.target.value })}
+                        placeholder="+91 98765 43210 or lead@school.edu"
+                        className="w-full px-3 py-2 border-2 border-black text-xs font-bold bg-white focus:outline-none focus:ring-2 focus:ring-black"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-black uppercase tracking-wider text-black mb-1">
+                        School / Institution Name
+                      </label>
+                      <input
+                        type="text"
+                        value={helpForm.school}
+                        onChange={(e) => setHelpForm({ ...helpForm, school: e.target.value })}
+                        placeholder="e.g. Model Higher Secondary School"
+                        className="w-full px-3 py-2 border-2 border-black text-xs font-bold bg-white focus:outline-none focus:ring-2 focus:ring-black"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-black uppercase tracking-wider text-black mb-1">
+                        Inquiry Category &amp; Priority *
+                      </label>
+                      <select
+                        value={helpForm.category}
+                        onChange={(e) => setHelpForm({ ...helpForm, category: e.target.value as any })}
+                        className="w-full px-3 py-2 border-2 border-black text-xs font-bold bg-white focus:outline-none focus:ring-2 focus:ring-black cursor-pointer"
+                      >
+                        <option value="general">General Inquiries (Normal)</option>
+                        <option value="schedule">Schedule &amp; Arena Timing Clash (Medium)</option>
+                        <option value="technical">Technical Setup / Power Sockets (High)</option>
+                        <option value="hospitality">Faculty Hospitality &amp; Arrival (Medium)</option>
+                        <option value="urgent">Urgent Ground Assistance (Critical)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-black uppercase tracking-wider text-black mb-1">
+                      Subject Line *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={helpForm.subject}
+                      onChange={(e) => setHelpForm({ ...helpForm, subject: e.target.value })}
+                      placeholder="e.g. Need extra 16A power socket for Robotics arena table 4"
+                      className="w-full px-3 py-2 border-2 border-black text-xs font-bold bg-white focus:outline-none focus:ring-2 focus:ring-black"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-black uppercase tracking-wider text-black mb-1">
+                      Message Details *
+                    </label>
+                    <textarea
+                      rows={3}
+                      required
+                      value={helpForm.message}
+                      onChange={(e) => setHelpForm({ ...helpForm, message: e.target.value })}
+                      placeholder="Provide specific details (location, table number, squad name, and how the Event Coordinator can assist you)..."
+                      className="w-full p-3 border-2 border-black text-xs font-bold bg-white focus:outline-none focus:ring-2 focus:ring-black resize-y"
+                    />
+                  </div>
+
+                  <Button
+                    type="submit"
+                    disabled={helpLoading}
+                    variant="yellow"
+                    className="w-full py-3 text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 shadow-[4px_4px_0px_#000000] cursor-pointer"
+                  >
+                    <Send className="w-4 h-4" />
+                    <span>{helpLoading ? "Transmitting to Coordinator..." : "Dispatch Message to Event Coordinator"}</span>
+                  </Button>
+                </form>
+              )}
             </div>
 
-            <div className="p-6 text-center border-[3px] border-black bg-[#FFFBEB] shadow-[6px_6px_0px_#000000]">
-              <div className="w-12 h-12 border-2 border-black bg-[#FF5252] text-black shadow-[3px_3px_0px_#000000] flex items-center justify-center mx-auto mb-4">
-                <ShieldCheck className="w-6 h-6" />
+            {/* RIGHT COLUMN: HOTLINES & CONTROL ROOM */}
+            <div className="lg:col-span-5 space-y-4">
+              <div className="p-5 border-[3px] border-black bg-white shadow-[6px_6px_0px_#000000]">
+                <div className="flex items-center gap-2 text-xs font-black uppercase mb-1">
+                  <span className="h-2.5 w-2.5 rounded-full bg-[#4CAF50] animate-ping" />
+                  <span className="bg-black text-[#FFEB3B] px-2 py-0.5">COORDINATOR DESK LIVE</span>
+                </div>
+                <h4 className="font-black text-base text-black mt-2">Central Event Operations Room</h4>
+                <p className="text-xs text-slate-700 font-bold mt-1">
+                  The Event Coordinator monitors ground messages live on the arena telemetry network.
+                </p>
+                <div className="mt-3 p-2 bg-[#FFFBEB] border border-black text-xs font-mono font-bold flex items-center justify-between">
+                  <span>Hotline:</span>
+                  <span className="font-black text-black">+91 94471 23456</span>
+                </div>
+                <p className="text-[10px] text-slate-600 font-bold mt-1">Location: Academic Block Room 102</p>
               </div>
-              <h3 className="font-black text-black text-base">Campus Medical Emergency</h3>
-              <p className="text-base text-black font-mono font-black mt-1">+91 98765 00099</p>
-              <p className="text-xs text-slate-700 font-bold mt-2">Health Center Ground Floor</p>
-            </div>
 
-            <div className="p-6 text-center border-[3px] border-black bg-[#FFFBEB] shadow-[6px_6px_0px_#000000]">
-              <div className="w-12 h-12 border-2 border-black bg-[#4CAF50] text-black shadow-[3px_3px_0px_#000000] flex items-center justify-center mx-auto mb-4">
-                <Building2 className="w-6 h-6" />
+              <div className="p-5 border-[3px] border-black bg-white shadow-[6px_6px_0px_#000000]">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 border-2 border-black bg-[#2196F3] text-black shadow-[2px_2px_0px_#000000] flex items-center justify-center flex-shrink-0">
+                    <Phone className="w-5 h-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <h4 className="font-black text-sm text-black">Registration Desk Helpline</h4>
+                    <p className="text-xs font-mono font-black text-black">+91 98765 00001</p>
+                    <p className="text-[10px] text-slate-600 font-bold">Central Quadrangle Entrance Booth 1</p>
+                  </div>
+                </div>
               </div>
-              <h3 className="font-black text-black text-base">Faculty Hospitality Lounge</h3>
-              <p className="text-base text-black font-mono font-black mt-1">+91 94471 23456</p>
-              <p className="text-xs text-slate-700 font-bold mt-2">Academic Block Room 102</p>
+
+              <div className="p-5 border-[3px] border-black bg-white shadow-[6px_6px_0px_#000000]">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 border-2 border-black bg-[#FF5252] text-black shadow-[2px_2px_0px_#000000] flex items-center justify-center flex-shrink-0">
+                    <ShieldCheck className="w-5 h-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <h4 className="font-black text-sm text-black">Campus Medical Emergency</h4>
+                    <p className="text-xs font-mono font-black text-black">+91 98765 00099</p>
+                    <p className="text-[10px] text-slate-600 font-bold">Health Center Ground Floor • 24x7 EMT</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
