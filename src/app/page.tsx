@@ -330,15 +330,14 @@ export default function LandingPage() {
                   <Flame className="w-6 h-6 text-black" />
                 </div>
                 <div>
-                  <span className="text-[10px] font-black uppercase tracking-widest text-black bg-[#FFEB3B] px-2 py-0.5 border border-black">
-                    ABOUT THE SPARK
-                  </span>
-                  <h3 className="text-xl sm:text-2xl font-black text-black mt-0.5">An All-Round Tech Fest</h3>
+                  <h3 className="text-2xl sm:text-3xl md:text-4xl font-black text-black tracking-tight uppercase leading-none">
+                    About The SPARK
+                  </h3>
                 </div>
               </div>
               <div className="p-6 sm:p-8 flex-1 space-y-4 text-sm sm:text-base font-medium text-slate-900 leading-relaxed">
                 <p>
-                  <strong>SPARK</strong> is a comprehensive, all-round technical fest conceived to give inter-school students a vibrant platform that champions hands-on engineering, creative problem-solving, and practical innovation over theoretical presentations.
+                  <strong>SPARK</strong> is a comprehensive technical fest conceived to give inter-school students a vibrant platform that champions hands-on engineering, creative problem-solving, and practical innovation over theoretical presentations.
                 </p>
                 <p>
                   Hosted across the college campus, visiting school delegations field student squads under the mentorship of their faculty leads. From robotics challenges and scrap-material fabrication to creative engineering and hardware design, teams collaborate, construct, test, and demonstrate working projects under live panel evaluation.
