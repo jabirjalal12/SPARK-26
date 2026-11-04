@@ -95,7 +95,7 @@ export default function LandingPage() {
           OFFICIAL DATE
         </span>
         <span>
-          SPARK 2026 Kicks Off on <strong className="underline decoration-2">05 November 2026 at 07:00 AM</strong> — Central Quadrangle
+          SPARK 2026 Kicks Off on <strong className="underline decoration-2">05 November 2026 at 07:00 AM</strong> — Venue: <strong className="underline decoration-2">College Campus</strong>
         </span>
       </div>
 
@@ -164,7 +164,7 @@ export default function LandingPage() {
         <div className="mt-10 max-w-xl mx-auto">
           <div className="inline-flex items-center gap-2 bg-black text-[#FFEB3B] px-4 py-1.5 font-black text-xs sm:text-sm uppercase tracking-widest mb-3 border-2 border-black shadow-[3px_3px_0px_#000000]">
             <Clock className="h-4 w-4 text-[#FFEB3B]" />
-            COUNTDOWN TO KICKOFF: 05 NOV 2026 • 07:00 AM
+            COUNTDOWN TO KICKOFF: 05 NOV 2026 • 07:00 AM • COLLEGE CAMPUS
           </div>
 
           <div className="grid grid-cols-4 gap-2.5 sm:gap-4">
@@ -210,7 +210,17 @@ export default function LandingPage() {
         </div>
 
         {/* Highlights banner */}
-        <div className="mt-14 pt-8 border-t-[3px] border-black grid grid-cols-2 sm:grid-cols-4 gap-4 text-left">
+        <div className="mt-14 pt-8 border-t-[3px] border-black grid grid-cols-2 sm:grid-cols-5 gap-3 sm:gap-4 text-left">
+          <div className="p-3.5 bg-white border-[3px] border-black shadow-[4px_4px_0px_#000000] flex items-center gap-3">
+            <div className="p-2.5 bg-[#FFEB3B] border-2 border-black text-black">
+              <MapPin className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-[10px] text-slate-700 font-black uppercase tracking-wider">Event Venue</p>
+              <p className="text-sm font-black text-black">College Campus</p>
+            </div>
+          </div>
+
           <div className="p-3.5 bg-white border-[3px] border-black shadow-[4px_4px_0px_#000000] flex items-center gap-3">
             <div className="p-2.5 bg-[#FFEB3B] border-2 border-black text-black">
               <Calendar className="h-5 w-5" />
@@ -273,11 +283,14 @@ export default function LandingPage() {
                 </h2>
               </div>
               <div className="lg:max-w-sm p-4 bg-[#FFFBEB] border-[3px] border-black shadow-[5px_5px_0px_#000000]">
-                <p className="text-sm font-black uppercase tracking-wider text-black mb-1">Hosted by</p>
-                <p className="text-xl font-black text-black leading-tight">ACE Engineering College</p>
-                <p className="text-xs font-bold text-slate-700 mt-1">Department of Mechanical &amp; Electronics Engineering</p>
+                <p className="text-sm font-black uppercase tracking-wider text-black mb-1">Event Venue</p>
+                <p className="text-xl font-black text-black leading-tight flex items-center gap-1.5">
+                  <MapPin className="w-5 h-5 text-black" />
+                  College Campus
+                </p>
+                <p className="text-xs font-bold text-slate-700 mt-1">ACE Engineering College — On-Campus Arenas &amp; Quadrangle</p>
                 <div className="mt-3 pt-3 border-t-2 border-black flex items-center gap-2 flex-wrap">
-
+                  <span className="bg-[#FFEB3B] text-black border border-black px-2 py-0.5 text-[10px] font-black uppercase">College Campus</span>
                   <span className="bg-[#4CAF50] text-black border border-black px-2 py-0.5 text-[10px] font-black uppercase">05 Nov 2026</span>
                   <span className="bg-[#2196F3] text-black border border-black px-2 py-0.5 text-[10px] font-black uppercase">3 Arenas</span>
                 </div>
