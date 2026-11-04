@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import Link from "next/link";
 import { useFestStore } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
+import * as XLSX from "xlsx";
 import {
   Calendar,
   Clock,
@@ -15,7 +16,31 @@ import {
   Users,
   CheckCircle2,
   AlertCircle,
+  FileSpreadsheet,
+  Upload,
+  Download,
+  AlertTriangle,
+  FileText,
+  Check,
+  Sparkles,
 } from "lucide-react";
+
+interface ParsedEventRow {
+  index: number;
+  rawTitle: string;
+  title: string;
+  description: string;
+  type: "ceremony" | "competition" | "break" | "judging" | "other";
+  venueName: string;
+  venueId: string | null;
+  trackName: string;
+  trackId: string | null;
+  startsAt: string;
+  endsAt: string;
+  isValid: boolean;
+  validationError?: string;
+  willCreateVenue?: boolean;
+}
 
 export default function OrganizerSchedulePage() {
   const {
@@ -23,6 +48,7 @@ export default function OrganizerSchedulePage() {
     venues,
     tracks,
     addScheduleItem,
+    importScheduleItems,
     deleteScheduleItem,
     addVenue,
     deleteVenue,
@@ -33,9 +59,10 @@ export default function OrganizerSchedulePage() {
   const [activeTab, setActiveTab] = useState<"schedule" | "venues">("schedule");
   const [eventModalOpen, setEventModalOpen] = useState(false);
   const [venueModalOpen, setVenueModalOpen] = useState(false);
+  const [importModalOpen, setImportModalOpen] = useState(false);
   const canEdit = isSuperAdmin || isEventCoordinator;
 
-  // Event form
+  // Single event form
   const [eventForm, setEventForm] = useState({
     title: "",
     description: "",
@@ -52,6 +79,323 @@ export default function OrganizerSchedulePage() {
     location: "",
     capacity: 200,
   });
+
+  // Excel / CSV Import State
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [parsedRows, setParsedRows] = useState<ParsedEventRow[]>([]);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
+  const [importError, setImportError] = useState<string | null>(null);
+  const [importSuccess, setImportSuccess] = useState<string | null>(null);
+
+  // Helper to parse dates and times robustly
+  const parseEventDateTime = (val: any, defaultTime: string, defaultDate = "2026-11-05"): string => {
+    if (!val) {
+      return new Date(`${defaultDate}T${defaultTime}:00`).toISOString();
+    }
+
+    if (val instanceof Date && !isNaN(val.getTime())) {
+      return val.toISOString();
+    }
+
+    if (typeof val === "number") {
+      if (val >= 0 && val < 1) {
+        const totalMinutes = Math.round(val * 24 * 60);
+        const hours = String(Math.floor(totalMinutes / 60)).padStart(2, "0");
+        const mins = String(totalMinutes % 60).padStart(2, "0");
+        return new Date(`${defaultDate}T${hours}:${mins}:00`).toISOString();
+      }
+      const excelEpoch = new Date(Date.UTC(1899, 11, 30));
+      const parsed = new Date(excelEpoch.getTime() + val * 86400 * 1000);
+      if (!isNaN(parsed.getTime())) return parsed.toISOString();
+    }
+
+    const str = String(val).trim();
+
+    const direct = new Date(str);
+    if (!isNaN(direct.getTime()) && str.includes("-") && str.length >= 10) {
+      return direct.toISOString();
+    }
+
+    const slashMatch = str.match(/^(\d{1,2})[\/\.](\d{1,2})[\/\.](\d{4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)?)?$/i);
+    if (slashMatch) {
+      let [, p1, p2, year, hour = "9", min = "0", , ampm] = slashMatch;
+      let h = parseInt(hour, 10);
+      if (ampm) {
+        if (ampm.toUpperCase() === "PM" && h < 12) h += 12;
+        if (ampm.toUpperCase() === "AM" && h === 12) h = 0;
+      }
+      const d = parseInt(p1, 10);
+      const m = parseInt(p2, 10);
+      const day = d <= 31 && m <= 12 ? d : m;
+      const month = d <= 31 && m <= 12 ? m : d;
+      return new Date(Date.UTC(parseInt(year, 10), month - 1, day, h, parseInt(min, 10))).toISOString();
+    }
+
+    const timeMatch = str.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)?$/i);
+    if (timeMatch) {
+      let [, hour, min, , ampm] = timeMatch;
+      let h = parseInt(hour, 10);
+      if (ampm) {
+        if (ampm.toUpperCase() === "PM" && h < 12) h += 12;
+        if (ampm.toUpperCase() === "AM" && h === 12) h = 0;
+      }
+      const hStr = String(h).padStart(2, "0");
+      return new Date(`${defaultDate}T${hStr}:${min}:00`).toISOString();
+    }
+
+    return new Date(`${defaultDate}T${defaultTime}:00`).toISOString();
+  };
+
+  // Helper to map event type strings
+  const normalizeEventType = (val: string): "ceremony" | "competition" | "break" | "judging" | "other" => {
+    const s = String(val || "").toLowerCase().trim();
+    if (s.includes("break") || s.includes("lunch") || s.includes("tea") || s.includes("snack") || s.includes("refreshment")) {
+      return "break";
+    }
+    if (s.includes("ceremony") || s.includes("inaugur") || s.includes("valedict") || s.includes("award") || s.includes("closing") || s.includes("opening")) {
+      return "ceremony";
+    }
+    if (s.includes("judg") || s.includes("pitch") || s.includes("eval") || s.includes("defense") || s.includes("jury")) {
+      return "judging";
+    }
+    if (s.includes("comp") || s.includes("heat") || s.includes("round") || s.includes("trial") || s.includes("match") || s.includes("arena")) {
+      return "competition";
+    }
+    return "competition";
+  };
+
+  // Parse uploaded Excel or CSV
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setImportFile(file);
+    setIsProcessing(true);
+    setImportError(null);
+    setImportSuccess(null);
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const buffer = evt.target?.result;
+        if (!buffer) throw new Error("Empty file content");
+
+        const wb = XLSX.read(buffer, { type: "array", cellDates: true });
+        const sheetName = wb.SheetNames[0];
+        if (!sheetName) throw new Error("No sheet found in workbook");
+
+        const ws = wb.Sheets[sheetName];
+        const rawJson: any[] = XLSX.utils.sheet_to_json(ws, { defval: "" });
+
+        if (!rawJson || rawJson.length === 0) {
+          throw new Error("Spreadsheet contains no data rows.");
+        }
+
+        const rows: ParsedEventRow[] = rawJson.map((row, idx) => {
+          const keys = Object.keys(row);
+          const findVal = (...terms: string[]) => {
+            const foundKey = keys.find((k) =>
+              terms.some((term) => k.toLowerCase().replace(/[^a-z0-9]/g, "").includes(term))
+            );
+            return foundKey ? row[foundKey] : "";
+          };
+
+          const rawTitle = String(findVal("title", "eventname", "name", "event") || "").trim();
+          const description = String(findVal("desc", "detail", "info", "summary") || "").trim();
+          const rawType = String(findVal("type", "category", "roundtype") || "competition");
+          const venueVal = String(findVal("venue", "place", "location", "room", "hall", "arena") || "").trim();
+          const trackVal = String(findVal("track", "stream", "competition") || "").trim();
+          const startsVal = findVal("start", "from", "begin", "time");
+          const endsVal = findVal("end", "to", "finish");
+
+          // Match Venue
+          let matchedVenue = venues.find(
+            (v) =>
+              v.name.toLowerCase() === venueVal.toLowerCase() ||
+              v.location.toLowerCase().includes(venueVal.toLowerCase())
+          );
+          const willCreateVenue = !matchedVenue && venueVal.length > 0;
+
+          // Match Track
+          let matchedTrack = tracks.find(
+            (t) =>
+              t.name.toLowerCase() === trackVal.toLowerCase() ||
+              t.slug.toLowerCase() === trackVal.toLowerCase() ||
+              trackVal.toLowerCase().includes(t.name.toLowerCase())
+          );
+
+          // Parse times
+          const startsAt = parseEventDateTime(startsVal, "09:30");
+          const endsAt = parseEventDateTime(endsVal, "10:30");
+
+          const isValid = rawTitle.length > 0;
+          const validationError = !isValid ? "Event title is missing" : undefined;
+
+          return {
+            index: idx + 1,
+            rawTitle,
+            title: rawTitle,
+            description,
+            type: normalizeEventType(rawType),
+            venueName: venueVal,
+            venueId: matchedVenue ? matchedVenue.id : null,
+            trackName: matchedTrack ? matchedTrack.name : trackVal,
+            trackId: matchedTrack ? matchedTrack.id : null,
+            startsAt,
+            endsAt,
+            isValid,
+            validationError,
+            willCreateVenue,
+          };
+        });
+
+        setParsedRows(rows);
+      } catch (err: any) {
+        console.error("Excel parse error:", err);
+        setImportError(err.message || "Failed to parse spreadsheet file.");
+      } finally {
+        setIsProcessing(false);
+      }
+    };
+
+    reader.onerror = () => {
+      setImportError("Error reading the selected file.");
+      setIsProcessing(false);
+    };
+
+    reader.readAsArrayBuffer(file);
+  };
+
+  // Download Sample Template (Excel .xlsx)
+  const downloadSampleTemplate = (format: "xlsx" | "csv") => {
+    const sampleRows = [
+      {
+        "Event Title": "Robotics Arena Trials - Heat 1",
+        "Description": "Autonomous line follower scrutiny and obstacle trials",
+        "Event Type": "competition",
+        "Venue / Place": "College Dome",
+        "Track": "Robotics",
+        "Starts At": "2026-11-05 09:30",
+        "Ends At": "2026-11-05 11:00",
+      },
+      {
+        "Event Title": "Tech Quiz Prelims",
+        "Description": "Elimination written quiz round for all schools",
+        "Event Type": "competition",
+        "Venue / Place": "College Auditorium",
+        "Track": "Quiz",
+        "Starts At": "2026-11-05 10:00",
+        "Ends At": "2026-11-05 11:30",
+      },
+      {
+        "Event Title": "Lunch & Maker Networking",
+        "Description": "Complimentary lunch in dining area for student delegations",
+        "Event Type": "break",
+        "Venue / Place": "Near Reception",
+        "Track": "",
+        "Starts At": "2026-11-05 12:30",
+        "Ends At": "2026-11-05 13:30",
+      },
+      {
+        "Event Title": "Ideathon Stage Final Defense",
+        "Description": "5-minute pitch before jury of industry evaluators",
+        "Event Type": "judging",
+        "Venue / Place": "Smart Classroom (2nd Floor)",
+        "Track": "Ideathon",
+        "Starts At": "2026-11-05 14:00",
+        "Ends At": "2026-11-05 16:00",
+      },
+      {
+        "Event Title": "Grand Valedictory & Award Ceremony",
+        "Description": "Distribution of championship trophy, certificates and shields",
+        "Event Type": "ceremony",
+        "Venue / Place": "College Auditorium",
+        "Track": "",
+        "Starts At": "2026-11-05 16:30",
+        "Ends At": "2026-11-05 18:00",
+      },
+    ];
+
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(sampleRows);
+
+    ws["!cols"] = [
+      { wch: 32 },
+      { wch: 45 },
+      { wch: 15 },
+      { wch: 25 },
+      { wch: 20 },
+      { wch: 20 },
+      { wch: 20 },
+    ];
+
+    XLSX.utils.book_append_sheet(wb, ws, "Fest_Schedule");
+
+    if (format === "csv") {
+      XLSX.writeFile(wb, "spark_event_schedule_template.csv", { bookType: "csv" });
+    } else {
+      XLSX.writeFile(wb, "spark_event_schedule_template.xlsx");
+    }
+  };
+
+  // Commit the parsed events
+  const handleConfirmImport = async () => {
+    const validRows = parsedRows.filter((r) => r.isValid);
+    if (validRows.length === 0) return;
+
+    setIsImporting(true);
+    setImportError(null);
+
+    try {
+      // 1. Auto-create any new venues
+      const createdVenuesMap = new Map<string, string>();
+      for (const row of validRows) {
+        if (row.willCreateVenue && row.venueName && !createdVenuesMap.has(row.venueName.toLowerCase())) {
+          const newVenue = await addVenue({
+            name: row.venueName,
+            location: "Main Campus Grounds",
+            capacity: 200,
+          });
+          createdVenuesMap.set(row.venueName.toLowerCase(), newVenue.id);
+        }
+      }
+
+      // 2. Prepare final schedule items
+      const itemsToInsert = validRows.map((row) => {
+        let venueId = row.venueId;
+        if (!venueId && row.venueName) {
+          venueId = createdVenuesMap.get(row.venueName.toLowerCase()) || null;
+        }
+
+        return {
+          title: row.title,
+          description: row.description || null,
+          track_id: row.trackId || null,
+          venue_id: venueId || null,
+          starts_at: row.startsAt,
+          ends_at: row.endsAt,
+          type: row.type,
+        };
+      });
+
+      const count = await importScheduleItems(itemsToInsert);
+
+      setImportSuccess(`Successfully imported ${count} event ${count === 1 ? "slot" : "slots"} into the fest timeline!`);
+      setTimeout(() => {
+        setImportModalOpen(false);
+        setParsedRows([]);
+        setImportFile(null);
+        setImportSuccess(null);
+      }, 1500);
+    } catch (err: any) {
+      console.error("Import failed:", err);
+      setImportError(err.message || "Failed to import schedule items.");
+    } finally {
+      setIsImporting(false);
+    }
+  };
 
   const handleAddEvent = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -142,32 +486,44 @@ export default function OrganizerSchedulePage() {
       <div className="p-6 sm:p-8 bg-[#FFEB3B] border-[3px] border-black shadow-[6px_6px_0px_#000000] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <div className="inline-block bg-black text-white px-2.5 py-0.5 text-xs font-black uppercase tracking-wider mb-2">
-            ADMIN WORKSPACE
+            ADMIN & COORDINATOR WORKSPACE
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-black tracking-tight">
             Schedule & Campus Places Manager
           </h1>
           <p className="text-xs sm:text-sm font-bold text-slate-900 mt-1">
-            Super Admins & Event Coordinators: configure event phases, arena timings, and campus venue locations.
+            Configure event rounds, arena heats, stage assignments, or import full schedules directly via Excel.
           </p>
         </div>
 
         {canEdit && (
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            {/* IMPORT EXCEL BUTTON */}
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => setImportModalOpen(true)}
+              className="text-xs uppercase font-black bg-[#4CAF50] text-black border-2 border-black shadow-[3px_3px_0px_#000000] hover:bg-[#81C784] hover:-translate-x-0.5 hover:-translate-y-0.5 transition-all"
+            >
+              <FileSpreadsheet className="h-4 w-4 mr-1.5" />
+              <span>Import Excel</span>
+            </Button>
+
             <Button
               variant="primary"
               size="sm"
               onClick={() => setVenueModalOpen(true)}
-              className="text-xs uppercase font-black bg-white text-black border-2 border-black shadow-[3px_3px_0px_#000000] hover:bg-[#FFFBEB]"
+              className="text-xs uppercase font-black bg-white text-black border-2 border-black shadow-[3px_3px_0px_#000000] hover:bg-[#FFFBEB] hover:-translate-x-0.5 hover:-translate-y-0.5 transition-all"
             >
               <Plus className="h-3.5 w-3.5 mr-1" />
               <span>Add Place</span>
             </Button>
+
             <Button
               variant="primary"
               size="sm"
               onClick={() => setEventModalOpen(true)}
-              className="text-xs uppercase font-black bg-black text-white border-2 border-black shadow-[3px_3px_0px_#ffffff] hover:bg-slate-800"
+              className="text-xs uppercase font-black bg-black text-white border-2 border-black shadow-[3px_3px_0px_#000000] hover:bg-slate-800 hover:-translate-x-0.5 hover:-translate-y-0.5 transition-all"
             >
               <Plus className="h-3.5 w-3.5 mr-1" />
               <span>Add Event Slot</span>
@@ -210,16 +566,25 @@ export default function OrganizerSchedulePage() {
               </div>
               <h3 className="text-xl font-black text-black">No Event Slots Configured Yet</h3>
               <p className="text-xs sm:text-sm font-bold text-slate-700 max-w-md mx-auto">
-                Build your fest timeline starting 5/11/2026. Click "Add Event Slot" to schedule competition heats, inaugural ceremonies, and meal breaks.
+                Build your fest timeline starting 5/11/2026. Import your complete event timetable via Excel or add slots manually.
               </p>
               {canEdit && (
-                <Button
-                  onClick={() => setEventModalOpen(true)}
-                  className="mt-3 text-xs uppercase font-black bg-[#2196F3] text-black border-2 border-black shadow-[3px_3px_0px_#000000]"
-                >
-                  <Plus className="h-4 w-4 mr-1" />
-                  Add First Event Slot
-                </Button>
+                <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+                  <Button
+                    onClick={() => setImportModalOpen(true)}
+                    className="text-xs uppercase font-black bg-[#4CAF50] text-black border-2 border-black shadow-[3px_3px_0px_#000000] hover:bg-[#81C784]"
+                  >
+                    <FileSpreadsheet className="h-4 w-4 mr-1.5" />
+                    Import from Excel
+                  </Button>
+                  <Button
+                    onClick={() => setEventModalOpen(true)}
+                    className="text-xs uppercase font-black bg-[#FFEB3B] text-black border-2 border-black shadow-[3px_3px_0px_#000000] hover:bg-black hover:text-white"
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    Add Event Slot
+                  </Button>
+                </div>
               )}
             </div>
           ) : (
@@ -343,7 +708,220 @@ export default function OrganizerSchedulePage() {
         </div>
       )}
 
-      {/* MODAL: ADD EVENT SLOT */}
+      {/* MODAL 1: IMPORT SCHEDULE VIA EXCEL / CSV */}
+      <Modal
+        isOpen={importModalOpen}
+        onClose={() => {
+          if (!isImporting) {
+            setImportModalOpen(false);
+            setParsedRows([]);
+            setImportFile(null);
+            setImportError(null);
+            setImportSuccess(null);
+          }
+        }}
+        title="Import Schedule from Excel / CSV"
+        description="Upload an Excel spreadsheet (.xlsx, .xls) or CSV file with your complete fest timeline events."
+      >
+        <div className="space-y-5 font-sans text-black">
+          {/* Download Template Banner */}
+          <div className="p-4 bg-[#FFFBEB] border-2 border-black shadow-[2px_2px_0px_#000000] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-black text-black flex items-center gap-1.5">
+                <FileSpreadsheet className="w-4 h-4 text-[#4CAF50]" />
+                <span>Need a ready-made format?</span>
+              </p>
+              <p className="text-[11px] font-bold text-slate-700 mt-0.5">
+                Download our pre-formatted schedule template with sample rounds and timings.
+              </p>
+            </div>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => downloadSampleTemplate("xlsx")}
+                className="text-[11px] font-black bg-[#4CAF50] text-black border border-black shadow-[2px_2px_0px_#000000] hover:bg-[#81C784]"
+              >
+                <Download className="w-3.5 h-3.5 mr-1" />
+                <span>Excel (.xlsx)</span>
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => downloadSampleTemplate("csv")}
+                className="text-[11px] font-black bg-white text-black border border-black shadow-[2px_2px_0px_#000000]"
+              >
+                <Download className="w-3.5 h-3.5 mr-1" />
+                <span>CSV</span>
+              </Button>
+            </div>
+          </div>
+
+          {/* Upload Zone */}
+          <div>
+            <label className="text-xs font-black text-black block mb-1">
+              Select or Drop Spreadsheet File (.xlsx, .xls, .csv)
+            </label>
+            <div
+              onClick={() => fileInputRef.current?.click()}
+              className="p-6 border-[3px] border-dashed border-black bg-white hover:bg-[#FFFBEB] transition-colors cursor-pointer text-center group"
+            >
+              <Upload className="w-8 h-8 text-black mx-auto mb-2 group-hover:-translate-y-0.5 transition-transform" />
+              <p className="text-xs font-black text-black">
+                {importFile ? importFile.name : "Click to browse or drag file here"}
+              </p>
+              <p className="text-[10px] font-bold text-slate-600 mt-1">
+                Supported formats: Microsoft Excel (.xlsx, .xls) and Comma-Separated Values (.csv)
+              </p>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".xlsx,.xls,.csv"
+                onChange={handleFileUpload}
+                className="hidden"
+              />
+            </div>
+          </div>
+
+          {/* Processing Indicator */}
+          {isProcessing && (
+            <div className="p-3 bg-[#FFEB3B] border-2 border-black text-xs font-black flex items-center gap-2">
+              <Clock className="w-4 h-4 animate-spin text-black" />
+              <span>Analyzing spreadsheet headers and rows...</span>
+            </div>
+          )}
+
+          {/* Error Message */}
+          {importError && (
+            <div className="p-3 bg-[#FF5252] text-black border-2 border-black text-xs font-black flex items-center gap-2 shadow-[2px_2px_0px_#000]">
+              <AlertTriangle className="w-4 h-4 text-black flex-shrink-0" />
+              <span>{importError}</span>
+            </div>
+          )}
+
+          {/* Success Message */}
+          {importSuccess && (
+            <div className="p-3 bg-[#4CAF50] text-black border-2 border-black text-xs font-black flex items-center gap-2 shadow-[2px_2px_0px_#000]">
+              <CheckCircle2 className="w-4 h-4 text-black flex-shrink-0" />
+              <span>{importSuccess}</span>
+            </div>
+          )}
+
+          {/* Parsed Preview Table */}
+          {parsedRows.length > 0 && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between pb-1 border-b-2 border-black">
+                <span className="text-xs font-black uppercase text-black">
+                  Preview: {parsedRows.filter((r) => r.isValid).length} of {parsedRows.length} Events Valid
+                </span>
+                <span className="text-[11px] font-bold text-slate-700">
+                  {parsedRows.filter((r) => r.willCreateVenue).length > 0 &&
+                    `(${parsedRows.filter((r) => r.willCreateVenue).length} new campus venues will be auto-created)`}
+                </span>
+              </div>
+
+              <div className="max-h-60 overflow-y-auto border-2 border-black bg-white shadow-[2px_2px_0px_#000000]">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-black text-white font-black uppercase text-[10px] sticky top-0">
+                    <tr>
+                      <th className="p-2">#</th>
+                      <th className="p-2">Event Title</th>
+                      <th className="p-2">Type</th>
+                      <th className="p-2">Venue / Place</th>
+                      <th className="p-2">Track</th>
+                      <th className="p-2">Starts</th>
+                      <th className="p-2">Ends</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-black font-bold">
+                    {parsedRows.map((row) => (
+                      <tr key={row.index} className={row.isValid ? "hover:bg-[#FFFBEB]" : "bg-[#FF5252]/20"}>
+                        <td className="p-2 font-mono text-[10px]">{row.index}</td>
+                        <td className="p-2 font-black text-black">
+                          {row.title || <span className="text-[#D32F2F] italic">Missing Title</span>}
+                          {row.description && <p className="text-[10px] font-normal text-slate-600 line-clamp-1">{row.description}</p>}
+                        </td>
+                        <td className="p-2">
+                          <span className={`px-1.5 py-0.2 border border-black text-[9px] font-black uppercase ${getTypeBadge(row.type)}`}>
+                            {row.type}
+                          </span>
+                        </td>
+                        <td className="p-2 text-[11px]">
+                          {row.venueName ? (
+                            <span className="flex items-center gap-1">
+                              <span>{row.venueName}</span>
+                              {row.willCreateVenue && (
+                                <span className="text-[9px] bg-[#FFEB3B] text-black border border-black px-1 uppercase font-black">
+                                  +New Place
+                                </span>
+                              )}
+                            </span>
+                          ) : (
+                            <span className="text-slate-500 font-normal">--</span>
+                          )}
+                        </td>
+                        <td className="p-2 text-[11px]">
+                          {row.trackName ? (
+                            <span className="bg-[#2196F3] text-black border border-black px-1.5 py-0.2 font-black text-[9px] uppercase">
+                              {row.trackName}
+                            </span>
+                          ) : (
+                            <span className="text-slate-500 font-normal">General</span>
+                          )}
+                        </td>
+                        <td className="p-2 font-mono text-[10px]">
+                          {new Date(row.startsAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                        </td>
+                        <td className="p-2 font-mono text-[10px]">
+                          {new Date(row.endsAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* Footer Actions */}
+          <div className="flex justify-between items-center pt-3 border-t-2 border-black">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={isImporting}
+              onClick={() => {
+                setImportModalOpen(false);
+                setParsedRows([]);
+                setImportFile(null);
+              }}
+              className="border-2 border-black text-xs font-black"
+            >
+              Cancel
+            </Button>
+
+            <Button
+              type="button"
+              size="sm"
+              disabled={parsedRows.filter((r) => r.isValid).length === 0 || isImporting}
+              onClick={handleConfirmImport}
+              className="bg-[#4CAF50] text-black border-2 border-black shadow-[3px_3px_0px_#000000] text-xs font-black uppercase hover:bg-[#81C784]"
+            >
+              {isImporting ? (
+                <span className="flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5 animate-spin" />
+                  <span>Importing Events...</span>
+                </span>
+              ) : (
+                <span>Confirm & Import ({parsedRows.filter((r) => r.isValid).length} Events)</span>
+              )}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* MODAL 2: ADD EVENT SLOT (SINGLE) */}
       <Modal
         isOpen={eventModalOpen}
         onClose={() => setEventModalOpen(false)}
@@ -351,6 +929,22 @@ export default function OrganizerSchedulePage() {
         description="Insert a round, competition heat, pit scrutiny, or ceremony into the fest timeline."
       >
         <form onSubmit={handleAddEvent} className="space-y-4 font-sans text-black">
+          {/* Quick link to import Excel */}
+          <div className="p-2.5 bg-[#FFFBEB] border-2 border-black flex items-center justify-between text-xs font-bold shadow-[2px_2px_0px_#000]">
+            <span>Have multiple rounds or timeline slots?</span>
+            <button
+              type="button"
+              onClick={() => {
+                setEventModalOpen(false);
+                setImportModalOpen(true);
+              }}
+              className="underline font-black text-black flex items-center gap-1 hover:bg-[#FFEB3B] px-1.5 py-0.5 border border-black bg-white cursor-pointer"
+            >
+              <FileSpreadsheet className="w-3.5 h-3.5 text-[#4CAF50]" />
+              <span>Import Excel</span>
+            </button>
+          </div>
+
           <div>
             <label className="text-xs font-black text-black block mb-1">Event Title *</label>
             <input
@@ -432,8 +1026,7 @@ export default function OrganizerSchedulePage() {
                 value={eventForm.startsAt}
                 onChange={(e) => setEventForm({ ...eventForm, startsAt: e.target.value })}
                 className="w-full px-3 py-2 border-2 border-black bg-white text-xs font-bold text-black"
-              >
-              </input>
+              />
             </div>
 
             <div>
@@ -444,8 +1037,7 @@ export default function OrganizerSchedulePage() {
                 value={eventForm.endsAt}
                 onChange={(e) => setEventForm({ ...eventForm, endsAt: e.target.value })}
                 className="w-full px-3 py-2 border-2 border-black bg-white text-xs font-bold text-black"
-              >
-              </input>
+              />
             </div>
           </div>
 
@@ -470,7 +1062,7 @@ export default function OrganizerSchedulePage() {
         </form>
       </Modal>
 
-      {/* MODAL: ADD PLACE / VENUE */}
+      {/* MODAL 3: ADD PLACE / VENUE */}
       <Modal
         isOpen={venueModalOpen}
         onClose={() => setVenueModalOpen(false)}

@@ -116,6 +116,7 @@ interface FestStoreContextType {
   reportIssue: (issue: { title: string; description: string; severity: "low" | "medium" | "high" | "critical" }) => void;
   resolveIssue: (id: string, notes: string) => void;
   addScheduleItem: (item: Omit<ScheduleItem, "id">) => void;
+  importScheduleItems: (items: Omit<ScheduleItem, "id">[]) => Promise<number>;
   deleteScheduleItem: (id: string) => void;
   addVenue: (venue: Omit<Venue, "id" | "created_at">) => Promise<Venue>;
   deleteVenue: (id: string) => Promise<void>;
@@ -1205,6 +1206,31 @@ export function FestStoreProvider({ children }: { children: React.ReactNode }) {
     logAudit("ADD_SCHEDULE_ITEM", "schedule_items", newItem.id, null, newItem);
   };
 
+  const importScheduleItems = async (items: Omit<ScheduleItem, "id">[]): Promise<number> => {
+    if (!items.length) return 0;
+    const newItems: ScheduleItem[] = items.map((item) => ({
+      ...item,
+      id: generateSafeUUID(),
+    }));
+
+    setSchedule((prev) =>
+      [...prev, ...newItems].sort(
+        (a, b) => new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime()
+      )
+    );
+
+    if (isSupabaseConfigured()) {
+      try {
+        await createClient().from("schedule_items").insert(newItems);
+      } catch (e) {
+        console.warn("Failed batch inserting schedule items into Supabase:", e);
+      }
+    }
+
+    logAudit("IMPORT_SCHEDULE_ITEMS", "schedule_items", "batch", null, { count: newItems.length });
+    return newItems.length;
+  };
+
   const deleteScheduleItem = async (id: string) => {
     setSchedule((prev) => prev.filter((s) => s.id !== id));
     if (isSupabaseConfigured()) {
@@ -1361,6 +1387,7 @@ export function FestStoreProvider({ children }: { children: React.ReactNode }) {
     reportIssue,
     resolveIssue,
     addScheduleItem,
+    importScheduleItems,
     deleteScheduleItem,
     addVenue,
     deleteVenue,

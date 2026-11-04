@@ -270,11 +270,16 @@ export default function DashboardPage() {
                   </div>
                   <p className="font-black text-sm text-black">Event Schedule & Timelines</p>
                   <p className="text-[11px] font-bold text-slate-700 mt-1">
-                    Manage track slots, heat timetables, stage assignments, and venue auditoriums.
+                    Manage track slots, heat timetables, stage assignments, and import schedules via Excel.
                   </p>
-                  <div className="mt-3 font-black text-black text-[11px] flex items-center gap-1 group-hover:underline">
-                    <span>Open Schedule Editor</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
+                  <div className="mt-3 font-black text-black text-[11px] flex items-center justify-between group-hover:underline">
+                    <span className="flex items-center gap-1">
+                      <span>Open Schedule Editor</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </span>
+                    <span className="text-[10px] bg-[#4CAF50] text-black border border-black px-1.5 py-0.2 uppercase font-black shadow-[1px_1px_0px_#000]">
+                      Excel Import
+                    </span>
                   </div>
                 </div>
               </Link>
