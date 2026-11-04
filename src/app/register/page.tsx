@@ -8,6 +8,7 @@ import { schoolRegistrationSchema } from "@/lib/schemas";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Button } from "@/components/ui/button";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
+import { fetchUserProfile } from "@/lib/supabase/db";
 import {
   School,
   ArrowRight,
@@ -25,7 +26,7 @@ import {
 
 export default function RegisterSchoolPage() {
   const router = useRouter();
-  const { addSchool, switchRole } = useFestStore();
+  const { addSchool, switchRole, setCurrentProfile } = useFestStore();
 
   const [formData, setFormData] = useState({
     schoolName: "",
@@ -41,6 +42,7 @@ export default function RegisterSchoolPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [registeredSchool, setRegisteredSchool] = useState<any | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -125,9 +127,32 @@ export default function RegisterSchoolPage() {
           token_hash: tokenHash,
         });
 
+        // 6. Automatically log in the faculty so their session is established immediately
+        let isAuthenticated = false;
+        try {
+          const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+            email: formData.facultyEmail,
+            password: formData.password,
+          });
+
+          if (!signInError && signInData?.user) {
+            const profile = await fetchUserProfile(signInData.user.id);
+            if (profile) {
+              setCurrentProfile(profile);
+            }
+            switchRole("faculty");
+            isAuthenticated = true;
+          }
+        } catch (loginErr) {
+          console.warn("Auto-login error after registration:", loginErr);
+        }
+
         setRegisteredSchool({
           ...schoolData,
           ticket_token: tokenHash,
+          facultyEmail: formData.facultyEmail,
+          facultyPassword: formData.password,
+          isAuthenticated,
         });
       } else {
         const school = addSchool({
@@ -195,18 +220,61 @@ export default function RegisterSchoolPage() {
               </div>
             </div>
 
-            <div className="flex gap-3">
+            {registeredSchool.isAuthenticated && (
+              <div className="mb-5 inline-flex items-center gap-2 bg-[#4CAF50] text-black border-2 border-black px-3.5 py-1 text-xs font-black uppercase shadow-[2px_2px_0px_#000000]">
+                <CheckCircle2 className="w-4 h-4 text-black" />
+                <span>Active Session: Logged In as Faculty</span>
+              </div>
+            )}
+
+            <div className="flex flex-col gap-3">
               <Button
                 variant="yellow"
-                className="w-full text-base py-3"
-                onClick={() => {
-                  switchRole("faculty");
-                  router.push("/faculty/students");
+                className="w-full text-base py-3 font-black"
+                disabled={isLoggingIn}
+                onClick={async () => {
+                  setIsLoggingIn(true);
+                  try {
+                    if (isSupabaseConfigured()) {
+                      const supabase = createClient();
+                      const { data: sessionData } = await supabase.auth.getSession();
+                      
+                      if (!sessionData?.session?.user && registeredSchool?.facultyEmail && registeredSchool?.facultyPassword) {
+                        const { data: sData, error: sErr } = await supabase.auth.signInWithPassword({
+                          email: registeredSchool.facultyEmail,
+                          password: registeredSchool.facultyPassword,
+                        });
+                        if (sErr) {
+                          router.push(`/login?email=${encodeURIComponent(registeredSchool.facultyEmail)}&redirect=/faculty/students`);
+                          return;
+                        }
+                        if (sData?.user) {
+                          const prof = await fetchUserProfile(sData.user.id);
+                          if (prof) setCurrentProfile(prof);
+                        }
+                      }
+                    }
+                    switchRole("faculty");
+                    router.push("/faculty/students");
+                  } catch (e) {
+                    router.push(`/login?email=${encodeURIComponent(registeredSchool?.facultyEmail || "")}&redirect=/faculty/students`);
+                  } finally {
+                    setIsLoggingIn(false);
+                  }
                 }}
               >
-                <span>Proceed to Faculty Delegation Manager</span>
+                <span>{isLoggingIn ? "Authenticating Session..." : "Proceed to Faculty Delegation Manager"}</span>
                 <ArrowRight className="h-4 w-4 ml-1.5" />
               </Button>
+
+              <Link
+                href={`/login?email=${encodeURIComponent(registeredSchool?.facultyEmail || "")}&redirect=/faculty/students`}
+                className="w-full"
+              >
+                <Button variant="secondary" className="w-full text-xs font-black uppercase">
+                  <span>Open Faculty Portal via Login Screen</span>
+                </Button>
+              </Link>
             </div>
           </div>
         ) : (

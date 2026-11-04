@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useFestStore } from "@/lib/store";
@@ -29,6 +29,17 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [magicLinkSent, setMagicLinkSent] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+
+  // Pre-fill email from query parameters if redirected from registration
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const prefillEmail = params.get("email");
+      if (prefillEmail) {
+        setEmail(prefillEmail);
+      }
+    }
+  }, []);
 
   const supabaseConfigured = isSupabaseConfigured();
 
@@ -71,6 +82,8 @@ export default function LoginPage() {
         return;
       }
 
+      let profile: any = null;
+
       if (supabaseConfigured) {
         const { data, error } = await supabase.auth.signInWithPassword({
           email,
@@ -84,7 +97,7 @@ export default function LoginPage() {
         }
 
         if (data.user) {
-          const profile = await fetchUserProfile(data.user.id);
+          profile = await fetchUserProfile(data.user.id);
           if (profile) {
             setCurrentProfile(profile);
             switchRole(profile.role);
@@ -105,7 +118,22 @@ export default function LoginPage() {
         }
       }
 
-      router.push("/dashboard");
+      let destination = "/dashboard";
+      if (typeof window !== "undefined") {
+        const params = new URLSearchParams(window.location.search);
+        const redirectParam = params.get("redirect");
+        if (redirectParam && redirectParam.startsWith("/")) {
+          destination = redirectParam;
+        } else if (profile?.role === "faculty" || email.toLowerCase().includes("fac")) {
+          destination = "/faculty/students";
+        } else if (profile?.role === "volunteer" || email.toLowerCase().includes("vol")) {
+          destination = "/volunteer/duties";
+        }
+      } else if (profile?.role === "faculty") {
+        destination = "/faculty/students";
+      }
+
+      router.push(destination);
     } catch (err: any) {
       setErrorMessage(err?.message || "Authentication failed. Please check credentials.");
     } finally {
