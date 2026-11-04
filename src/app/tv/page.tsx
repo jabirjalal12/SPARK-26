@@ -55,22 +55,74 @@ export default function StandaloneTvPage() {
     return () => clearInterval(timer);
   }, []);
 
-  // Fullscreen Listener
+  // Fullscreen helper
+  const enterFullscreen = () => {
+    if (typeof document !== "undefined" && !document.fullscreenElement) {
+      const el = document.documentElement;
+      if (el.requestFullscreen) {
+        el.requestFullscreen().catch(() => {});
+      } else if ((el as any).webkitRequestFullscreen) {
+        (el as any).webkitRequestFullscreen();
+      } else if ((el as any).msRequestFullscreen) {
+        (el as any).msRequestFullscreen();
+      }
+    }
+  };
+
+  const toggleFullscreen = () => {
+    if (typeof document === "undefined") return;
+    if (!document.fullscreenElement) {
+      enterFullscreen();
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen().catch(() => {});
+      }
+    }
+  };
+
+  // Fullscreen Listener & Automatic Fullscreen Trigger
   useEffect(() => {
     const onFsChange = () => setIsFullscreen(!!document.fullscreenElement);
     document.addEventListener("fullscreenchange", onFsChange);
-    return () => document.removeEventListener("fullscreenchange", onFsChange);
+    document.addEventListener("webkitfullscreenchange", onFsChange);
+
+    // Initial check
+    setIsFullscreen(!!document.fullscreenElement);
+
+    // 1. Attempt to enter fullscreen immediately on page load
+    enterFullscreen();
+
+    // 2. Automatically trigger fullscreen on ANY user click, touch, or keypress anywhere on screen
+    const handleFirstGesture = () => {
+      enterFullscreen();
+    };
+
+    window.addEventListener("click", handleFirstGesture);
+    window.addEventListener("touchstart", handleFirstGesture);
+    window.addEventListener("keydown", handleFirstGesture);
+    window.addEventListener("pointerdown", handleFirstGesture);
+
+    return () => {
+      document.removeEventListener("fullscreenchange", onFsChange);
+      document.removeEventListener("webkitfullscreenchange", onFsChange);
+      window.removeEventListener("click", handleFirstGesture);
+      window.removeEventListener("touchstart", handleFirstGesture);
+      window.removeEventListener("keydown", handleFirstGesture);
+      window.removeEventListener("pointerdown", handleFirstGesture);
+    };
   }, []);
 
   // Keyboard Shortcuts (F = Fullscreen, Space = Play/Pause, ArrowRight = Next stage)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "f" || e.key === "F") {
+        e.preventDefault();
         toggleFullscreen();
       } else if (e.code === "Space") {
         e.preventDefault();
         setAutoRotate((prev) => !prev);
       } else if (e.key === "ArrowRight") {
+        e.preventDefault();
         nextStage();
       }
     };
@@ -78,37 +130,37 @@ export default function StandaloneTvPage() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [totalStages]);
 
-  const toggleFullscreen = () => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch(() => {});
-    } else {
-      document.exitFullscreen().catch(() => {});
-    }
-  };
-
   const nextStage = () => {
     setCurrentStage((prev) => (prev + 1) % totalStages);
     setAnimKey((k) => k + 1);
     setCountdown(12);
   };
 
-  // Automatic Rotation: Event 1 -> Event 2 -> Event 3 -> Overall Leaderboard -> Loop Repeat
+  // Automatic Rotation: Strict 12-second cycle per stage
+  // Sequence: Event 1 -> Event 2 -> Event 3 -> Event 4 -> Event 5 -> Event 6 -> Event 7 -> Event 8 -> Overall Championship -> Loop
+  useEffect(() => {
+    if (!autoRotate || totalStages <= 1) return;
+
+    const stageTimer = setTimeout(() => {
+      setCurrentStage((prev) => (prev + 1) % totalStages);
+      setAnimKey((k) => k + 1);
+      setCountdown(12);
+    }, 12000);
+
+    return () => clearTimeout(stageTimer);
+  }, [autoRotate, totalStages, currentStage]);
+
+  // Dedicated 1-second countdown ticker for progress bar and badge
   useEffect(() => {
     if (!autoRotate) return;
+    setCountdown(12);
 
-    const interval = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          setCurrentStage((curr) => (curr + 1) % totalStages);
-          setAnimKey((k) => k + 1);
-          return 12;
-        }
-        return prev - 1;
-      });
+    const ticker = setInterval(() => {
+      setCountdown((prev) => (prev > 1 ? prev - 1 : 1));
     }, 1000);
 
-    return () => clearInterval(interval);
-  }, [autoRotate, totalStages]);
+    return () => clearInterval(ticker);
+  }, [autoRotate, currentStage]);
 
   // Ranked Teams for the active individual event
   const trackTeams = useMemo(() => {
@@ -190,6 +242,23 @@ export default function StandaloneTvPage() {
           style={{ width: `${((12 - countdown) / 12) * 100}%` }}
         />
       </div>
+
+      {/* Kiosk Auto-Fullscreen Banner (Shown when not in fullscreen to guide user) */}
+      {!isFullscreen && (
+        <div
+          onClick={enterFullscreen}
+          className="w-full bg-[#FFEB3B] text-black border-b-[3px] border-black px-4 py-2 flex items-center justify-between text-xs font-black shadow-md cursor-pointer hover:bg-black hover:text-[#FFEB3B] transition-colors flex-shrink-0 animate-pulse"
+          title="Click anywhere on screen to enter full screen presentation mode"
+        >
+          <div className="flex items-center gap-2">
+            <Maximize2 className="w-4 h-4" />
+            <span>KIOSK AUTO-FULLSCREEN READY — Click anywhere on screen to expand full screen</span>
+          </div>
+          <span className="px-2 py-0.5 bg-black text-[#FFEB3B] text-[10px] font-mono uppercase">
+            Click to Expand [F]
+          </span>
+        </div>
+      )}
 
       {/* Main Kiosk Header Bar */}
       <header className="px-6 py-3 bg-white border-b-[3px] border-black flex items-center justify-between gap-4 flex-shrink-0 shadow-[0_3px_0px_#000000]">
