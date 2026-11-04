@@ -98,6 +98,14 @@ interface FestStoreContextType {
   addTeam: (team: { school_id: string; track_id: string; name: string; project_title: string; project_summary: string; table_number?: string }) => Team;
   updateTeam: (id: string, updates: Partial<Team>) => void;
   deleteTeam: (id: string) => void;
+  saveEventSquad: (data: {
+    school_id: string;
+    track_id: string;
+    team_name: string;
+    project_title?: string;
+    project_summary?: string;
+    members: { name: string; class: string }[];
+  }) => Promise<{ team: Team; students: Student[] }>;
   saveScore: (scoreData: { team_id: string; criterion_id: string; value: number; feedback?: string }) => void;
   lockTrackScores: (trackId: string, locked: boolean) => void;
   togglePublishResults: () => void;
@@ -703,6 +711,116 @@ export function FestStoreProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // SAVE EVENT SQUAD (Atomic 4-member squad creation per event)
+  const saveEventSquad = async (data: {
+    school_id: string;
+    track_id: string;
+    team_name: string;
+    project_title?: string;
+    project_summary?: string;
+    members: { name: string; class: string }[];
+  }) => {
+    const existingTeam = teams.find((t) => t.school_id === data.school_id && t.track_id === data.track_id);
+    let targetTeam: Team;
+
+    if (existingTeam) {
+      const updates = {
+        name: data.team_name,
+        project_title: data.project_title || "",
+        project_summary: data.project_summary || "",
+      };
+      targetTeam = { ...existingTeam, ...updates };
+      setTeams((prev) => prev.map((t) => (t.id === existingTeam.id ? targetTeam : t)));
+      if (isSupabaseConfigured()) {
+        try {
+          await createClient().from("teams").update(updates).eq("id", existingTeam.id);
+        } catch (e) {
+          console.warn("Could not update team in Supabase:", e);
+        }
+      }
+    } else {
+      const newTeamId = generateSafeUUID();
+      targetTeam = {
+        id: newTeamId,
+        school_id: data.school_id,
+        track_id: data.track_id,
+        name: data.team_name,
+        project_title: data.project_title || "",
+        project_summary: data.project_summary || "",
+        table_number: "T-" + Math.floor(10 + Math.random() * 89),
+        score_total: 0,
+        created_at: new Date().toISOString(),
+      };
+      setTeams((prev) => [...prev, targetTeam]);
+      if (isSupabaseConfigured()) {
+        try {
+          await createClient().from("teams").insert(targetTeam);
+        } catch (e) {
+          console.warn("Could not insert team into Supabase:", e);
+        }
+      }
+    }
+
+    // Process up to 4 members
+    const existingStudentsForTeam = students.filter((s) => s.team_id === targetTeam.id);
+    const updatedStudentsList: Student[] = [];
+
+    for (let i = 0; i < data.members.length; i++) {
+      const m = data.members[i];
+      if (!m.name.trim()) continue;
+
+      if (existingStudentsForTeam[i]) {
+        const updatedStu: Student = {
+          ...existingStudentsForTeam[i],
+          name: m.name.trim(),
+          class: m.class.trim() || "12-A",
+          track_id: data.track_id,
+        };
+        updatedStudentsList.push(updatedStu);
+        setStudents((prev) => prev.map((s) => (s.id === updatedStu.id ? updatedStu : s)));
+        if (isSupabaseConfigured()) {
+          try {
+            await createClient().from("students").update({
+              name: updatedStu.name,
+              class: updatedStu.class,
+              track_id: updatedStu.track_id,
+            }).eq("id", updatedStu.id);
+          } catch (e) {
+            console.warn("Could not update student:", e);
+          }
+        }
+      } else {
+        const newStu: Student = {
+          id: generateSafeUUID(),
+          school_id: data.school_id,
+          team_id: targetTeam.id,
+          track_id: data.track_id,
+          name: m.name.trim(),
+          class: m.class.trim() || "12-A",
+          is_walkin: false,
+          checked_in: false,
+          created_at: new Date().toISOString(),
+        };
+        updatedStudentsList.push(newStu);
+        setStudents((prev) => [...prev, newStu]);
+        if (isSupabaseConfigured()) {
+          try {
+            await createClient().from("students").insert(newStu);
+          } catch (e) {
+            console.warn("Could not insert student:", e);
+          }
+        }
+      }
+    }
+
+    logAudit("SAVE_EVENT_SQUAD", "teams", targetTeam.id, null, {
+      team: targetTeam,
+      memberCount: updatedStudentsList.length,
+    });
+
+    return { team: targetTeam, students: updatedStudentsList };
+  };
+
   // SAVE SCORE
   const saveScore = (scoreData: { team_id: string; criterion_id: string; value: number; feedback?: string }) => {
     const now = new Date().toISOString();
@@ -1049,6 +1167,7 @@ export function FestStoreProvider({ children }: { children: React.ReactNode }) {
     addTeam,
     updateTeam,
     deleteTeam,
+    saveEventSquad,
     saveScore,
     lockTrackScores,
     togglePublishResults,

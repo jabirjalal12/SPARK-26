@@ -51,9 +51,8 @@ export function PillNav() {
     if (role === "faculty") {
       return [
         { href: "/dashboard", label: "Overview", icon: Home },
-        { href: "/faculty/students", label: "Students", icon: Users },
-        { href: "/faculty/teams", label: "Teams", icon: Sparkles },
-        { href: "/faculty/ticket", label: "Ticket", icon: QrCode },
+        { href: "/faculty/students", label: "Event Squads (4 Members)", icon: Users },
+        { href: "/faculty/ticket", label: "Passes & Tickets", icon: QrCode },
         { href: "/faculty/info-sheet", label: "Info Sheet", icon: FileText },
         { href: "/schedule", label: "Schedule", icon: Calendar },
         { href: "/announcements", label: "Notices", icon: Bell },
