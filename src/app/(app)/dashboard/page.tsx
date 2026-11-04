@@ -110,13 +110,21 @@ export default function DashboardPage() {
 
           {/* Quick context CTA */}
           <div className="flex items-center gap-2">
-            {role === "organizer" && isSuperAdmin && (
-              <Link href="/organizer/results">
-                <Button size="sm" variant={resultsPublished ? "green" : "yellow"} className="text-xs">
-                  <Trophy className="w-4 h-4 mr-1.5" />
-                  <span>{resultsPublished ? "Results Published" : "Publish Results"}</span>
-                </Button>
-              </Link>
+            {isSuperAdmin && (
+              <div className="flex items-center gap-2">
+                <Link href="/passes?create=true">
+                  <Button size="sm" variant="yellow" className="text-xs font-black border-2 border-black shadow-[2px_2px_0px_#000000]">
+                    <QrCode className="w-4 h-4 mr-1.5" />
+                    <span>+ Issue ID Pass</span>
+                  </Button>
+                </Link>
+                <Link href="/organizer/results">
+                  <Button size="sm" variant={resultsPublished ? "green" : "secondary"} className="text-xs font-black border-2 border-black shadow-[2px_2px_0px_#000000]">
+                    <Trophy className="w-4 h-4 mr-1.5" />
+                    <span>{resultsPublished ? "Results Published" : "Publish Results"}</span>
+                  </Button>
+                </Link>
+              </div>
             )}
             {role === "volunteer" && (
               <Link href="/volunteer/scan">

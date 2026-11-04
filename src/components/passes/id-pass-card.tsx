@@ -19,7 +19,7 @@ import {
   Layers,
 } from "lucide-react";
 
-export type PassRole = "faculty" | "volunteer" | "judge" | "organizer" | "student";
+export type PassRole = "faculty" | "volunteer" | "judge" | "organizer" | "student" | "event_coordinator" | "registration_head";
 
 export interface IdPassProps {
   role: PassRole;
@@ -105,10 +105,26 @@ export function IdPassCard({
     organizer: {
       bannerBg: "bg-black",
       bannerText: "text-[#FFEB3B]",
-      roleTitle: "FEST EXECUTIVE / SA",
+      roleTitle: "SUPER ADMINISTRATOR",
       accessBadge: "FULL CAMPUS ACCESS • ALL AREAS • ADMIN HQ",
       roleTagColor: "bg-[#FFEB3B]",
       themeBorder: "border-black",
+    },
+    event_coordinator: {
+      bannerBg: "bg-[#FF5252]",
+      bannerText: "text-black",
+      roleTitle: "EVENT OPERATIONS COORDINATOR",
+      accessBadge: "FULL CAMPUS ACCESS • ALL ARENAS • STAGE • HQ",
+      roleTagColor: "bg-[#FFEB3B]",
+      themeBorder: "border-[#FF5252]",
+    },
+    registration_head: {
+      bannerBg: "bg-[#00BCD4]",
+      bannerText: "text-black",
+      roleTitle: "HEAD OF REGISTRATION",
+      accessBadge: "REGISTRATION DESK • ALL ACCESS • ADMIN HQ",
+      roleTagColor: "bg-[#FFEB3B]",
+      themeBorder: "border-[#00BCD4]",
     },
     student: {
       bannerBg: "bg-[#FF9800]",
@@ -120,7 +136,7 @@ export function IdPassCard({
     },
   };
 
-  const config = roleConfig[role];
+  const config = roleConfig[role] || roleConfig.organizer;
   const finalAccess = accessLevel || config.accessBadge;
 
   // PDF Badge Generation
@@ -145,6 +161,8 @@ export function IdPassCard({
     else if (role === "faculty") doc.setFillColor(76, 175, 80); // Green
     else if (role === "volunteer") doc.setFillColor(33, 150, 243); // Blue
     else if (role === "student") doc.setFillColor(255, 152, 0); // Orange
+    else if (role === "event_coordinator") doc.setFillColor(255, 82, 82); // Red
+    else if (role === "registration_head") doc.setFillColor(0, 188, 212); // Cyan
     else doc.setFillColor(0, 0, 0); // Black
 
     doc.rect(3, 14, 94, 28, "F");
