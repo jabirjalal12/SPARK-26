@@ -210,7 +210,7 @@ export default function LandingPage() {
         </div>
 
         {/* Highlights banner */}
-        <div className="mt-14 pt-8 border-t-[3px] border-black grid grid-cols-2 sm:grid-cols-5 gap-3 sm:gap-4 text-left">
+        <div className="mt-14 pt-8 border-t-[3px] border-black grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 text-left">
           <div className="p-3.5 bg-white border-[3px] border-black shadow-[4px_4px_0px_#000000] flex items-center gap-3">
             <div className="p-2.5 bg-[#FFEB3B] border-2 border-black text-black">
               <MapPin className="h-5 w-5" />
@@ -251,15 +251,7 @@ export default function LandingPage() {
             </div>
           </div>
 
-          <div className="p-3.5 bg-white border-[3px] border-black shadow-[4px_4px_0px_#000000] flex items-center gap-3">
-            <div className="p-2.5 bg-[#FF5252] border-2 border-black text-black">
-              <ShieldCheck className="h-5 w-5" />
-            </div>
-            <div>
-              <p className="text-[10px] text-slate-700 font-black uppercase tracking-wider">Format</p>
-              <p className="text-sm font-black text-black">1 Faculty + Squad</p>
-            </div>
-          </div>
+
         </div>
       </section>
 
