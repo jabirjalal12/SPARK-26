@@ -5,8 +5,15 @@
 
 -- 1. AUDIT LOGGING TRIGGER FUNCTION
 CREATE OR REPLACE FUNCTION public.log_audit_event()
-RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER AS $$
+RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER AS $
+DECLARE
+    v_actor_id UUID := NULL;
 BEGIN
+    -- Check if auth.uid() actually exists in public.profiles before referencing it
+    IF auth.uid() IS NOT NULL THEN
+        SELECT id INTO v_actor_id FROM public.profiles WHERE id = auth.uid();
+    END IF;
+
     INSERT INTO public.audit_log (
         action,
         actor_id,
@@ -17,7 +24,7 @@ BEGIN
         created_at
     ) VALUES (
         TG_OP,
-        auth.uid(),
+        v_actor_id,
         TG_TABLE_NAME,
         COALESCE(NEW.id, OLD.id),
         CASE WHEN TG_OP IN ('UPDATE', 'DELETE') THEN to_jsonb(OLD) ELSE NULL END,
@@ -26,7 +33,7 @@ BEGIN
     );
     RETURN COALESCE(NEW, OLD);
 END;
-$$;
+$;
 
 -- Apply audit triggers to key tables
 DROP TRIGGER IF EXISTS trg_audit_schools ON public.schools;
