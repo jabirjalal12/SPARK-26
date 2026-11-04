@@ -2,13 +2,12 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { useFestStore } from "@/lib/store";
-import { School, Team, Track } from "@/lib/types/database";
+import { School } from "@/lib/types/database";
 import {
   Trophy,
   Radio,
   Maximize2,
   Minimize2,
-  Clock,
   Play,
   Pause,
   AlertTriangle,
@@ -16,8 +15,6 @@ import {
   Bot,
   Wrench,
   Award,
-  ShieldCheck,
-  Building2,
   Zap,
   Layers,
 } from "lucide-react";
@@ -28,32 +25,12 @@ export default function StandaloneTvPage() {
   // Sequence stages: 0..(tracks.length - 1) = individual tracks, tracks.length = overall school leaderboard
   const [currentStage, setCurrentStage] = useState(0);
   const [autoRotate, setAutoRotate] = useState(true);
-  const [countdown, setCountdown] = useState(12);
-  const [currentTime, setCurrentTime] = useState("");
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [animKey, setAnimKey] = useState(0);
 
   const totalStages = Math.max(1, tracks.length + 1);
   const isOverallStage = currentStage === tracks.length;
   const currentTrack = !isOverallStage ? tracks[currentStage] || tracks[0] : null;
-
-  // Real-time Clock
-  useEffect(() => {
-    const updateTime = () => {
-      const now = new Date();
-      setCurrentTime(
-        now.toLocaleTimeString("en-IN", {
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-          hour12: true,
-        })
-      );
-    };
-    updateTime();
-    const timer = setInterval(updateTime, 1000);
-    return () => clearInterval(timer);
-  }, []);
 
   // Fullscreen helper
   const enterFullscreen = () => {
@@ -112,7 +89,7 @@ export default function StandaloneTvPage() {
     };
   }, []);
 
-  // Keyboard Shortcuts (F = Fullscreen, Space = Play/Pause, ArrowRight = Next stage)
+  // Keyboard Shortcuts (F = Fullscreen, Space = Play/Pause, ArrowRight/Left = Next/Prev stage)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "f" || e.key === "F") {
@@ -124,6 +101,9 @@ export default function StandaloneTvPage() {
       } else if (e.key === "ArrowRight") {
         e.preventDefault();
         nextStage();
+      } else if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        prevStage();
       }
     };
     window.addEventListener("keydown", handleKeyDown);
@@ -133,10 +113,14 @@ export default function StandaloneTvPage() {
   const nextStage = () => {
     setCurrentStage((prev) => (prev + 1) % totalStages);
     setAnimKey((k) => k + 1);
-    setCountdown(12);
   };
 
-  // Automatic Rotation: Strict 12-second cycle per stage
+  const prevStage = () => {
+    setCurrentStage((prev) => (prev - 1 + totalStages) % totalStages);
+    setAnimKey((k) => k + 1);
+  };
+
+  // Automatic Rotation: Strict 12-second cycle per stage (silent background cycling)
   // Sequence: Event 1 -> Event 2 -> Event 3 -> Event 4 -> Event 5 -> Event 6 -> Event 7 -> Event 8 -> Overall Championship -> Loop
   useEffect(() => {
     if (!autoRotate || totalStages <= 1) return;
@@ -144,23 +128,10 @@ export default function StandaloneTvPage() {
     const stageTimer = setTimeout(() => {
       setCurrentStage((prev) => (prev + 1) % totalStages);
       setAnimKey((k) => k + 1);
-      setCountdown(12);
     }, 12000);
 
     return () => clearTimeout(stageTimer);
   }, [autoRotate, totalStages, currentStage]);
-
-  // Dedicated 1-second countdown ticker for progress bar and badge
-  useEffect(() => {
-    if (!autoRotate) return;
-    setCountdown(12);
-
-    const ticker = setInterval(() => {
-      setCountdown((prev) => (prev > 1 ? prev - 1 : 1));
-    }, 1000);
-
-    return () => clearInterval(ticker);
-  }, [autoRotate, currentStage]);
 
   // Ranked Teams for the active individual event
   const trackTeams = useMemo(() => {
@@ -235,14 +206,6 @@ export default function StandaloneTvPage() {
 
   return (
     <div className="w-screen h-screen overflow-hidden flex flex-col bg-[#FFFBEB] text-black font-sans select-none">
-      {/* Top Countdown Animation Line */}
-      <div className="w-full h-1.5 bg-black/10 overflow-hidden flex-shrink-0">
-        <div
-          className="h-full bg-[#FF5252] transition-all duration-1000 ease-linear"
-          style={{ width: `${((12 - countdown) / 12) * 100}%` }}
-        />
-      </div>
-
       {/* Kiosk Auto-Fullscreen Banner (Shown when not in fullscreen to guide user) */}
       {!isFullscreen && (
         <div
@@ -283,45 +246,7 @@ export default function StandaloneTvPage() {
           </div>
         </div>
 
-        {/* Center: Stage Sequence Navigator (Animated Events + Overall Trophy) */}
-        <div className="hidden lg:flex items-center gap-1 p-1 bg-[#FFFBEB] border-2 border-black shadow-[2px_2px_0px_#000000]">
-          {tracks.map((t, idx) => (
-            <button
-              key={t.id}
-              onClick={() => {
-                setCurrentStage(idx);
-                setAnimKey((k) => k + 1);
-                setCountdown(12);
-              }}
-              className={`px-3 py-1 text-xs font-black border transition-all cursor-pointer flex items-center gap-1.5 ${
-                currentStage === idx
-                  ? "bg-black text-[#FFEB3B] border-black shadow-[2px_2px_0px_#2196F3]"
-                  : "bg-white text-black border-transparent hover:border-black"
-              }`}
-            >
-              <span>Event {idx + 1}: {t.name}</span>
-              {currentStage === idx && <span className="text-[10px] bg-[#FFEB3B] text-black px-1 rounded-sm">{countdown}s</span>}
-            </button>
-          ))}
-          <button
-            onClick={() => {
-              setCurrentStage(tracks.length);
-              setAnimKey((k) => k + 1);
-              setCountdown(12);
-            }}
-            className={`px-3 py-1 text-xs font-black border transition-all cursor-pointer flex items-center gap-1.5 ${
-              isOverallStage
-                ? "bg-[#9C27B0] text-white border-black shadow-[2px_2px_0px_#FFEB3B]"
-                : "bg-white text-black border-transparent hover:border-black"
-            }`}
-          >
-            <Trophy className="w-3.5 h-3.5 text-[#FFEB3B]" />
-            <span>🏆 Overall Championship</span>
-            {isOverallStage && <span className="text-[10px] bg-[#FFEB3B] text-black px-1 rounded-sm">{countdown}s</span>}
-          </button>
-        </div>
-
-        {/* Right Controls: Auto Cycle Toggle, Clock & Fullscreen */}
+        {/* Right Controls: Auto Cycle Toggle & Fullscreen (no countdowns or clocks) */}
         <div className="flex items-center gap-2.5">
           <button
             onClick={() => setAutoRotate(!autoRotate)}
@@ -333,7 +258,7 @@ export default function StandaloneTvPage() {
             {autoRotate ? (
               <>
                 <Pause className="w-3.5 h-3.5" />
-                <span>Cycling ({countdown}s)</span>
+                <span>Cycling</span>
               </>
             ) : (
               <>
@@ -342,11 +267,6 @@ export default function StandaloneTvPage() {
               </>
             )}
           </button>
-
-          <div className="px-3 py-1.5 bg-black text-[#FFEB3B] font-mono text-xs sm:text-sm font-black border-2 border-black shadow-[2px_2px_0px_#000000] flex items-center gap-1.5">
-            <Clock className="w-4 h-4 text-[#FFEB3B]" />
-            <span>{currentTime || "00:00:00"}</span>
-          </div>
 
           <button
             onClick={toggleFullscreen}
@@ -360,7 +280,7 @@ export default function StandaloneTvPage() {
 
       {/* Main Split Screen Area: Edge-to-Edge Animated Windows */}
       <main className="flex-1 p-5 overflow-hidden">
-        <div className="grid grid-cols-12 gap-5 h-[calc(100vh-130px)]">
+        <div className="grid grid-cols-12 gap-5 h-[calc(100vh-125px)]">
           {/* ========================================================================= */}
           {/* LEFT WINDOW: ANIMATED LEADERBOARD (CYCLES THROUGH EACH EVENT & OVERALL) */}
           {/* ========================================================================= */}
@@ -380,14 +300,6 @@ export default function StandaloneTvPage() {
                     )}
                   </div>
                   <div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-black uppercase tracking-wider px-1.5 py-0.2 bg-black text-[#FFEB3B]">
-                        {isOverallStage ? "FINAL TROPHY STANDINGS" : `EVENT ${currentStage + 1} OF ${tracks.length}`}
-                      </span>
-                      <span className="text-xs font-bold text-slate-700">
-                        {isOverallStage ? "All Tracks Aggregated" : "Track Standings"}
-                      </span>
-                    </div>
                     <h2 className="text-xl sm:text-2xl font-black text-black leading-tight">
                       {isOverallStage
                         ? "🏆 SPARK Rolling Trophy — Overall School Championship"
@@ -433,7 +345,7 @@ export default function StandaloneTvPage() {
                         🥇
                       </div>
                       <div>
-                        <span className="text-xs font-black uppercase tracking-wider text-black">EVENT CHAMPION (#1)</span>
+                        <span className="text-xs font-black uppercase tracking-wider text-black">CHAMPION (#1)</span>
                         <h3 className="text-base font-black text-black truncate">{trackTeams[0]?.name || "Evaluating"}</h3>
                         <p className="text-xs font-bold text-slate-900 truncate">
                           {schools.find((s) => s.id === trackTeams[0]?.school_id)?.name || "—"}
@@ -665,8 +577,8 @@ export default function StandaloneTvPage() {
                     <span className="px-1.5 py-0.5 bg-black text-[#FFEB3B]">
                       {(item.audience || "ALL").toUpperCase()}
                     </span>
-                    <span>
-                      {item.created_at ? new Date(item.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "LIVE"}
+                    <span className="px-1.5 py-0.5 bg-[#4CAF50] text-black font-black">
+                      LIVE
                     </span>
                   </div>
                   <h4 className="font-black text-sm text-black">{item.title}</h4>
