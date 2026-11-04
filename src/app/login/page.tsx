@@ -236,68 +236,10 @@ export default function LoginPage() {
             <div className="h-12 w-12 bg-[#FFEB3B] border-[3px] border-black shadow-[3px_3px_0px_#000000] flex items-center justify-center mx-auto mb-3">
               <Lock className="h-6 w-6 text-black" />
             </div>
-            <h1 className="text-2xl font-black text-black tracking-tight">Staff Portal Sign In</h1>
+            <h1 className="text-2xl font-black text-black tracking-tight">Sign In</h1>
             <p className="text-xs font-bold text-slate-800 mt-1">
-              Authorized access for Organizers, Judges, Visiting Faculty, and Desk Volunteers.
+              Enter your credentials to access your account.
             </p>
-          </div>
-
-          {/* Quick Credential Presets */}
-          <div className="p-3 bg-[#FFFBEB] border-2 border-black space-y-2 mb-5 shadow-[2px_2px_0px_#000000]">
-            <p className="text-[10px] font-black uppercase tracking-wider text-black flex items-center justify-between">
-              <span>Quick Fill Accounts</span>
-              <span className="text-slate-600 font-mono text-[9px]">Password: 123456</span>
-            </p>
-            <div className="grid grid-cols-2 gap-1.5">
-              <button
-                type="button"
-                onClick={() => {
-                  setEmail("admin@spark.in");
-                  setPassword("123456");
-                  setErrorMessage("");
-                }}
-                className="px-2 py-1.5 bg-black text-[#FFEB3B] text-[11px] font-black border border-black hover:bg-slate-800 text-left transition-colors cursor-pointer"
-              >
-                ★ Super Admin
-                <span className="block text-[9px] text-slate-300 font-normal">admin@spark.in</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setEmail("judge@spark.in");
-                  setPassword("123456");
-                  setErrorMessage("");
-                }}
-                className="px-2 py-1.5 bg-[#9C27B0] text-white text-[11px] font-black border border-black hover:opacity-90 text-left transition-colors cursor-pointer"
-              >
-                ⚖ Fest Judge
-                <span className="block text-[9px] text-purple-200 font-normal">judge@spark.in</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setEmail("faculty@spark.in");
-                  setPassword("123456");
-                  setErrorMessage("");
-                }}
-                className="px-2 py-1.5 bg-[#4CAF50] text-black text-[11px] font-black border border-black hover:opacity-90 text-left transition-colors cursor-pointer"
-              >
-                🏫 Visiting Faculty
-                <span className="block text-[9px] text-slate-900 font-normal">faculty@spark.in</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setEmail("volunteer@spark.in");
-                  setPassword("123456");
-                  setErrorMessage("");
-                }}
-                className="px-2 py-1.5 bg-[#2196F3] text-black text-[11px] font-black border border-black hover:opacity-90 text-left transition-colors cursor-pointer"
-              >
-                🎫 Volunteer Crew
-                <span className="block text-[9px] text-slate-900 font-normal">volunteer@spark.in</span>
-              </button>
-            </div>
           </div>
 
           {/* Method tabs */}
@@ -406,7 +348,7 @@ export default function LoginPage() {
                   <span>Authenticating via Supabase...</span>
                 ) : (
                   <>
-                    <span>{mode === "password" ? "Sign In to Portal" : "Send Magic Link"}</span>
+                    <span>{mode === "password" ? "Sign In" : "Send Magic Link"}</span>
                     <ArrowRight className="h-4 w-4 ml-1.5" />
                   </>
                 )}
