@@ -62,6 +62,7 @@ interface FestStoreContextType {
   isOrganizer: boolean;
   isFaculty: boolean;
   isVolunteer: boolean;
+  isJudge: boolean;
   isSupabaseLive: boolean;
 
   // Data collections
@@ -249,6 +250,16 @@ export function FestStoreProvider({ children }: { children: React.ReactNode }) {
   // Determine current active profile (Authenticated via Supabase or fallback)
   const currentProfile: Profile = useMemo(() => {
     if (customProfile) return customProfile;
+    if (currentRole === "judge") {
+      return {
+        ...defaultProfile,
+        id: "judge-jury-01",
+        full_name: "Dr. Evelyn Reed (Lead Jury)",
+        email: "judge@spark.edu",
+        role: "judge",
+        sub_roles: undefined,
+      };
+    }
     return {
       ...defaultProfile,
       role: currentRole,
@@ -260,6 +271,7 @@ export function FestStoreProvider({ children }: { children: React.ReactNode }) {
   const isOrganizer = currentRole === "organizer";
   const isFaculty = currentRole === "faculty";
   const isVolunteer = currentRole === "volunteer";
+  const isJudge = currentRole === "judge";
 
   const isSuperAdmin = isOrganizer && (activeOrganizerSubRole === "super_admin" || currentProfile.sub_roles?.includes("super_admin") || false);
   const isEventCoordinator = isOrganizer && (activeOrganizerSubRole === "event_coordinator" || currentProfile.sub_roles?.includes("event_coordinator") || isSuperAdmin);
@@ -267,6 +279,18 @@ export function FestStoreProvider({ children }: { children: React.ReactNode }) {
 
   const switchRole = (role: UserRole) => {
     setCurrentRole(role);
+    if (role === "judge") {
+      setCustomProfile({
+        id: "judge-jury-01",
+        role: "judge",
+        school_id: null,
+        full_name: "Dr. Evelyn Reed (Lead Jury)",
+        email: "judge@spark.edu",
+        phone: "+91 98765 00099",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
+    }
   };
 
   const switchOrganizerSubRole = (subRole: OrganizerSubRole) => {
@@ -993,6 +1017,7 @@ export function FestStoreProvider({ children }: { children: React.ReactNode }) {
     isOrganizer,
     isFaculty,
     isVolunteer,
+    isJudge,
     isSupabaseLive,
     schools,
     schoolTickets,

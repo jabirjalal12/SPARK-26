@@ -9,6 +9,7 @@ import { UserRole, OrganizerSubRole } from "@/lib/types/database";
 import { cn } from "@/lib/utils";
 import {
   Sparkles,
+  Award,
   Calendar,
   Trophy,
   Bell,
@@ -63,8 +64,19 @@ export function PillNav() {
       return [
         { href: "/dashboard", label: "Desk Status", icon: Home },
         { href: "/volunteer/scan", label: "Fast Scanner", icon: Scan },
+        { href: "/volunteer/pass", label: "Duty Pass", icon: QrCode },
         { href: "/volunteer/duties", label: "Duty Roster", icon: ClipboardList },
         { href: "/volunteer/issues", label: "Report Issue", icon: AlertTriangle },
+        { href: "/schedule", label: "Schedule", icon: Calendar },
+        { href: "/announcements", label: "Notices", icon: Bell },
+      ];
+    }
+
+    if (role === "judge") {
+      return [
+        { href: "/judge", label: "Enter Marks", icon: Sparkles },
+        { href: "/judge/pass", label: "Judge Pass", icon: QrCode },
+        { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
         { href: "/schedule", label: "Schedule", icon: Calendar },
         { href: "/announcements", label: "Notices", icon: Bell },
       ];
@@ -76,8 +88,9 @@ export function PillNav() {
         { href: "/dashboard", label: "Telemetry", icon: Home },
         { href: "/organizer/schools", label: "Approvals", icon: ShieldCheck },
         { href: "/organizer/checkins", label: "Desk Arrivals", icon: RotateCcw },
-        { href: "/organizer/schedule", label: "Schedule", icon: Calendar },
         { href: "/organizer/scoring", label: "Scoring", icon: Sparkles },
+        { href: "/passes", label: "Passes Terminal", icon: QrCode },
+        { href: "/organizer/pass", label: "Executive Pass", icon: ShieldCheck },
         { href: "/organizer/results", label: "Publish", icon: Trophy },
         { href: "/announcements", label: "Notices", icon: Bell },
         { href: "/organizer/export", label: "Export", icon: Sliders },
@@ -112,11 +125,19 @@ export function PillNav() {
   const links = getNavLinks();
 
   const getRoleBadgeLabel = () => {
-    if (role === "faculty") return "Visiting Faculty";
+    if (role === "faculty") return "Visiting Faculty Lead";
     if (role === "volunteer") return "Registration Desk Volunteer";
+    if (role === "judge") return "Official Fest Judge";
     if (activeOrganizerSubRole === "super_admin") return "Super Admin (Organizer)";
     if (activeOrganizerSubRole === "event_coordinator") return "Event Coordinator (Organizer)";
     return "Registration Head (Organizer)";
+  };
+
+  const getMyPassHref = () => {
+    if (role === "faculty") return "/faculty/ticket";
+    if (role === "volunteer") return "/volunteer/pass";
+    if (role === "judge") return "/judge/pass";
+    return "/organizer/pass";
   };
 
   return (
@@ -179,15 +200,24 @@ export function PillNav() {
           )}
 
           {/* Role Switcher Pill & Dropdown */}
-          <div className="relative">
-            <button
-              onClick={() => setRoleMenuOpen(!roleMenuOpen)}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-none bg-white hover:bg-[#FFEB3B] border-[3px] border-black shadow-[3px_3px_0px_#000000] text-xs font-black text-black hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer"
+          <div className="flex items-center gap-2">
+            <Link
+              href={getMyPassHref()}
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-[#FFEB3B] hover:bg-black hover:text-white border-[3px] border-black shadow-[3px_3px_0px_#000000] text-xs font-black text-black hover:-translate-x-0.5 hover:-translate-y-0.5 transition-all"
             >
-              <span className="w-2.5 h-2.5 rounded-full bg-[#4CAF50] border border-black animate-pulse" />
-              <span>{getRoleBadgeLabel()}</span>
-              <ChevronDown className="w-3.5 h-3.5 text-black" />
-            </button>
+              <QrCode className="w-3.5 h-3.5" />
+              <span>My ID Pass</span>
+            </Link>
+
+            <div className="relative">
+              <button
+                onClick={() => setRoleMenuOpen(!roleMenuOpen)}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-none bg-white hover:bg-[#FFEB3B] border-[3px] border-black shadow-[3px_3px_0px_#000000] text-xs font-black text-black hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer"
+              >
+                <span className="w-2.5 h-2.5 rounded-full bg-[#4CAF50] border border-black animate-pulse" />
+                <span>{getRoleBadgeLabel()}</span>
+                <ChevronDown className="w-3.5 h-3.5 text-black" />
+              </button>
 
             {/* Role Switcher Modal / Dropdown */}
             {roleMenuOpen && (
@@ -201,6 +231,74 @@ export function PillNav() {
                   <div className="mt-1.5 inline-block bg-black text-[#FFEB3B] px-2 py-0.5 text-[10px] font-black uppercase tracking-wider">
                     {getRoleBadgeLabel()}
                   </div>
+                </div>
+
+                <div className="space-y-1 mb-2 pb-2 border-b-2 border-black">
+                  <p className="text-[10px] font-black uppercase tracking-wider text-black px-2 pt-1">
+                    Switch Active Role
+                  </p>
+                  <div className="grid grid-cols-2 gap-1">
+                    <button
+                      onClick={() => {
+                        switchRole("organizer");
+                        switchOrganizerSubRole("super_admin");
+                        setRoleMenuOpen(false);
+                      }}
+                      className={cn(
+                        "text-left px-2 py-1 text-[11px] font-black border transition-colors cursor-pointer",
+                        role === "organizer" ? "bg-black text-white border-black" : "bg-white hover:bg-[#FFFBEB] border-slate-300"
+                      )}
+                    >
+                      Organizer
+                    </button>
+                    <button
+                      onClick={() => {
+                        switchRole("judge");
+                        setRoleMenuOpen(false);
+                      }}
+                      className={cn(
+                        "text-left px-2 py-1 text-[11px] font-black border transition-colors cursor-pointer",
+                        role === "judge" ? "bg-[#9C27B0] text-white border-black" : "bg-white hover:bg-[#FFFBEB] border-slate-300"
+                      )}
+                    >
+                      Judge (Jury)
+                    </button>
+                    <button
+                      onClick={() => {
+                        switchRole("faculty");
+                        setRoleMenuOpen(false);
+                      }}
+                      className={cn(
+                        "text-left px-2 py-1 text-[11px] font-black border transition-colors cursor-pointer",
+                        role === "faculty" ? "bg-[#4CAF50] text-black border-black" : "bg-white hover:bg-[#FFFBEB] border-slate-300"
+                      )}
+                    >
+                      Faculty
+                    </button>
+                    <button
+                      onClick={() => {
+                        switchRole("volunteer");
+                        setRoleMenuOpen(false);
+                      }}
+                      className={cn(
+                        "text-left px-2 py-1 text-[11px] font-black border transition-colors cursor-pointer",
+                        role === "volunteer" ? "bg-[#2196F3] text-black border-black" : "bg-white hover:bg-[#FFFBEB] border-slate-300"
+                      )}
+                    >
+                      Volunteer
+                    </button>
+                  </div>
+                </div>
+
+                <div className="mb-2">
+                  <Link
+                    href={getMyPassHref()}
+                    onClick={() => setRoleMenuOpen(false)}
+                    className="w-full px-3 py-1.5 bg-[#FFEB3B] hover:bg-black hover:text-white border-2 border-black flex items-center justify-between text-xs font-black transition-colors"
+                  >
+                    <span>View My Official ID Pass</span>
+                    <QrCode className="w-3.5 h-3.5" />
+                  </Link>
                 </div>
 
                 {role === "organizer" && (
@@ -277,6 +375,7 @@ export function PillNav() {
                 </div>
               </div>
             )}
+          </div>
           </div>
         </div>
       </header>

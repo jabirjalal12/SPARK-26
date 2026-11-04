@@ -108,7 +108,9 @@ export default function LoginPage() {
         }
       } else {
         // Fallback when Supabase keys in .env.local are still placeholder
-        if (email.toLowerCase().includes("fac")) {
+        if (email.toLowerCase().includes("judge") || email.toLowerCase().includes("jury")) {
+          switchRole("judge");
+        } else if (email.toLowerCase().includes("fac")) {
           switchRole("faculty");
         } else if (email.toLowerCase().includes("vol")) {
           switchRole("volunteer");
@@ -124,6 +126,8 @@ export default function LoginPage() {
         const redirectParam = params.get("redirect");
         if (redirectParam && redirectParam.startsWith("/")) {
           destination = redirectParam;
+        } else if (profile?.role === "judge" || email.toLowerCase().includes("judge") || email.toLowerCase().includes("jury")) {
+          destination = "/judge";
         } else if (profile?.role === "faculty" || email.toLowerCase().includes("fac")) {
           destination = "/faculty/students";
         } else if (profile?.role === "volunteer" || email.toLowerCase().includes("vol")) {

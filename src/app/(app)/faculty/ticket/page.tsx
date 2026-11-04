@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
-
-import React from "react";
+import React, { useState } from "react";
 import { useFestStore } from "@/lib/store";
 import { GlassCard } from "@/components/ui/glass-card";
 import { QRDisplay } from "@/components/qr/qr-display";
+import { IdPassCard } from "@/components/passes/id-pass-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,11 +18,13 @@ import {
   Users,
   CheckCircle2,
   Lock,
+  User,
 } from "lucide-react";
 import jsPDF from "jspdf";
 
 export default function FacultyTicketPage() {
   const { currentProfile, schools, schoolTickets, students, tracks } = useFestStore();
+  const [activeTab, setActiveTab] = useState<"delegation" | "faculty-badge" | "student-badges">("delegation");
 
   const facultySchool = schools.find((s) => s.id === currentProfile.school_id) || schools[0];
   const ticket = schoolTickets.find((t) => t.school_id === facultySchool?.id && !t.revoked_at);
@@ -31,6 +33,8 @@ export default function FacultyTicketPage() {
   const schoolStudents = facultySchool
     ? students.filter((s) => s.school_id === facultySchool.id)
     : [];
+
+  const [selectedStudentId, setSelectedStudentId] = useState<string>(schoolStudents[0]?.id || "");
 
   const handleDownloadPDF = () => {
     if (!facultySchool) return;
@@ -81,12 +85,10 @@ export default function FacultyTicketPage() {
     doc.setFont("helvetica", "bold");
     doc.text("#", 15, y);
     doc.text("Student Name", 25, y);
-    doc.text("Class", 100, y);
-    doc.text("Assigned Track", 140, y);
-
-    y += 4;
-    doc.line(15, y, 195, y);
-    y += 7;
+    doc.text("Class/Grade", 100, y);
+    doc.text("Arena Track", 140, y);
+    doc.line(15, y + 2, 195, y + 2);
+    y += 8;
 
     doc.setFont("helvetica", "normal");
     schoolStudents.forEach((stu, idx) => {
@@ -110,19 +112,21 @@ export default function FacultyTicketPage() {
     doc.save(`SPARK-Pass-${facultySchool.code}.pdf`);
   };
 
+  const selectedStudent = schoolStudents.find((s) => s.id === selectedStudentId) || schoolStudents[0];
+
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
+    <div className="space-y-6 max-w-4xl mx-auto pb-16">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b-[3px] border-black">
         <div>
           <div className="inline-block bg-[#FFEB3B] text-black border-2 border-black px-2.5 py-0.5 text-xs font-black uppercase mb-2 shadow-[2px_2px_0px_#000000]">
-            OFFICIAL DELEGATION TICKET
+            OFFICIAL DELEGATION ACCREDITATION
           </div>
           <h1 className="text-2xl sm:text-4xl font-black text-black">
-            Generate Delegation Pass
+            Delegation Tickets &amp; ID Passes
           </h1>
           <p className="text-xs font-bold text-slate-800 mt-1">
-            Official entry ticket for {facultySchool?.name} • Scanned at the venue by Registration Desk users
+            Official entry credentials for {facultySchool?.name || "Visiting Institution"} • Present at venue registration desk
           </p>
         </div>
 
@@ -133,115 +137,213 @@ export default function FacultyTicketPage() {
           </Button>
           <Button variant="yellow" size="sm" onClick={handleDownloadPDF} className="text-xs font-black shadow-[3px_3px_0px_#000000]">
             <Download className="h-4 w-4 mr-1.5" />
-            <span>Generate &amp; Download PDF</span>
+            <span>Download PDF Roster</span>
           </Button>
         </div>
       </div>
 
-      {/* Venue Scanning Notice Banner */}
-      <div className="p-4 border-[3px] border-black bg-[#2196F3] text-black shadow-[5px_5px_0px_#000000] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <div className="space-y-0.5">
-          <p className="text-xs font-black uppercase tracking-wider text-black bg-[#FFEB3B] border border-black px-2 py-0.5 inline-block">
-            VENUE REGISTRATION DESK PROTOCOL
-          </p>
-          <p className="text-xs font-bold text-black mt-1 leading-relaxed">
-            This QR Ticket is scanned at the College Campus entrance by Registration Desk users. A single scan verifies and admits your entire student squad.
-          </p>
-        </div>
-        {schoolStudents.length === 0 && (
-          <Link href="/faculty/students" className="flex-shrink-0">
-            <Button variant="primary" size="sm" className="text-xs font-black uppercase shadow-[2px_2px_0px_#000000]">
-              <span>Add Students First</span>
-              <ArrowRight className="w-3.5 h-3.5 ml-1" />
-            </Button>
-          </Link>
-        )}
+      {/* Tabs */}
+      <div className="flex flex-wrap items-center gap-2 p-2 bg-[#FFFBEB] border-[3px] border-black shadow-[4px_4px_0px_#000000]">
+        <button
+          onClick={() => setActiveTab("delegation")}
+          className={`px-4 py-2 text-xs font-black border-2 border-black transition-all cursor-pointer ${
+            activeTab === "delegation"
+              ? "bg-black text-white shadow-[2px_2px_0px_#2196F3]"
+              : "bg-white text-black hover:bg-[#FFEB3B]"
+          }`}
+        >
+          Institutional Delegation Pass
+        </button>
+        <button
+          onClick={() => setActiveTab("faculty-badge")}
+          className={`px-4 py-2 text-xs font-black border-2 border-black transition-all cursor-pointer ${
+            activeTab === "faculty-badge"
+              ? "bg-[#4CAF50] text-black shadow-[2px_2px_0px_#000000]"
+              : "bg-white text-black hover:bg-[#FFEB3B]"
+          }`}
+        >
+          Faculty Lead ID Badge
+        </button>
+        <button
+          onClick={() => setActiveTab("student-badges")}
+          className={`px-4 py-2 text-xs font-black border-2 border-black transition-all cursor-pointer ${
+            activeTab === "student-badges"
+              ? "bg-[#FF9800] text-black shadow-[2px_2px_0px_#000000]"
+              : "bg-white text-black hover:bg-[#FFEB3B]"
+          }`}
+        >
+          Student Squad Badges ({schoolStudents.length})
+        </button>
       </div>
 
-      {/* Main Ticket Card */}
-      <div className="p-6 sm:p-8 border-[3px] border-black bg-white shadow-[6px_6px_0px_#000000]">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
-          <div className="md:col-span-2 space-y-4">
-            <div className="flex items-center gap-2">
-              <span className="px-3 py-1 bg-[#4CAF50] text-black border-2 border-black text-xs font-black uppercase tracking-wider flex items-center gap-1.5 shadow-[2px_2px_0px_#000000]">
-                <ShieldCheck className="w-4 h-4" />
-                Verified Institutional Delegation
-              </span>
-              <span className="text-xs font-mono font-black text-black px-2.5 py-1 bg-[#FFEB3B] border-2 border-black shadow-[2px_2px_0px_#000000]">
-                {facultySchool?.code}
-              </span>
+      {/* Tab 1: Delegation QR Ticket for Registration Desk */}
+      {activeTab === "delegation" && (
+        <div className="space-y-6">
+          {/* Venue Scanning Notice Banner */}
+          <div className="p-4 border-[3px] border-black bg-[#2196F3] text-black shadow-[5px_5px_0px_#000000] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="space-y-0.5">
+              <p className="text-xs font-black uppercase tracking-wider text-black bg-[#FFEB3B] border border-black px-2 py-0.5 inline-block">
+                VENUE REGISTRATION DESK PROTOCOL
+              </p>
+              <p className="text-xs font-bold text-black mt-1 leading-relaxed">
+                This QR Ticket is scanned at the College Campus entrance by Registration Desk users. A single scan verifies and admits your entire student squad.
+              </p>
             </div>
-
-            <h2 className="text-2xl sm:text-3xl font-black text-black leading-tight">
-              {facultySchool?.name}
-            </h2>
-
-            <p className="text-xs font-bold text-slate-800 leading-relaxed max-w-lg bg-[#FFFBEB] border-2 border-black p-3 shadow-[2px_2px_0px_#000000]">
-              Present this pass at the Central Quadrangle registration desk on arrival. The desk volunteer will scan this QR ticket to display your student checklist and verify your delegation in under 30 seconds.
-            </p>
-
-            <div className="grid grid-cols-2 gap-3 pt-2 text-xs">
-              <div className="p-3 border-2 border-black bg-white shadow-[2px_2px_0px_#000000]">
-                <span className="text-slate-700 font-bold block text-[11px] uppercase">Faculty Lead</span>
-                <span className="font-black text-black mt-0.5 block truncate text-sm">
-                  {currentProfile.full_name}
-                </span>
-              </div>
-              <div className="p-3 border-2 border-black bg-white shadow-[2px_2px_0px_#000000]">
-                <span className="text-slate-700 font-bold block text-[11px] uppercase">Registered Delegation</span>
-                <span className="font-black text-black mt-0.5 block text-sm">
-                  {schoolStudents.length} Students
-                </span>
-              </div>
-            </div>
-
-            <div className="text-[11px] text-black font-mono font-bold flex items-center gap-1.5 pt-1">
-              <Lock className="w-3.5 h-3.5" />
-              <span>Token Hash: {ticketToken}</span>
-            </div>
+            {schoolStudents.length === 0 && (
+              <Link href="/faculty/students" className="flex-shrink-0">
+                <Button variant="primary" size="sm" className="text-xs font-black uppercase shadow-[2px_2px_0px_#000000]">
+                  <span>Add Students First</span>
+                  <ArrowRight className="w-3.5 h-3.5 ml-1" />
+                </Button>
+              </Link>
+            )}
           </div>
 
-          {/* QR Display */}
-          <div className="flex flex-col items-center justify-center p-4 border-[3px] border-black bg-[#FFFBEB] shadow-[4px_4px_0px_#000000]">
-            <QRDisplay
-              value={ticketToken}
-              title={facultySchool?.code || "SCH"}
-              subtitle={facultySchool?.name.split(" ")[0]}
-              size={170}
-            />
-            <p className="text-[10px] text-black font-black uppercase tracking-wider mt-3 bg-[#FFEB3B] border border-black px-2 py-0.5">
-              Scan at Registration Desk
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Delegation Summary */}
-      <div className="p-6 border-[3px] border-black bg-white shadow-[6px_6px_0px_#000000]">
-        <h3 className="font-black text-black text-base mb-3">Enrolled Student Delegation ({schoolStudents.length})</h3>
-        {schoolStudents.length === 0 ? (
-          <p className="text-xs text-slate-800 italic">No students enrolled yet. Go to Students to add your delegation.</p>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-            {schoolStudents.map((s) => {
-              const tr = tracks.find((t) => t.id === s.track_id);
-              return (
-                <div key={s.id} className="p-3 border-2 border-black bg-[#FFFBEB] shadow-[2px_2px_0px_#000000] flex items-center justify-between text-xs">
-                  <div>
-                    <p className="font-black text-black">{s.name}</p>
-                    <p className="text-[11px] font-bold text-slate-700">{s.class} • {tr?.name}</p>
-                  </div>
-                  {s.checked_in ? (
-                    <span className="bg-[#4CAF50] text-black border border-black px-2 py-0.5 text-[10px] font-black uppercase">Arrived</span>
-                  ) : (
-                    <span className="bg-white text-black border border-black px-2 py-0.5 text-[10px] font-bold uppercase">Expected</span>
-                  )}
+          {/* Main Ticket Card */}
+          <div className="p-6 sm:p-8 border-[3px] border-black bg-white shadow-[6px_6px_0px_#000000]">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
+              <div className="md:col-span-2 space-y-4">
+                <div className="flex items-center gap-2">
+                  <span className="px-3 py-1 bg-[#4CAF50] text-black border-2 border-black text-xs font-black uppercase tracking-wider flex items-center gap-1.5 shadow-[2px_2px_0px_#000000]">
+                    <ShieldCheck className="w-4 h-4" />
+                    Verified Institutional Delegation
+                  </span>
+                  <span className="text-xs font-mono font-black text-black px-2.5 py-1 bg-[#FFEB3B] border-2 border-black shadow-[2px_2px_0px_#000000]">
+                    {facultySchool?.code}
+                  </span>
                 </div>
-              );
-            })}
+
+                <h2 className="text-2xl sm:text-3xl font-black text-black leading-tight">
+                  {facultySchool?.name}
+                </h2>
+
+                <p className="text-xs font-bold text-slate-800 leading-relaxed max-w-lg bg-[#FFFBEB] border-2 border-black p-3 shadow-[2px_2px_0px_#000000]">
+                  Present this pass at the registration desk on arrival. The desk volunteer will scan this QR ticket to display your student checklist and verify your delegation in under 30 seconds.
+                </p>
+
+                <div className="grid grid-cols-2 gap-3 text-xs pt-2">
+                  <div className="p-3 border-2 border-black bg-[#FFFBEB]">
+                    <span className="text-slate-600 block text-[10px] font-black uppercase">ACCOMPANYING FACULTY</span>
+                    <span className="font-black text-black">{currentProfile.full_name}</span>
+                    <span className="block text-slate-600 font-mono text-[11px] mt-0.5">{currentProfile.phone || "No phone recorded"}</span>
+                  </div>
+                  <div className="p-3 border-2 border-black bg-[#FFFBEB]">
+                    <span className="text-slate-600 block text-[10px] font-black uppercase">REGISTERED STUDENTS</span>
+                    <span className="font-black text-black text-lg">{schoolStudents.length} Students</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* QR Display */}
+              <div className="flex flex-col items-center justify-center p-4 border-[3px] border-black bg-[#FFFBEB] shadow-[4px_4px_0px_#000000]">
+                <QRDisplay
+                  value={ticketToken}
+                  title={`Pass-${facultySchool?.code}`}
+                  subtitle="Scanned by Registration Desk"
+                  size={180}
+                  downloadable={false}
+                />
+                <span className="text-[10px] font-mono text-black font-black uppercase bg-[#FFEB3B] border border-black px-2 py-0.5 mt-2">
+                  {ticketToken}
+                </span>
+              </div>
+            </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
+
+      {/* Tab 2: Faculty Lead Official ID Pass */}
+      {activeTab === "faculty-badge" && (
+        <div className="flex flex-col items-center py-4">
+          <IdPassCard
+            role="faculty"
+            name={currentProfile.full_name || "Faculty Coordinator"}
+            badgeNumber={`FAC-${facultySchool?.code || "SCH"}`}
+            title="Institutional Faculty Coordinator"
+            organization={facultySchool?.name || "Visiting Delegation"}
+            qrToken={ticketToken}
+            accessLevel="DELEGATION ACCESS • VISITOR LOUNGE • CAMPUS ARENA"
+            trackName={`${schoolStudents.length} Registered Students`}
+            metadata={[
+              { label: "INSTITUTION CODE", value: facultySchool?.code || "SCH" },
+              { label: "CONTACT", value: currentProfile.phone || "On File" },
+            ]}
+          />
+        </div>
+      )}
+
+      {/* Tab 3: Student Squad Badges */}
+      {activeTab === "student-badges" && (
+        <div className="space-y-6">
+          {schoolStudents.length === 0 ? (
+            <div className="p-8 text-center bg-white border-[3px] border-black shadow-[6px_6px_0px_#000000]">
+              <Users className="w-10 h-10 text-slate-400 mx-auto mb-2" />
+              <p className="text-base font-black text-black">No student participants added yet.</p>
+              <p className="text-xs font-bold text-slate-600 mt-1 mb-4">
+                Add students from your Faculty Manager to generate their official competition passes.
+              </p>
+              <Link href="/faculty/students">
+                <Button variant="yellow" className="text-xs font-black shadow-[3px_3px_0px_#000000]">
+                  <span>Go to Student Manager</span>
+                  <ArrowRight className="w-4 h-4 ml-1.5" />
+                </Button>
+              </Link>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
+              {/* Student Selector */}
+              <div className="md:col-span-5 space-y-2">
+                <p className="text-xs font-black uppercase tracking-wider text-black bg-[#FFEB3B] border border-black px-2 py-0.5 inline-block">
+                  Select Student Participant:
+                </p>
+                <div className="space-y-2 max-h-[500px] overflow-y-auto pr-1">
+                  {schoolStudents.map((stu) => {
+                    const isSelected = selectedStudent?.id === stu.id;
+                    const trk = tracks.find((t) => t.id === stu.track_id);
+
+                    return (
+                      <button
+                        key={stu.id}
+                        onClick={() => setSelectedStudentId(stu.id)}
+                        className={`w-full p-3 border-[3px] border-black text-left transition-all cursor-pointer ${
+                          isSelected
+                            ? "bg-[#FFEB3B] text-black shadow-[4px_4px_0px_#000000] -translate-x-0.5 -translate-y-0.5"
+                            : "bg-white hover:bg-slate-50 shadow-[2px_2px_0px_#000000]"
+                        }`}
+                      >
+                        <p className="font-black text-sm">{stu.name}</p>
+                        <p className="text-xs font-bold text-slate-700">
+                          Class {stu.class} • {trk?.name || "Track"}
+                        </p>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Student Badge Preview */}
+              <div className="md:col-span-7 flex flex-col items-center">
+                {selectedStudent && (
+                  <IdPassCard
+                    role="student"
+                    name={selectedStudent.name}
+                    badgeNumber={`STU-${selectedStudent.id.substring(0, 6).toUpperCase()}`}
+                    title={`Class / Grade: ${selectedStudent.class}`}
+                    organization={facultySchool?.name || "Visiting Delegation"}
+                    qrToken={`STU-${facultySchool?.code}-${selectedStudent.id.substring(0, 8)}`}
+                    trackName={tracks.find((t) => t.id === selectedStudent.track_id)?.name || "Competition Track"}
+                    accessLevel="PARTICIPANT • ARENA FLOOR • COMPETITION STATIONS"
+                    metadata={[
+                      { label: "GRADE", value: selectedStudent.class },
+                      { label: "SCHOOL CODE", value: facultySchool?.code || "SCH" },
+                    ]}
+                  />
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

@@ -84,7 +84,11 @@ CREATE POLICY "schools_update_admin" ON public.schools
 FOR UPDATE TO public 
 USING (true);
 
--- 4. PROFILES RLS POLICIES (Allow profile creation during signup)
+-- 4. PROFILES RLS POLICIES & JUDGE ROLE CONSTRAINT
+ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS profiles_role_check;
+ALTER TABLE public.profiles ADD CONSTRAINT profiles_role_check 
+  CHECK (role IN ('faculty', 'volunteer', 'organizer', 'judge'));
+
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "profiles_select" ON public.profiles;
