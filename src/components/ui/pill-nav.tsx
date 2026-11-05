@@ -126,7 +126,7 @@ export function PillNav() {
       { href: "/organizer/schools", label: "Approvals", icon: ShieldCheck },
       { href: "/organizer/checkins", label: "Desk Arrivals", icon: RotateCcw },
       { href: "/passes", label: "Role Logins", icon: Key },
-      { href: "/organizer/results", label: "Publish", icon: Trophy },
+      { href: "/organizer/results", label: "Leaderboard & TV", icon: Trophy },
       { href: "/announcements", label: "Notices", icon: Bell },
       { href: "/organizer/export", label: "Export", icon: Sliders },
       { href: "/organizer/audit", label: "Audit Log", icon: History },

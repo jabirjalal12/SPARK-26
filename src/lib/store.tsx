@@ -85,6 +85,10 @@ interface FestStoreContextType {
   results: Result[];
   certificates: Certificate[];
   resultsPublished: boolean;
+  publishedTrackIds: string[];
+  toggleTrackPublish: (trackId: string, publish?: boolean) => Promise<void>;
+  updateTeamLeaderboard: (teamId: string, updates: { name?: string; school_id?: string; project_title?: string; score_total?: number }) => Promise<void>;
+  addLeaderboardTeam: (data: { track_id: string; name: string; school_id: string; project_title: string; score_total: number }) => Promise<Team>;
 
   // Actions
   checkInBatch: (schoolId: string, studentIds: string[]) => { success: boolean; message: string; count: number };
@@ -150,6 +154,16 @@ export function FestStoreProvider({ children }: { children: React.ReactNode }) {
   const [volunteerDuties, setVolunteerDuties] = useState<VolunteerDuty[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [resultsPublished, setResultsPublished] = useState<boolean>(false);
+  const [results, setResults] = useState<Result[]>([]);
+  const [publishedTrackIds, setPublishedTrackIds] = useState<string[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const cached = localStorage.getItem("spark_published_tracks");
+        if (cached) return JSON.parse(cached);
+      } catch {}
+    }
+    return [];
+  });
   const [isLoaded, setIsLoaded] = useState<boolean>(false);
 
   // Initialize Supabase Auth Session and Live Data
@@ -194,6 +208,13 @@ export function FestStoreProvider({ children }: { children: React.ReactNode }) {
             setIssueReports(liveData.issueReports);
             setScores(liveData.scores);
             setAuditLogs(liveData.auditLogs);
+            setResults(liveData.results || []);
+            const fromResults = Array.from(
+              new Set((liveData.results || []).filter((r) => r.is_published).map((r) => r.track_id))
+            );
+            if (fromResults.length > 0) {
+              setPublishedTrackIds((prev) => Array.from(new Set([...prev, ...fromResults])));
+            }
             setIsSupabaseLive(true);
 
             if (typeof window !== "undefined") {
@@ -235,7 +256,20 @@ export function FestStoreProvider({ children }: { children: React.ReactNode }) {
 
           // 4. Subscribe to Realtime Postgres Changes across all operational tables
           unsubscribeRealtime = subscribeToFestRealtime((payload) => {
-            if (payload.table === "venues") {
+            if (payload.table === "results") {
+              if (payload.event === "INSERT" || payload.event === "UPDATE") {
+                setResults((prev) => [...prev.filter((r) => r.id !== payload.record.id), payload.record]);
+                if (payload.record.is_published) {
+                  setPublishedTrackIds((prev) => Array.from(new Set([...prev, payload.record.track_id])));
+                }
+              } else if (payload.event === "DELETE") {
+                setResults((prev) => prev.filter((r) => r.id !== payload.record.id));
+              }
+            } else if (payload.table === "tracks") {
+              if (payload.event === "UPDATE") {
+                setTracks((prev) => prev.map((t) => (t.id === payload.record.id ? { ...t, ...payload.record } : t)));
+              }
+            } else if (payload.table === "venues") {
               if (payload.event === "INSERT") {
                 setVenues((prev) => [...prev.filter((v) => v.id !== payload.record.id), payload.record]);
               } else if (payload.event === "DELETE") {
@@ -1048,6 +1082,126 @@ export function FestStoreProvider({ children }: { children: React.ReactNode }) {
     logAudit("LOCK_SCORES", "tracks", trackId, null, { locked });
   };
 
+  // TOGGLE TRACK PUBLISH FOR TV & LEADERBOARD
+  const toggleTrackPublish = async (trackId: string, publish?: boolean) => {
+    const isCurrentlyPublished = publishedTrackIds.includes(trackId);
+    const shouldPublish = publish !== undefined ? publish : !isCurrentlyPublished;
+
+    const nextIds = shouldPublish
+      ? Array.from(new Set([...publishedTrackIds, trackId]))
+      : publishedTrackIds.filter((id) => id !== trackId);
+
+    setPublishedTrackIds(nextIds);
+    try {
+      localStorage.setItem("spark_published_tracks", JSON.stringify(nextIds));
+    } catch {}
+
+    // In Supabase, update or upsert results for teams in this track
+    if (isSupabaseConfigured()) {
+      try {
+        const supabase = createClient();
+        const trackTeams = teams
+          .filter((t) => t.track_id === trackId)
+          .sort((a, b) => (b.score_total || 0) - (a.score_total || 0));
+
+        for (let idx = 0; idx < trackTeams.length; idx++) {
+          const t = trackTeams[idx];
+          await supabase.from("results").upsert({
+            track_id: trackId,
+            team_id: t.id,
+            rank: idx + 1,
+            weighted_score: t.score_total || 0,
+            is_published: shouldPublish,
+            published_by: currentProfile.id || null,
+            published_at: shouldPublish ? new Date().toISOString() : null,
+          });
+        }
+      } catch (e) {
+        console.warn("Failed updating track results in Supabase:", e);
+      }
+    }
+
+    logAudit(shouldPublish ? "PUBLISH_EVENT_TV" : "HIDE_EVENT_TV", "tracks", trackId, null, {
+      published: shouldPublish,
+    });
+  };
+
+  // MANUAL LEADERBOARD UPDATE FOR TEAM (Type Name, School, Project Title, and Score)
+  const updateTeamLeaderboard = async (
+    teamId: string,
+    updates: { name?: string; school_id?: string; project_title?: string; score_total?: number }
+  ) => {
+    setTeams((prev) => prev.map((t) => (t.id === teamId ? { ...t, ...updates } : t)));
+
+    if (isSupabaseConfigured()) {
+      try {
+        await createClient().from("teams").update(updates).eq("id", teamId);
+      } catch (e) {
+        console.warn("Failed updating team in Supabase:", e);
+      }
+    }
+
+    const team = teams.find((t) => t.id === teamId);
+    if (team && isSupabaseConfigured()) {
+      try {
+        const supabase = createClient();
+        const updatedTrackTeams = teams
+          .map((t) => (t.id === teamId ? { ...t, ...updates } : t))
+          .filter((t) => t.track_id === team.track_id)
+          .sort((a, b) => (b.score_total || 0) - (a.score_total || 0));
+
+        for (let idx = 0; idx < updatedTrackTeams.length; idx++) {
+          const t = updatedTrackTeams[idx];
+          await supabase.from("results").upsert({
+            track_id: team.track_id,
+            team_id: t.id,
+            rank: idx + 1,
+            weighted_score: t.score_total || 0,
+            is_published: publishedTrackIds.includes(team.track_id),
+          });
+        }
+      } catch (e) {
+        console.warn("Failed syncing results after team update:", e);
+      }
+    }
+
+    logAudit("MANUAL_UPDATE_TEAM_LEADERBOARD", "teams", teamId, null, updates);
+  };
+
+  // ADD CUSTOM LEADERBOARD TEAM (Manual Type Name & Score)
+  const addLeaderboardTeam = async (data: {
+    track_id: string;
+    name: string;
+    school_id: string;
+    project_title: string;
+    score_total: number;
+  }): Promise<Team> => {
+    const newTeam: Team = {
+      id: generateSafeUUID(),
+      track_id: data.track_id,
+      name: data.name,
+      school_id: data.school_id,
+      project_title: data.project_title,
+      project_summary: "Manual leaderboard entry",
+      table_number: "T-00",
+      score_total: data.score_total,
+      created_at: new Date().toISOString(),
+    };
+
+    setTeams((prev) => [...prev, newTeam]);
+
+    if (isSupabaseConfigured()) {
+      try {
+        await createClient().from("teams").insert(newTeam);
+      } catch (e) {
+        console.warn("Failed inserting manual team in Supabase:", e);
+      }
+    }
+
+    logAudit("MANUAL_ADD_LEADERBOARD_TEAM", "teams", newTeam.id, null, newTeam);
+    return newTeam;
+  };
+
   // TOGGLE PUBLISH RESULTS
   const togglePublishResults = () => {
     const newState = !resultsPublished;
@@ -1391,9 +1545,13 @@ export function FestStoreProvider({ children }: { children: React.ReactNode }) {
     issueReports,
     auditLogs,
     checkins,
-    results: [],
+    results,
     certificates: [],
     resultsPublished,
+    publishedTrackIds,
+    toggleTrackPublish,
+    updateTeamLeaderboard,
+    addLeaderboardTeam,
     checkInBatch,
     undoCheckin,
     addWalkinStudent,

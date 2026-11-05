@@ -20,17 +20,27 @@ import {
 } from "lucide-react";
 
 export default function StandaloneTvPage() {
-  const { tracks, teams, schools, announcements, resultsPublished } = useFestStore();
+  const { tracks, teams, schools, announcements, resultsPublished, publishedTrackIds, results } = useFestStore();
 
-  // Sequence stages: 0..(tracks.length - 1) = individual tracks, tracks.length = overall school leaderboard
+  // ONLY events that have been updated / published by admin will appear on the TV display!
+  const updatedTracks = useMemo(() => {
+    return tracks.filter((track) => {
+      const isExplicitlyPublished = (publishedTrackIds || []).includes(track.id);
+      const hasPublishedResults = (results || []).some((r) => r.track_id === track.id && r.is_published);
+      return isExplicitlyPublished || hasPublishedResults;
+    });
+  }, [tracks, publishedTrackIds, results]);
+
   const [currentStage, setCurrentStage] = useState(0);
+
+  const hasUpdatedTracks = updatedTracks.length > 0;
+  // If no updated events, 1 stage (waiting kiosk); if updated tracks exist, stages = 0..(updatedTracks.length - 1) for events, and updatedTracks.length for overall championship
+  const totalStages = hasUpdatedTracks ? updatedTracks.length + 1 : 1;
+  const isOverallStage = hasUpdatedTracks && currentStage === updatedTracks.length;
+  const currentTrack = hasUpdatedTracks && !isOverallStage ? updatedTracks[currentStage] || updatedTracks[0] : null;
   const [autoRotate, setAutoRotate] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [animKey, setAnimKey] = useState(0);
-
-  const totalStages = Math.max(1, tracks.length + 1);
-  const isOverallStage = currentStage === tracks.length;
-  const currentTrack = !isOverallStage ? tracks[currentStage] || tracks[0] : null;
 
   // Fullscreen helper
   const enterFullscreen = () => {
@@ -301,24 +311,48 @@ export default function StandaloneTvPage() {
                   </div>
                   <div>
                     <h2 className="text-xl sm:text-2xl font-black text-black leading-tight">
-                      {isOverallStage
+                      {!hasUpdatedTracks
+                        ? "⚡ SPARK Tech Fest 2026 — Live Arena Telemetry"
+                        : isOverallStage
                         ? "🏆 SPARK Rolling Trophy — Overall School Championship"
                         : currentTrack?.name}
                     </h2>
+                    {hasUpdatedTracks && !isOverallStage && (
+                      <p className="text-[10px] font-bold text-slate-700">Official Event Leaderboard & Podium</p>
+                    )}
                   </div>
                 </div>
 
                 <div className="text-right">
                   <span className="px-2.5 py-1 bg-[#4CAF50] text-black border border-black text-xs font-black uppercase">
-                    {resultsPublished ? "Official Verified" : "Live Scoring Active"}
+                    {!hasUpdatedTracks ? "Arenas Active" : "Verified Standings"}
                   </span>
                 </div>
               </div>
 
+              {/* IF NO EVENTS UPDATED YET: DISPLAY ACTIVE ARENA WAITING DISPLAY */}
+              {!hasUpdatedTracks && (
+                <div className="p-8 my-6 border-[3px] border-dashed border-black bg-[#FFFBEB] text-center space-y-4">
+                  <div className="w-16 h-16 bg-[#FFEB3B] border-[3px] border-black shadow-[3px_3px_0px_#000000] flex items-center justify-center mx-auto animate-bounce">
+                    <Trophy className="w-8 h-8 text-black" />
+                  </div>
+                  <h3 className="text-2xl font-black text-black tracking-tight">
+                    ARENAS IN PROGRESS • JURY SCRUTINY UNDERWAY
+                  </h3>
+                  <p className="text-xs font-bold text-slate-800 max-w-md mx-auto leading-relaxed">
+                    Student squads are competing across all 8 campus arenas. Official event podium standings will stream live on this kiosk as soon as each event is published by the festival marshals.
+                  </p>
+                  <div className="inline-flex items-center gap-2 px-3 py-1 bg-black text-[#FFEB3B] border border-black text-xs font-black uppercase shadow-[2px_2px_0px_#000]">
+                    <span className="w-2 h-2 rounded-full bg-[#4CAF50] animate-ping" />
+                    <span>Awaiting Event Leaderboard Releases</span>
+                  </div>
+                </div>
+              )}
+
               {/* =================================================================== */}
               {/* STAGE CASE A: INDIVIDUAL TRACK EVENT PODIUM & TABLE                */}
               {/* =================================================================== */}
-              {!isOverallStage && (
+              {hasUpdatedTracks && !isOverallStage && (
                 <>
                   {/* Olympic Podium for Track */}
                   <div className="grid grid-cols-3 gap-3 mb-4 items-end">
@@ -527,6 +561,43 @@ export default function StandaloneTvPage() {
                 </>
               )}
             </div>
+
+            {/* Bottom Event Navigator (Shows ONLY Updated Events) */}
+            {hasUpdatedTracks && (
+              <div className="pt-3 border-t-2 border-black flex items-center justify-between text-xs font-black mt-2">
+                <div className="flex items-center gap-1.5 overflow-x-auto py-0.5">
+                  {updatedTracks.map((tr, idx) => (
+                    <button
+                      key={tr.id}
+                      onClick={() => {
+                        setCurrentStage(idx);
+                        setAnimKey((k) => k + 1);
+                      }}
+                      className={`px-2 py-0.5 text-[10px] uppercase font-black border border-black cursor-pointer transition-all ${
+                        currentStage === idx ? "bg-black text-[#FFEB3B]" : "bg-white text-black hover:bg-[#FFEB3B]"
+                      }`}
+                    >
+                      {tr.name}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => {
+                      setCurrentStage(updatedTracks.length);
+                      setAnimKey((k) => k + 1);
+                    }}
+                    className={`px-2 py-0.5 text-[10px] uppercase font-black border border-black cursor-pointer transition-all ${
+                      isOverallStage ? "bg-black text-[#FFEB3B]" : "bg-white text-black hover:bg-[#FFEB3B]"
+                    }`}
+                  >
+                    🏆 Overall
+                  </button>
+                </div>
+
+                <span className="text-[10px] font-mono text-black font-black bg-[#FFFBEB] px-1.5 py-0.5 border border-black">
+                  Stage {currentStage + 1} / {totalStages}
+                </span>
+              </div>
+            )}
           </div>
 
           {/* ========================================================================= */}

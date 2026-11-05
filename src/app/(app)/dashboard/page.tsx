@@ -122,9 +122,9 @@ export default function DashboardPage() {
                   </Button>
                 </Link>
                 <Link href="/organizer/results">
-                  <Button size="sm" variant={resultsPublished ? "green" : "secondary"} className="text-xs font-black border-2 border-black shadow-[2px_2px_0px_#000000]">
+                  <Button size="sm" variant="yellow" className="text-xs font-black border-2 border-black shadow-[2px_2px_0px_#000000]">
                     <Trophy className="w-4 h-4 mr-1.5" />
-                    <span>{resultsPublished ? "Results Published" : "Publish Results"}</span>
+                    <span>Leaderboard & TV Manager</span>
                   </Button>
                 </Link>
               </div>
@@ -570,8 +570,8 @@ export default function DashboardPage() {
               <Link href="/organizer/results" className="block">
                 <div className="p-4 border-2 border-black bg-[#FFFBEB] hover:bg-[#FFEB3B] shadow-[2px_2px_0px_#000000] transition-all">
                   <Trophy className="w-5 h-5 text-black mb-2" />
-                  <p className="font-black text-black">Lock & Publish</p>
-                  <p className="text-[11px] font-bold text-slate-700 mt-0.5">SA Result Publishing</p>
+                  <p className="font-black text-black">Leaderboard & TV</p>
+                  <p className="text-[11px] font-bold text-slate-700 mt-0.5">Manual names & TV broadcast</p>
                 </div>
               </Link>
 
